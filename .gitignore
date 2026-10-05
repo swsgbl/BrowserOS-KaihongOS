@@ -1,0 +1,42 @@
+# Build outputs
+entry/build/
+**/build/
+*.hap
+hap-extract/
+hap-inspect/
+hap-inspect2/
+
+# Node modules
+node_modules/
+
+# hvigor cache
+.hvigor/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Screenshots and temp files
+*.jpeg
+*.png
+layout_*.json
+layout_*.txt
+launcher_*.json
+launcher_*.jpeg
+
+# Deploy scripts
+deploy_hap.py
+repack_hap.py
+analyze_*.py
+find_buttons.py
+check_roots.py
+com.oneaiterm.terminal.app
+
+# Logs
+*.log
+hilog_*.txt

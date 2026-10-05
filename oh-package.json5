@@ -1,0 +1,7 @@
+{
+  "modelVersion": "5.0.0",
+  "name": "browseros-kaihongos",
+  "version": "1.0.0",
+  "description": "BrowserOS KaihongOS - AI Agent Browser for KaihongOS",
+  "dependencies": {}
+}
