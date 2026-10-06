@@ -270,3 +270,11 @@
 - [x] P3 MCP 网络层（2026-10-06 终验通过）
 - [x] P4 录制回放管道（2026-10-06 终验通过，screenshots 组合时序转 P5 复验）
 - [x] P5 接线与打磨（2026-10-06 终验通过，组合时序缺口如实记录）
+
+
+### P6 终验（2026-10-06 18:2x-18:3x，Zodex 独立复跑实证，通过——完整 Agent 闭环达成）
+- 后台并行 Web（治本）：BrowserShell 每非 dashboard tab 各渲染 Web（Hidden 保活）；NeoDashboard 改造为壳内覆盖面板（根治 router 覆盖态不重渲染）
+- **零人工干预全链铁证（Zodex 独立复跑）**：建 agent→BCPEngine bound after 1 polls→auto-navigate https://example.com→snapshot/wait/getText 全 success→capture shot#5/#6→LLM finish=stop→**task complete, answer: The page is https://example.com, and its title is:...**→会话 JSON opLogs=5 screenshots=8
+- 回放端到端：点『回放』→router 创建 SessionPlayerPage→**loaded session shots=8 logs=5**（neo Replay 卖点真实数据首验）
+- B 项：暗色主题 6 处落地；导入登录态诚实提示落地；Onboarding 12 处接线（触发走查留待）；ConfirmDialog P5 已挂载（触发走查留待）
+- hmh 会话无 final 中断 2 次（上下文耗尽），Zodex 均接管收尾验证

@@ -1,0 +1,12 @@
+const fs = require('fs');
+const f = 'entry/src/main/ets/components/NeoDashboardPanel.ets';
+let c = fs.readFileSync(f, 'utf8');
+const before = c;
+c = c.replace("        .height(36)\n        任务描述占位\n", "        .height(36)\n");
+c = c.replace('.margin({ top: 嵌套引号 })', '.margin({ top: 8 })');
+c = c.replace('.margin({ top:  COMPLETION })', '.margin({ top: 4 })');
+c = c.replace("llmModelInput2: ''\n            } as Record<string, Object>)", "llmModel: this.llmModelInput\n            })");
+fs.writeFileSync(f, c, 'utf8');
+const bad = ['任务描述占位', '嵌套引号', 'COMPLETION}', 'llmModelInput2', 'as Record<string, Object>)'].filter(p => c.includes(p));
+console.log('changed:', before !== c, 'remaining bad:', JSON.stringify(bad));
+console.log('llmModel ok:', c.includes('llmModel: this.llmModelInput'));

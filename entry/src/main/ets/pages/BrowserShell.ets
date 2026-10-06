@@ -11,6 +11,7 @@ import { EventBus, EventBusEvents } from '../infra/EventBus'
 import { TabStatus, SensitiveOperationType } from '../common/Types'
 import { TabInfo } from '../model/TabInfo'
 import { ConfirmDialog } from '../components/ConfirmDialog'
+import { NeoDashboardPanel } from '../components/NeoDashboardPanel'
 import { webview } from '@kit.ArkWeb'
 import { router } from '@kit.ArkUI'
 
@@ -36,6 +37,8 @@ struct BrowserShell {
   @State loadProgress: number = 0
   @State isBookmarked: boolean = false
   @State showHistory: boolean = false
+  // P6: NeoDashboard 内嵌覆盖层（不再 router.pushUrl，规避覆盖态不渲染）
+  @State showNeo: boolean = false
   @State historyItems: HistoryEntry[] = []
   // 每个 Tab 独立的 WebviewController（key=tabId）
   private controllers: Map<string, webview.WebviewController> = new Map()
@@ -159,11 +162,30 @@ struct BrowserShell {
     Column() {
       this.AddressBar()
       this.TabBar()
-      if (this.showDashboard) {
-        this.DashboardContent()
-      } else {
+      // P6 治本：Web 层常驻 —— 所有 tab 的 Web 组件始终挂载（非激活 Hidden 保活），
+      // dashboard/NeoDashboard 作为覆盖层置顶。修复「dashboard 激活时全部 Web 销毁、
+      // 覆盖态 ForEach 不新增」的时序缺口：agent tab 创建即有 WebView，BCP 立即可用。
+      Stack() {
         this.WebViewContent()
+        if (this.showDashboard) {
+          this.DashboardContent()
+        }
+        if (this.showNeo) {
+          NeoDashboardPanel({
+            shellBack: () => {
+              console.info('BrowserShell neo panel closed')
+              this.showNeo = false
+            },
+            shellOpenReplay: (sessionId: string) => {
+              console.info('BrowserShell open replay: ' + sessionId)
+              this.showNeo = false
+              const navParams: Record<string, Object> = { 'sessionId': sessionId }
+              router.pushUrl({ url: 'pages/SessionPlayerPage', params: navParams })
+            }
+          })
+        }
       }
+      .layoutWeight(1)
       if (this.showHistory) {
         this.HistoryPanel()
       }
@@ -458,8 +480,8 @@ struct BrowserShell {
           .fontColor('#FFFFFF')
           .margin({ left: 12 })
           .onClick(() => {
-            console.info('BrowserShell navigate to NeoDashboardPage')
-            router.pushUrl({ url: 'pages/NeoDashboardPage' })
+            console.info('BrowserShell open NeoDashboard panel (in-shell overlay)')
+            this.showNeo = true
           })
 
         Button('导入登录态')
@@ -468,6 +490,12 @@ struct BrowserShell {
           .fontColor('#FFFFFF')
           .margin({ left: 12 })
           .onClick(() => {
+            AlertDialog.show({
+              title: '导入登录态',
+              message: 'KaihongOS 无 Chrome 浏览器数据可导入。请使用外部导出的 cookies.json（功能开发中）。',
+              primaryButton: { value: '知道了', action: () => { console.info('BrowserShell import-login acknowledged') } },
+              cancel: () => { console.info('BrowserShell import-login dismissed') }
+            })
           })
       }
       .margin({ top: 24 })
