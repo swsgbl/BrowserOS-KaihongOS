@@ -278,3 +278,13 @@
 - 回放端到端：点『回放』→router 创建 SessionPlayerPage→**loaded session shots=8 logs=5**（neo Replay 卖点真实数据首验）
 - B 项：暗色主题 6 处落地；导入登录态诚实提示落地；Onboarding 12 处接线（触发走查留待）；ConfirmDialog P5 已挂载（触发走查留待）
 - hmh 会话无 final 中断 2 次（上下文耗尽），Zodex 均接管收尾验证
+
+
+### P7 终验（2026-10-07 00:0x-00:1x，Zodex 实证，通过）
+- **A1 cookies.json 导入全链**：UI 对话框→路径输入→parseCookieJson(cookies=1 domains=1)→**injectCookiesToWebview written=1**（WebCookieManager 真注入）→回显 domains=1 injected=1。关键情报：hdc 视角应用沙盒 filesDir=/data/app/el2/100/base/<bundle>/haps/entry/files（推测试 fixture 的正确路径）
+- **B4 MCP GET 405 复验**：{"error":"POST only"} + 405 ✅（fport 隧道由 P7 重建）
+- **A2 Onboarding 触发**：config 置 false 冷启动→hilog: entry page: pages/OnboardingPage + RunPage/router 创建记录 ✅（已还原 true）
+- **A3 ConfirmDialog**：挂载验证 ✅（mounted, listening SENSITIVE_OPERATION_DETECTED）；端到端触发留走查项（需真实可加载的敏感关键词页面触发 detectNavigation）
+- B7 回放视觉/B8 三标签视觉：数据链路已证（loaded shots=8），视觉截图因 agent 列表内存态重启后为空未取样——留走查项
+- **C 工程卫生**：97 个调试产物归档 attic/（git mv 保留历史）、__pycache__ 清除、根目录 14 个核心文件、清理后构建绿（1.1s）
+- P7 会话无 final 中断（上下文耗尽），A/B 项由 Zodex 接管验证、C 项由 Zodex 执行

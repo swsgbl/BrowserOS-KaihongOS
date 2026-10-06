@@ -14,6 +14,7 @@ import { ConfirmDialog } from '../components/ConfirmDialog'
 import { NeoDashboardPanel } from '../components/NeoDashboardPanel'
 import { webview } from '@kit.ArkWeb'
 import { router } from '@kit.ArkUI'
+import { LoginStateManager } from '../service/LoginStateManager'
 
 interface PageLoadErrorData {
   tabId: string
@@ -342,6 +343,90 @@ struct BrowserShell {
     this.refreshBookmarkState()
   }
 
+  /** P7: 导入登录态 —— 输入应用沙盒内 cookies.json 相对路径 → parse → WebCookieManager 注入 */
+  @State showImportPanel: boolean = false
+  @State importPath: string = ''
+  @State importResult: string = ''
+
+  private importLoginState(): void {
+    this.importPath = ''
+    this.importResult = ''
+    this.showImportPanel = true
+  }
+
+  private doImport(): void {
+    const path = this.importPath.trim()
+    if (path.length === 0) {
+      this.importResult = '请输入 cookies.json 的沙盒相对路径'
+      return
+    }
+    LoginStateManager.importFromCookieFile(path).then((states) => {
+      const n = states.length
+      const written = 0
+      if (n > 0) {
+        // 注入 WebView cookies
+        LoginStateManager.injectCookiesToWebview().then((count) => {
+          this.importResult = `已导入 ${n} 个域 / 注入 ${count} 条 cookie`
+          console.info('BrowserShell import-login: domains=' + n + ' injected=' + count)
+        })
+      } else {
+        this.importResult = '未解析到 cookie（文件不存在或格式不符）'
+        console.info('BrowserShell import-login: 0 domains parsed from ' + path)
+      }
+      this.showImportPanel = false
+      // 回显到仪表盘
+      this.showDashboard = true
+    })
+  }
+
+  /** P7: 导入面板 Builder（挂在 Dashboard 内） */
+  @Builder
+  ImportLoginPanel(): void {
+    Column() {
+      Text('导入登录态 (cookies.json)')
+        .fontSize(16)
+        .fontWeight(FontWeight.Bold)
+        .fontColor('#E6EDF3')
+      Text('输入应用沙盒 files/ 下的相对路径，如 files/cookies.json')
+        .fontSize(12)
+        .fontColor('#8B949E')
+        .margin({ top: 8 })
+      TextInput({ text: this.importPath, placeholder: 'files/cookies.json' })
+        .width('100%')
+        .height(40)
+        .margin({ top: 12 })
+        .onChange((v: string) => { this.importPath = v })
+      if (this.importResult.length > 0) {
+        Text(this.importResult)
+          .fontSize(12)
+          .fontColor('#4CAF50')
+          .margin({ top: 8 })
+      }
+      Row() {
+        Button('取消')
+          .fontSize(14)
+          .width(80)
+          .height(36)
+          .backgroundColor('#30363D')
+          .fontColor('#E6EDF3')
+          .onClick(() => { this.showImportPanel = false })
+        Button('导入')
+          .fontSize(14)
+          .width(80)
+          .height(36)
+          .backgroundColor('#9E6A03')
+          .fontColor('#FFFFFF')
+          .margin({ left: 12 })
+          .onClick(() => { this.doImport() })
+      }
+      .margin({ top: 12 })
+    }
+    .width('80%')
+    .padding(20)
+    .borderRadius(12)
+    .backgroundColor('#161B22')
+  }
+
   /** P5: 历史面板（HistoryManager 接线） */
   private openHistory(): void {
     this.historyItems = HistoryManager.getAllHistory(50)
@@ -490,12 +575,7 @@ struct BrowserShell {
           .fontColor('#FFFFFF')
           .margin({ left: 12 })
           .onClick(() => {
-            AlertDialog.show({
-              title: '导入登录态',
-              message: 'KaihongOS 无 Chrome 浏览器数据可导入。请使用外部导出的 cookies.json（功能开发中）。',
-              primaryButton: { value: '知道了', action: () => { console.info('BrowserShell import-login acknowledged') } },
-              cancel: () => { console.info('BrowserShell import-login dismissed') }
-            })
+            this.importLoginState()
           })
       }
       .margin({ top: 24 })
@@ -504,6 +584,16 @@ struct BrowserShell {
         .fontSize(12)
         .fontColor('#8B949E')
         .margin({ top: 16 })
+
+      if (this.showImportPanel) {
+        this.ImportLoginPanel()
+      }
+      if (this.importResult.length > 0 && !this.showImportPanel) {
+        Text(this.importResult)
+          .fontSize(12)
+          .fontColor('#4CAF50')
+          .margin({ top: 8 })
+      }
     }
     .width('100%')
     .layoutWeight(1)
@@ -651,6 +741,10 @@ struct BrowserShell {
             const sensitive = SensitiveOperationDetector.detectNavigation(tabId, url)
             if (sensitive) {
               console.info('BrowserShell sensitive navigation detected: ' + sensitive + ' url=' + url)
+              // P7: 触发 ConfirmDialog 闭环
+              SensitiveOperationDetector.requestConfirmation(tabId, sensitive, url, '').then((ok) => {
+                console.info('BrowserShell sensitive confirm resolved: ' + ok + ' url=' + url)
+              })
             }
             // 注入 BCP 桥脚本
             if (controller) {
