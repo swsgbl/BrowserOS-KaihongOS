@@ -31,8 +31,8 @@ export class AgentStatusInfo {
   }
 
   updateHeartbeat(): void {
-    this.lastHeartbeat = Date.now()
     this.runningDuration = Date.now() - this.lastHeartbeat
+    this.lastHeartbeat = Date.now()
   }
 
   toJSON(): AgentStatusJSON {

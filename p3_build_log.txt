@@ -1,0 +1,107 @@
+> hvigor [32mUP-TO-DATE :entry:default@PreBuild...  [39m
+> hvigor [32mFinished :entry:default@CreateModuleInfo... after 1 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@GenerateMetadata...  [39m
+> hvigor [32mFinished :entry:default@ConfigureCmake... after 1 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@MergeProfile...  [39m
+> hvigor [32mUP-TO-DATE :entry:default@CreateBuildProfile...  [39m
+> hvigor [32mFinished :entry:default@PreCheckSyscap... after 1 ms [39m
+> hvigor [32mFinished :entry:default@GeneratePkgContextInfo... after 4 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@GeneratePkgSdkInfo...  [39m
+> hvigor [32mFinished :entry:default@ProcessIntegratedHsp... after 1 ms [39m
+> hvigor [32mFinished :entry:default@BuildNativeWithCmake... after 1 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@MakePackInfo...  [39m
+> hvigor [32mFinished :entry:default@SyscapTransform... after 7 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@ProcessProfile...  [39m
+> hvigor [32mUP-TO-DATE :entry:default@ProcessRouterMap...  [39m
+> hvigor [32mUP-TO-DATE :entry:default@ProcessShareConfig...  [39m
+> hvigor [32mFinished :entry:default@ProcessStartupConfig... after 1 ms [39m
+> hvigor [32mFinished :entry:default@BuildNativeWithNinja... after 1 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@ProcessResource...  [39m
+> hvigor [32mUP-TO-DATE :entry:default@GenerateLoaderJson...  [39m
+> hvigor [32mUP-TO-DATE :entry:default@ProcessLibs...  [39m
+> hvigor [32mUP-TO-DATE :entry:default@CompileResource...  [39m
+> hvigor [32mUP-TO-DATE :entry:default@DoNativeStrip...  [39m
+> hvigor [32mFinished :entry:default@BuildJS... after 1 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@CacheNativeLibs...  [39m
+> hvigor [91mERROR: Failed :entry:default@CompileArkTS... [39m
+> hvigor [33mWARN: 
+[33m1 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/storage/StorageManager.ets:46:22
+ 'decodeWithStream' has been deprecated.
+[39m[39m
+[33m2 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/service/HttpMcpTransport.ets:515:45
+ 'decodeWithStream' has been deprecated.
+[39m[39m
+[33m3 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/protocol/WebViewAdapter.ets:20:28
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33m4 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/protocol/WebViewAdapter.ets:24:21
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33m5 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/protocol/WebViewAdapter.ets:28:21
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33m6 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/protocol/WebViewAdapter.ets:32:21
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33m7 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/protocol/WebViewAdapter.ets:36:21
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33m8 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/protocol/WebViewAdapter.ets:40:28
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33m9 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/protocol/WebViewAdapter.ets:44:28
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33m10 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/protocol/WebViewAdapter.ets:48:28
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33m11 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:296:20
+ 'pushUrl' has been deprecated.
+[39m[39m
+[33m12 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/NeoDashboardPage.ets:76:20
+ 'back' has been deprecated.
+[39m[39m[39m
+> hvigor [91mERROR: ArkTS Compiler Error
+[31m1 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: 'BusinessError' only refers to a type, but is being used as a value here. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/service/LLMClient.ets:258:35
+[31m[39m
+[39m
+[31m2 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: 'BusinessError' only refers to a type, but is being used as a value here. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/service/LLMClient.ets:259:70
+[31m[39m
+[39m
+[31m3 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: 'BusinessError' only refers to a type, but is being used as a value here. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/service/HttpMcpTransport.ets:141:35
+[31m[39m
+[39m
+[31m4 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: 'BusinessError' only refers to a type, but is being used as a value here. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/service/HttpMcpTransport.ets:298:35
+[31m[39m
+[39m
+[31m5 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: 'BusinessError' only refers to a type, but is being used as a value here. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/service/HttpMcpTransport.ets:473:35
+[31m[39m
+[39m
+[31mCOMPILE RESULT:FAIL {ERROR:6 WARN:12}[39m
+
+[31m* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --debug option to get more log output.
+[39m
+[31m
+FAILURE: Build completed with 1 failure.[31m[39m
+[31m
+1: Task failed with an exception.
+-----------
+* What went wrong:
+Execution failed for task 'default@CompileArkTS'.
+  > Compilation error. See log for more details
+
+[31m* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --debug option to get more log output.
+[31m[39m
+[31m================================================================================[31m[39m
+> hvigor [91mERROR: BUILD FAILED in 4 s 41 ms [39m
+
+25 tasks in total: 10 executed, 15 up-to-date

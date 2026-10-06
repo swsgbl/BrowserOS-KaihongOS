@@ -5,4 +5,6 @@ export interface IWebviewController {
   forward(): void
   refresh(): void
   getTitle(): string
+  accessBackward(): boolean
+  accessForward(): boolean
 }

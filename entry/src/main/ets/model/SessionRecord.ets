@@ -89,6 +89,8 @@ interface SessionRecordJSON {
   urlSequence: string[]
   filePath: string
   fileSize: number
+  operationLogs: OperationLogJSON[]
+  screenshots: ScreenshotEntryJSON[]
   isCorrupted: boolean
 }
 
@@ -138,6 +140,8 @@ export class SessionRecord {
       urlSequence: this.urlSequence,
       filePath: this.filePath,
       fileSize: this.fileSize,
+      operationLogs: this.operationLogs.map((log: OperationLog): OperationLogJSON => log.toJSON()),
+      screenshots: this.screenshots.map((shot: ScreenshotEntry): ScreenshotEntryJSON => shot.toJSON()),
       isCorrupted: this.isCorrupted
     }
     return result
@@ -155,6 +159,18 @@ export class SessionRecord {
     record.filePath = json['filePath'] as string
     record.fileSize = json['fileSize'] as number
     record.isCorrupted = json['isCorrupted'] as boolean
+    const logs = json['operationLogs'] as Object[] | undefined
+    if (logs) {
+      for (const item of logs) {
+        record.operationLogs.push(OperationLog.fromJSON(item as Record<string, Object>))
+      }
+    }
+    const shots = json['screenshots'] as Object[] | undefined
+    if (shots) {
+      for (const item of shots) {
+        record.screenshots.push(ScreenshotEntry.fromJSON(item as Record<string, Object>))
+      }
+    }
     return record
   }
 }

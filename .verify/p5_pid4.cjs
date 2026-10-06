@@ -1,0 +1,10 @@
+const { execSync } = require('child_process');
+const HDC = '"C:\\Program Files\\Huawei\\DevEco Studio\\sdk\\default\\openharmony\\toolchains\\hdc.exe"';
+const T = '127.0.0.1:15566';
+const out = execSync(`${HDC} -t ${T} shell "cat /data/local/tmp/p5_h2.txt"`, { encoding: 'utf8', maxBuffer: 64e6 });
+const ls = out.split('\n').filter(l => l.indexOf('BrowserShell') >= 0);
+console.log('BrowserShell lines: ' + ls.length);
+ls.slice(-15).forEach(l => console.log(l.slice(0, 200)));
+const ls2 = out.split('\n').filter(l => l.indexOf('com.browseros') >= 0 && l.indexOf(/FATAL|crash|Error/i) >= 0);
+console.log('crash-ish: ' + ls2.length);
+ls2.slice(-8).forEach(l => console.log(l.slice(0, 200)));

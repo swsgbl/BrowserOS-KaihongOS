@@ -1,4 +1,5 @@
 import { fileIo as fs } from '@kit.CoreFileKit'
+import { util } from '@kit.ArkTS'
 import { Constants } from '../common/Constants'
 import { ErrorHandler, AppError } from '../infra/ErrorHandler'
 import { ErrorCodes } from '../common/ErrorCodes'
@@ -12,6 +13,11 @@ class StorageManagerImpl {
 
   setBasePath(path: string): void {
     this.basePath = path
+  }
+
+  /** P3: 暴露基路径（token 外显等沙盒文件绝对路径留痕用） */
+  getBasePath(): string {
+    return this.basePath
   }
 
   async save(relativePath: string, data: string): Promise<boolean> {
@@ -41,12 +47,8 @@ class StorageManagerImpl {
       const buffer = new ArrayBuffer(stat.size)
       fs.readSync(file.fd, buffer)
       fs.closeSync(file)
-      const view = new Uint8Array(buffer)
-      let result = ''
-      for (let i = 0; i < view.length; i++) {
-        result += String.fromCharCode(view[i])
-      }
-      return result
+      const decoder = util.TextDecoder.create('utf-8')
+      return decoder.decodeWithStream(new Uint8Array(buffer))
     } catch (e) {
       return null
     }

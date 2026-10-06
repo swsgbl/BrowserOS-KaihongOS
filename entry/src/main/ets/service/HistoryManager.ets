@@ -1,7 +1,7 @@
 import { StorageManager } from '../storage/StorageManager'
 import { EventBus, EventBusEvents } from '../infra/EventBus'
 
-interface HistoryEntry {
+export interface HistoryEntry {
   url: string
   title: string
   timestamp: number
@@ -27,7 +27,8 @@ class HistoryManagerImpl {
       stack.splice(currentIndex + 1)
     }
 
-    stack.push({ url, title, timestamp: Date.now() })
+    const entry: HistoryEntry = { url: url, title: title, timestamp: Date.now() }
+    stack.push(entry)
     this.currentIndices.set(tabId, stack.length - 1)
   }
 
@@ -73,6 +74,21 @@ class HistoryManagerImpl {
 
   getHistory(tabId: string): HistoryEntry[] {
     return this.navigationStacks.get(tabId) || []
+  }
+
+  /** P5: 跨 tab 汇总最近历史（时间倒序，供历史面板使用） */
+  getAllHistory(limit: number): HistoryEntry[] {
+    const all: HistoryEntry[] = []
+    this.navigationStacks.forEach((stack: HistoryEntry[]) => {
+      for (const entry of stack) {
+        all.push(entry)
+      }
+    })
+    all.sort((a: HistoryEntry, b: HistoryEntry) => b.timestamp - a.timestamp)
+    if (all.length > limit) {
+      return all.slice(0, limit)
+    }
+    return all
   }
 
   clearHistory(tabId: string): void {

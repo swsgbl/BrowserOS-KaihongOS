@@ -1,0 +1,198 @@
+matched 98
+10-06 14:51:10.695 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:10.695 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:13.695 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:13.695 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:16.696 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:16.696 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:19.697 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:19.697 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:22.699 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:22.699 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:25.701 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:25.701 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:26.155 12641 12641 I A03d00/JSAPP: [AgentEngine] tool_result: navigate -> {"success":false,"data":"","error":"JS Bridge注入失败：WebView未准备好"}
+10-06 14:51:27.635 12641 12641 I A03d00/JSAPP: [AgentEngine] tool_result: navigate -> {"success":false,"data":"","error":"JS Bridge注入失败：WebView未准备好"}
+10-06 14:51:28.702 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:28.702 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:31.704 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:31.704 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:34.704 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:34.704 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:37.706 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:37.706 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:40.707 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:40.707 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:43.708 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:43.708 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:44.064 12641 12641 I A03d00/JSAPP: [AgentEngine] tool_result: wait -> {"success":true,"data":"","error":""}
+10-06 14:51:46.709 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:46.709 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:49.711 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:49.711 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:50.419 12641 12641 I A03d00/JSAPP: [AgentEngine] tool_result: navigate -> {"success":false,"data":"","error":"JS Bridge注入失败：WebView未准备好"}
+10-06 14:51:52.712 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:52.712 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:55.713 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:55.713 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:58.713 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:58.713 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:52:01.716 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:52:01.716 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:52:04.718 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:52:04.719 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:52:07.718 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:52:07.718 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:52:10.719 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:52:10.719 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:52:13.721 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:52:13.721 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:52:15.865 12641 12641 I A03d00/JSAPP: [AgentEngine] tool_result: wait -> {"success":true,"data":"","error":""}
+10-06 14:52:16.723 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:52:16.723 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:52:19.724 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:52:19.724 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:52:20.834 12641 12641 I A03d00/JSAPP: [AgentEngine] tool_result: getText -> {"success":false,"data":"","error":"JS Bridge注入失败：WebView未准备好"}
+10-06 14:52:22.725 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:52:22.725 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:52:25.727 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:52:25.727 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:56:57.150 15677 15677 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:56:57.150 15677 15677 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:00.150 15677 15677 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:00.150 15677 15677 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:03.152 15677 15677 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:03.152 15677 15677 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:06.152 15677 15677 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:06.152 15677 15677 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:09.153 15677 15677 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:09.153 15677 15677 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:12.027 15677 15677 I A03d00/JSAPP: [AgentEngine] tool_result: navigate -> {"success":false,"data":"","error":"JS Bridge注入失败：WebView未准备好"}
+10-06 14:57:12.153 15677 15677 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:12.153 15677 15677 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:15.155 15677 15677 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:15.155 15677 15677 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:16.111 15677 15677 I A03d00/JSAPP: [AgentEngine] tool_result: navigate -> {"success":false,"data":"","error":"JS Bridge注入失败：WebView未准备好"}
+10-06 14:57:18.156 15677 15677 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:18.156 15677 15677 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:21.157 15677 15677 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:21.157 15677 15677 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:21.301 15677 15677 I A03d00/JSAPP: [AgentEngine] tool_result: wait -> {"success":true,"data":"","error":""}
+10-06 14:57:24.157 15677 15677 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:24.157 15677 15677 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:24.860 15677 15677 I A03d00/JSAPP: [AgentEngine] tool_result: navigate -> {"success":false,"data":"","error":"JS Bridge注入失败：WebView未准备好"}
+10-06 14:57:27.159 15677 15677 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:27.159 15677 15677 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:30.160 15677 15677 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:30.160 15677 15677 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:33.161 15677 15677 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:33.161 15677 15677 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:36.162 15677 15677 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:36.162 15677 15677 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:39.162 15677 15677 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:39.162 15677 15677 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:40.476 15677 15677 I A03d00/JSAPP: [AgentEngine] tool_result: getText -> {"success":false,"data":"","error":"JS Bridge注入失败：WebView未准备好"}
+10-06 14:57:42.163 15677 15677 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:42.163 15677 15677 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:45.163 15677 15677 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:45.163 15677 15677 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:45.749 15677 15677 I A03d00/JSAPP: [AgentEngine] task complete, answer: The browser/webview is not ready yet and I'm unable to access the page. The task was to open https://example.com and tell its title, but navigation and text retrieval are both failing with the error "JS Bridge注入失败：WebView未准备好" (JS Bridge injection failed: WebView not ready).
+---SHORT---
+10-06 14:51:10.695 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:10.695 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:13.695 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:13.695 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:16.696 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:16.696 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:19.697 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:19.697 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:22.699 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:22.699 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:25.701 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:25.701 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:26.155 12641 12641 I A03d00/JSAPP: [AgentEngine] tool_result: navigate -> {"success":false,"data":"","error":"JS Bridge注入失败：WebView未准备好"}
+10-06 14:51:27.635 12641 12641 I A03d00/JSAPP: [AgentEngine] tool_result: navigate -> {"success":false,"data":"","error":"JS Bridge注入失败：WebView未准备好"}
+10-06 14:51:28.702 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:28.702 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:31.704 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:31.704 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:34.704 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:34.704 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:37.706 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:37.706 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:40.707 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:40.707 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:43.708 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:43.708 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:44.064 12641 12641 I A03d00/JSAPP: [AgentEngine] tool_result: wait -> {"success":true,"data":"","error":""}
+10-06 14:51:46.709 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:46.709 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:49.711 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:49.711 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:50.419 12641 12641 I A03d00/JSAPP: [AgentEngine] tool_result: navigate -> {"success":false,"data":"","error":"JS Bridge注入失败：WebView未准备好"}
+10-06 14:51:52.712 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:52.712 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:55.713 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:55.713 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:58.713 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:51:58.713 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:52:01.716 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:52:01.716 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:52:04.718 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:52:04.719 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:52:07.718 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:52:07.718 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:52:10.719 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:52:10.719 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:52:13.721 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:52:13.721 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:52:15.865 12641 12641 I A03d00/JSAPP: [AgentEngine] tool_result: wait -> {"success":true,"data":"","error":""}
+10-06 14:52:16.723 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:52:16.723 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:52:19.724 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:52:19.724 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:52:20.834 12641 12641 I A03d00/JSAPP: [AgentEngine] tool_result: getText -> {"success":false,"data":"","error":"JS Bridge注入失败：WebView未准备好"}
+10-06 14:52:22.725 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:52:22.725 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:52:25.727 12641 12641 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:52:25.727 12641 12641 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:56:57.150 15677 15677 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:56:57.150 15677 15677 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:00.150 15677 15677 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:00.150 15677 15677 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:03.152 15677 15677 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:03.152 15677 15677 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:06.152 15677 15677 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:06.152 15677 15677 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:09.153 15677 15677 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:09.153 15677 15677 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:12.027 15677 15677 I A03d00/JSAPP: [AgentEngine] tool_result: navigate -> {"success":false,"data":"","error":"JS Bridge注入失败：WebView未准备好"}
+10-06 14:57:12.153 15677 15677 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:12.153 15677 15677 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:15.155 15677 15677 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:15.155 15677 15677 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:16.111 15677 15677 I A03d00/JSAPP: [AgentEngine] tool_result: navigate -> {"success":false,"data":"","error":"JS Bridge注入失败：WebView未准备好"}
+10-06 14:57:18.156 15677 15677 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:18.156 15677 15677 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:21.157 15677 15677 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:21.157 15677 15677 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:21.301 15677 15677 I A03d00/JSAPP: [AgentEngine] tool_result: wait -> {"success":true,"data":"","error":""}
+10-06 14:57:24.157 15677 15677 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:24.157 15677 15677 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:24.860 15677 15677 I A03d00/JSAPP: [AgentEngine] tool_result: navigate -> {"success":false,"data":"","error":"JS Bridge注入失败：WebView未准备好"}
+10-06 14:57:27.159 15677 15677 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:27.159 15677 15677 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:30.160 15677 15677 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:30.160 15677 15677 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:33.161 15677 15677 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:33.161 15677 15677 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:36.162 15677 15677 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:36.162 15677 15677 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:39.162 15677 15677 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:39.162 15677 15677 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:40.476 15677 15677 I A03d00/JSAPP: [AgentEngine] tool_result: getText -> {"success":false,"data":"","error":"JS Bridge注入失败：WebView未准备好"}
+10-06 14:57:42.163 15677 15677 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:42.163 15677 15677 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:45.163 15677 15677 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:45.163 15677 15677 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 14:57:45.749 15677 15677 I A03d00/JSAPP: [AgentEngine] task complete, answer: The browser/webview is not ready yet and I'm unable to access the page. The task was to open https://example.com and tell its title, but navigation and text retrieval are both failing with the error "JS Bridge注入失败：We…

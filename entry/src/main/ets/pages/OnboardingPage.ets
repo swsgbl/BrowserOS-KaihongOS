@@ -3,6 +3,7 @@ import { LoginStateManager } from '../service/LoginStateManager'
 import { ConfigManager } from '../storage/ConfigManager'
 import { EventBus, EventBusEvents } from '../infra/EventBus'
 import { AppConfigUpdate } from '../model/AppConfig'
+import { router } from '@kit.ArkUI'
 
 @Entry
 @Component
@@ -338,6 +339,8 @@ struct OnboardingPage {
         .onClick(() => {
           const updateData: AppConfigUpdate = { isOnboardingCompleted: true }
           ConfigManager.update(updateData)
+          console.info('OnboardingPage completed, entering BrowserShell')
+          router.replaceUrl({ url: 'pages/BrowserShell' })
         })
     }
     .width('100%')

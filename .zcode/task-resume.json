@@ -1,0 +1,1 @@
+{"text":"继续执行刚才被误中断的 bundleName 更换任务（你已读完 DEVPLAN 和关键文件，只读未写）。所有上下文与约束不变：目标包名 com.browseros.kaihong，红线不碰 D:\\oneaiterm/不重启 VM/不卸载旧包/不碰 5555。从中断处继续：改 app.json5 → 全库更新旧包名引用 → 清缓存全量重建 → 签名装机（profile 不匹配则重生成 p7b）→ A1-A4 逐条实证 → 修 bug-1（llmBaseUrl 拼接污染）→ DEVPLAN 追加汇报。","mode":"auto","sessionId":"web-muvgb56k"}

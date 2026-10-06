@@ -1,0 +1,61 @@
+n=106
+10-06 15:16:49.512 17995 17995 I A03d00/JSAPP: [AgentEngine] step 5/15 agent=agent_1791270985416_8gf8bhw5
+10-06 15:16:52.428 17995 17995 E A03d00/JSAPP: [BCP] BCP-001: Bridge injection failed: Error: Init error. The WebviewController must be associated with a Web component
+10-06 15:16:52.428 17995 17995 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 15:16:52.428 17995 17995 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 15:16:55.429 17995 17995 E A03d00/JSAPP: [BCP] BCP-001: Bridge injection failed: Error: Init error. The WebviewController must be associated with a Web component
+10-06 15:16:55.429 17995 17995 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 15:16:55.429 17995 17995 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 15:16:55.471 17995 17995 I A03d00/JSAPP: [AgentEngine] tool_call: navigate {"url": "https://example.com"} (id=call_4d80c44c4ba14cc8bbf5042b)
+10-06 15:16:55.471 17995 17995 E A03d00/JSAPP: [BCP] BCP-001: Bridge injection failed: Error: Init error. The WebviewController must be associated with a Web component
+10-06 15:16:55.471 17995 17995 I A03d00/JSAPP: [AgentEngine] tool_result: navigate -> {"success":false,"data":"","error":"JS Bridge注入失败：WebView未准备好"}
+10-06 15:16:55.471 17995 17995 I A03d00/JSAPP: [AgentEngine] addOperationLog tool=navigate result=fail
+10-06 15:16:55.471 17995 17995 I A03d00/JSAPP: [AgentEngine] step 6/15 agent=agent_1791270985416_8gf8bhw5
+10-06 15:16:57.974 17995 17995 I A03d00/JSAPP: [AgentEngine] tool_call: getText {} (id=call_96df653f40e0409eb5cf56cd)
+10-06 15:16:57.975 17995 17995 E A03d00/JSAPP: [BCP] BCP-001: Bridge injection failed: Error: Init error. The WebviewController must be associated with a Web component
+10-06 15:16:57.975 17995 17995 I A03d00/JSAPP: [AgentEngine] tool_result: getText -> {"success":false,"data":"","error":"JS Bridge注入失败：WebView未准备好"}
+10-06 15:16:57.975 17995 17995 I A03d00/JSAPP: [AgentEngine] addOperationLog tool=getText result=fail
+10-06 15:16:57.975 17995 17995 I A03d00/JSAPP: [AgentEngine] step 7/15 agent=agent_1791270985416_8gf8bhw5
+10-06 15:16:58.429 17995 17995 E A03d00/JSAPP: [BCP] BCP-001: Bridge injection failed: Error: Init error. The WebviewController must be associated with a Web component
+10-06 15:16:58.429 17995 17995 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 15:16:58.429 17995 17995 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 15:17:01.432 17995 17995 E A03d00/JSAPP: [BCP] BCP-001: Bridge injection failed: Error: Init error. The WebviewController must be associated with a Web component
+10-06 15:17:01.432 17995 17995 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 15:17:01.432 17995 17995 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 15:17:03.162 17995 17995 I A03d00/JSAPP: [AgentEngine] tool_call: wait {"ms": 5000} (id=call_72ff94fc754d422e8dd61c9e)
+10-06 15:17:04.435 17995 17995 E A03d00/JSAPP: [BCP] BCP-001: Bridge injection failed: Error: Init error. The WebviewController must be associated with a Web component
+10-06 15:17:04.435 17995 17995 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 15:17:04.435 17995 17995 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 15:17:07.436 17995 17995 E A03d00/JSAPP: [BCP] BCP-001: Bridge injection failed: Error: Init error. The WebviewController must be associated with a Web component
+10-06 15:17:07.436 17995 17995 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 15:17:07.436 17995 17995 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 15:17:08.164 17995 17995 I A03d00/JSAPP: [AgentEngine] tool_result: wait -> {"success":true,"data":"","error":""}
+10-06 15:17:08.164 17995 17995 I A03d00/JSAPP: [AgentEngine] addOperationLog tool=wait result=success
+10-06 15:17:08.164 17995 17995 I A03d00/JSAPP: [AgentEngine] step 8/15 agent=agent_1791270985416_8gf8bhw5
+10-06 15:17:09.278 17995 17995 I A03d00/JSAPP: [AgentEngine] tool_call: navigate {"url": "https://example.com"} (id=call_48982ece48e446c88ee65905)
+10-06 15:17:09.278 17995 17995 E A03d00/JSAPP: [BCP] BCP-001: Bridge injection failed: Error: Init error. The WebviewController must be associated with a Web component
+10-06 15:17:09.278 17995 17995 I A03d00/JSAPP: [AgentEngine] tool_result: navigate -> {"success":false,"data":"","error":"JS Bridge注入失败：WebView未准备好"}
+10-06 15:17:09.278 17995 17995 I A03d00/JSAPP: [AgentEngine] addOperationLog tool=navigate result=fail
+10-06 15:17:09.278 17995 17995 I A03d00/JSAPP: [AgentEngine] step 9/15 agent=agent_1791270985416_8gf8bhw5
+10-06 15:17:10.437 17995 17995 E A03d00/JSAPP: [BCP] BCP-001: Bridge injection failed: Error: Init error. The WebviewController must be associated with a Web component
+10-06 15:17:10.437 17995 17995 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 15:17:10.437 17995 17995 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 15:17:13.437 17995 17995 E A03d00/JSAPP: [BCP] BCP-001: Bridge injection failed: Error: Init error. The WebviewController must be associated with a Web component
+10-06 15:17:13.438 17995 17995 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 15:17:13.438 17995 17995 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 15:17:16.439 17995 17995 E A03d00/JSAPP: [BCP] BCP-001: Bridge injection failed: Error: Init error. The WebviewController must be associated with a Web component
+10-06 15:17:16.439 17995 17995 E A03d00/JSAPP: [BCP] BCP-005: Screenshot failed: JS Bridge注入失败：WebView未准备好
+10-06 15:17:16.439 17995 17995 W A03d00/JSAPP: [SessionManager] capture failed: JS Bridge注入失败：WebView未准备好
+10-06 15:17:16.805 17995 17995 I A03d00/JSAPP: [AgentEngine] task complete, answer: The WebView is consistently failing to initialize ("JS Bridge注入失败：WebView未准备好"). This appears to be a system-level issue with the browser automati
+10-06 15:17:16.805 17995 17995 I A03d00/JSAPP: I'm unable to complete the task at this time. The webview connection has not come up, so I can't navigate
+10-06 15:18:23.464 17995 17995 I A03d00/JSAPP: BrowserShell created WebviewController for tabId=tab_2_1791270828217
+10-06 15:18:23.464 17995 17995 I A03d00/JSAPP: BrowserShell created WebviewController for tabId=tab_3_1791270985416
+10-06 15:18:23.471 17995 17995 I A03d00/JSAPP: BrowserShell onControllerAttached tabId=tab_1_1791270099144
+10-06 15:18:23.471 17995 17995 I A03d00/JSAPP: BrowserShell registered webview adapter for tabId=tab_1_1791270099144
+10-06 15:18:23.475 17995 17995 I A03d00/JSAPP: BrowserShell onControllerAttached tabId=tab_2_1791270828217
+10-06 15:18:23.475 17995 17995 I A03d00/JSAPP: BrowserShell registered webview adapter for tabId=tab_2_1791270828217
+10-06 15:18:23.481 17995 17995 I A03d00/JSAPP: BrowserShell onControllerAttached tabId=tab_3_1791270985416
+10-06 15:18:23.482 17995 17995 I A03d00/JSAPP: BrowserShell registered webview adapter for tabId=tab_3_1791270985416
+10-06 15:18:23.580 17995 17995 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_1_1791270099144 url=about:blank
+10-06 15:18:23.583 17995 17995 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_2_1791270828217 url=about:blank
+10-06 15:18:23.587 17995 17995 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_3_1791270985416 url=about:blank

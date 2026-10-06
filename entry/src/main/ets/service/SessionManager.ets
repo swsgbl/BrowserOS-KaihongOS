@@ -6,6 +6,8 @@ import { ErrorCodes } from '../common/ErrorCodes'
 import { Constants } from '../common/Constants'
 import { ConfigManager } from '../storage/ConfigManager'
 import { RecordingQuality } from '../common/Types'
+import { ScreenshotCapture } from '../protocol/ScreenshotCapture'
+import { TabManager } from './TabManager'
 
 interface SessionStartData {
   sessionId: string
@@ -16,16 +18,21 @@ class SessionManagerImpl {
   private activeSessions: Map<string, SessionRecord> = new Map()
   private recordingTimers: Map<string, number> = new Map()
   private maxStorageSpace: number = Constants.RECORDING_MAX_SPACE_MB * 1024 * 1024
+  private sessionTabs: Map<string, string> = new Map()
 
-  startRecording(agentId: string): SessionRecord | null {
+  startRecording(agentId: string, tabId: string = ''): SessionRecord | null {
     const sessionId = this.generateSessionId()
     const session = new SessionRecord(sessionId, agentId)
 
     this.activeSessions.set(sessionId, session)
+    if (tabId.length > 0) {
+      this.sessionTabs.set(sessionId, tabId)
+    }
     const startData: SessionStartData = { sessionId: sessionId, agentId: agentId }
     EventBus.emit(EventBusEvents.SESSION_RECORDING_START, startData)
 
     this.startRecordingTimer(sessionId, agentId)
+    console.info('[SessionManager] startRecording session=' + sessionId + ' agent=' + agentId + ' tab=' + tabId)
 
     return session
   }
@@ -41,6 +48,7 @@ class SessionManagerImpl {
 
     this.persistSession(session)
     this.activeSessions.delete(sessionId)
+    this.sessionTabs.delete(sessionId)
 
     EventBus.emit(EventBusEvents.SESSION_RECORDING_STOP, session.toJSON())
     return session
@@ -76,6 +84,14 @@ class SessionManagerImpl {
 
   createReplayer(sessionId: string): SessionReplayer | null {
     const session = this.activeSessions.get(sessionId)
+    if (session) {
+      return new SessionReplayer(session)
+    }
+    return null
+  }
+
+  async createReplayerAsync(sessionId: string): Promise<SessionReplayer | null> {
+    const session = await this.getSessionDetail(sessionId)
     if (session) {
       return new SessionReplayer(session)
     }
@@ -129,10 +145,36 @@ class SessionManagerImpl {
     }
   }
 
-  private captureRecordingData(sessionId: string, agentId: string): void {
+  private async captureRecordingData(sessionId: string, agentId: string): Promise<void> {
     const session = this.activeSessions.get(sessionId)
     if (!session) {
       return
+    }
+
+    // URL from the agent tab
+    let url = ''
+    const tabId = this.sessionTabs.get(sessionId) || ''
+    if (tabId.length > 0) {
+      const tab = TabManager.getTab(tabId)
+      if (tab !== null && tab.currentUrl) {
+        url = tab.currentUrl
+      }
+    }
+    if (url.length > 0) {
+      const lastUrl = session.urlSequence.length > 0 ? session.urlSequence[session.urlSequence.length - 1] : ''
+      if (url !== lastUrl) {
+        session.addUrl(url)
+      }
+    }
+
+    // Screenshot via ScreenshotCapture (guarantees data: prefix)
+    const quality = ConfigManager.get().recordingQuality
+    const r = await ScreenshotCapture.capture(quality)
+    if (r.success && r.data) {
+      session.addScreenshot(new ScreenshotEntry(r.data, url))
+      console.info('[SessionManager] capture shot#' + session.screenshots.length + ' url=' + url + ' size=' + r.data.length)
+    } else {
+      console.warn('[SessionManager] capture failed: ' + (r.error || 'no data'))
     }
 
     this.checkStorageSpace()

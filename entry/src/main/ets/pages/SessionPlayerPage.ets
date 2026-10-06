@@ -1,6 +1,7 @@
 import { SessionManager, SessionReplayer } from '../service/SessionManager'
 import { SessionRecord, ScreenshotEntry, OperationLog } from '../model/SessionRecord'
 import { Constants } from '../common/Constants'
+import { router } from '@kit.ArkUI'
 
 @Entry
 @Component
@@ -16,6 +17,13 @@ struct SessionPlayerPage {
   private replayer: SessionReplayer | null = null
 
   aboutToAppear(): void {
+    const p = router.getParams() as Record<string, Object>
+    if (p && p['sessionId'] !== undefined) {
+      const v = p['sessionId'] as string
+      if (v && v.length > 0) {
+        this.sessionId = v
+      }
+    }
     if (this.sessionId) {
       this.loadSession()
     }
@@ -25,7 +33,10 @@ struct SessionPlayerPage {
     const session = await SessionManager.getSessionDetail(this.sessionId)
     if (session) {
       this.session = session
-      this.replayer = SessionManager.createReplayer(this.sessionId)
+      console.info('[SessionPlayer] loaded session=' + this.sessionId
+        + ' shots=' + (session ? session.screenshots.length : 0)
+        + ' logs=' + (session ? session.operationLogs.length : 0))
+      this.replayer = await SessionManager.createReplayerAsync(this.sessionId)
       if (this.replayer) {
         this.currentTime = this.replayer.getCurrentTime()
         this.updateCurrentView()

@@ -11,6 +11,8 @@ import { ErrorHandler, AppError } from '../infra/ErrorHandler'
 import { ErrorCodes } from '../common/ErrorCodes'
 import { Constants } from '../common/Constants'
 import { SensitiveOperationType } from '../common/Types'
+import { HttpMcpTransport, McpHttpDelegate } from './HttpMcpTransport'
+import { StorageManager } from '../storage/StorageManager'
 
 type ToolHandler = (params: Record<string, Object>, agentId: string) => Promise<MCPToolResponse>
 
@@ -43,7 +45,7 @@ interface MCPResponseData {
   result?: string | null
 }
 
-class MCPServerImpl {
+class MCPServerImpl implements McpHttpDelegate {
   private port: number = Constants.DEFAULT_MCP_PORT
   private authToken: string = ''
   private running: boolean = false
@@ -55,19 +57,31 @@ class MCPServerImpl {
     this.authToken = authToken
     this.registerToolHandlers()
 
-    try {
-      this.running = true
-      const startData: MCPConnectionChangeData = { status: 'started', port: this.port }
-      EventBus.emit(EventBusEvents.MCP_CONNECTION_CHANGE, startData)
-      return true
-    } catch (e) {
-      ErrorHandler.handle(new AppError(ErrorCodes.MCP_004, `Port conflict: ${e}`))
-      this.port++
-      return this.start(this.port, authToken)
+    // P3: 真实网络层接线 —— HttpMcpTransport 监听 0.0.0.0:{port}（失败即返回，不再盲重试端口）
+    const listening = await HttpMcpTransport.start(port, this)
+    if (!listening) {
+      ErrorHandler.handle(new AppError(ErrorCodes.MCP_004, `Port ${port} unavailable`))
+      return false
     }
+
+    this.running = true
+    const startData: MCPConnectionChangeData = { status: 'started', port: this.port }
+    EventBus.emit(EventBusEvents.MCP_CONNECTION_CHANGE, startData)
+    console.info('[MCPServer] started, HTTP transport listening on 0.0.0.0:' + this.port)
+
+    // P3: token 外显 —— 写入应用沙盒 files/mcp_token.txt（宿主经 hdc cat 可读）
+    const tokenFile = StorageManager.getBasePath() + '/mcp_token.txt'
+    const saved = await StorageManager.save('mcp_token.txt', this.authToken)
+    if (saved) {
+      console.info('[MCPServer] authToken persisted to ' + tokenFile)
+    } else {
+      console.error('[MCPServer] authToken persist FAILED to ' + tokenFile)
+    }
+    return true
   }
 
   async stop(): Promise<void> {
+    await HttpMcpTransport.stop()
     this.running = false
     this.connections.clear()
     const stopData: MCPConnectionChangeData = { status: 'stopped', port: this.port }
@@ -137,6 +151,11 @@ class MCPServerImpl {
   }
 
   getAvailableTools(): string[] {
+    return Array.from(this.toolHandlers.keys())
+  }
+
+  /** P3: McpHttpDelegate —— 供 HTTP 层拉取工具名列表 */
+  getToolNames(): string[] {
     return Array.from(this.toolHandlers.keys())
   }
 

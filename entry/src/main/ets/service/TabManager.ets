@@ -44,7 +44,9 @@ class TabManagerImpl {
   createAgentTab(agentId: string): TabInfo {
     const tabId = this.generateTabId()
     const tab = new TabInfo(tabId, agentId, false)
+    tab.title = 'Agent ' + agentId.substring(agentId.length - 6)
     this.tabs.set(tabId, tab)
+    // P3 修复：agent tab 立即可见于标签栏（BrowserShell 监听 TAB_STATUS_CHANGE 刷新）
     EventBus.emit(EventBusEvents.TAB_STATUS_CHANGE, tab.toJSON())
     return tab
   }

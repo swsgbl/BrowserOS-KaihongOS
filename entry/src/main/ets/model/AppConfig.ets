@@ -17,6 +17,9 @@ interface AppConfigJSON {
   isOnboardingCompleted: boolean
   isNeoMode: boolean
   telemetryEnabled: boolean
+  llmBaseUrl: string
+  llmApiKey: string
+  llmModel: string
 }
 
 export interface AppConfigUpdate {
@@ -29,6 +32,9 @@ export interface AppConfigUpdate {
   isOnboardingCompleted?: boolean
   isNeoMode?: boolean
   telemetryEnabled?: boolean
+  llmBaseUrl?: string
+  llmApiKey?: string
+  llmModel?: string
 }
 
 export class AppConfig {
@@ -48,6 +54,9 @@ export class AppConfig {
   isOnboardingCompleted: boolean = false
   isNeoMode: boolean = false
   telemetryEnabled: boolean = false
+  llmBaseUrl: string = ''
+  llmApiKey: string = ''
+  llmModel: string = ''
 
   toJSON(): AppConfigJSON {
     const result: AppConfigJSON = {
@@ -66,7 +75,10 @@ export class AppConfig {
       virtualListThreshold: this.virtualListThreshold,
       isOnboardingCompleted: this.isOnboardingCompleted,
       isNeoMode: this.isNeoMode,
-      telemetryEnabled: this.telemetryEnabled
+      telemetryEnabled: this.telemetryEnabled,
+      llmBaseUrl: this.llmBaseUrl,
+      llmApiKey: this.llmApiKey,
+      llmModel: this.llmModel
     }
     return result
   }
@@ -89,11 +101,28 @@ export class AppConfig {
     config.isOnboardingCompleted = json['isOnboardingCompleted'] as boolean
     config.isNeoMode = json['isNeoMode'] as boolean
     config.telemetryEnabled = json['telemetryEnabled'] as boolean
+    config.llmBaseUrl = AppConfig.sanitizeLlmBaseUrl((json['llmBaseUrl'] as string) || '')
+    config.llmApiKey = (json['llmApiKey'] as string) || ''
+    config.llmModel = (json['llmModel'] as string) || ''
     return config
   }
 
   static getDefault(): AppConfig {
     return new AppConfig()
+  }
+
+  /**
+   * bug-1 fix: 设备端 TextInput 受控回灌缺陷会把"旧值+新输入"无缝拼成
+   * "http://Ahttp://B" 形态的污染 URL。清洗策略: 按 http(s):// 边界切分,
+   * 取最后一段(用户最新输入意图), 保证落盘/生效的始终是单一 URL。
+   */
+  static sanitizeLlmBaseUrl(url: string): string {
+    let v = url.trim()
+    const parts = v.split(/(?=https?:\/\/)/)
+    if (parts.length > 1) {
+      v = parts[parts.length - 1].trim()
+    }
+    return v
   }
 
   validate(): string[] {
@@ -109,6 +138,12 @@ export class AppConfig {
     }
     if (this.recordingMaxSpaceMb < 100 || this.recordingMaxSpaceMb > 5000) {
       errors.push('recordingMaxSpaceMb must be between 100 and 5000')
+    }
+    if (this.llmBaseUrl && !this.llmBaseUrl.startsWith('http://') && !this.llmBaseUrl.startsWith('https://')) {
+      errors.push('llmBaseUrl must start with http:// or https://')
+    }
+    if (this.llmBaseUrl && this.llmBaseUrl.includes(' ')) {
+      errors.push('llmBaseUrl must not contain spaces')
     }
     return errors
   }

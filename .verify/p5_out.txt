@@ -1,0 +1,54 @@
+matched 26
+10-06 14:46:51.245 12641 12641 I A03d00/JSAPP: EntryAbility entry page: pages/BrowserShell (onboardingCompleted=true)
+10-06 14:46:51.364 12641 12641 I A03d00/JSAPP: BrowserShell aboutToAppear start
+10-06 14:46:51.364 12641 12641 I A03d00/JSAPP: BrowserShell tabs loaded: 0
+10-06 14:46:51.364 12641 12641 I A03d00/JSAPP: BrowserShell created tab: tab_1_1791269211364
+10-06 14:46:51.364 12641 12641 I A03d00/JSAPP: BrowserShell aboutToAppear done
+10-06 14:46:51.371 12641 12641 I A03d00/JSAPP: BrowserShell onPageShow: resync tab state
+10-06 14:46:51.371 12641 12641 I A03d00/JSAPP: BrowserShell sync: managerTabs=1 uiTabs=1 active=tab_1_1791269211364 dirty=false
+10-06 14:47:47.020 12641 12641 I A03d00/JSAPP: BrowserShell navigate to NeoDashboardPage
+10-06 14:51:07.692 12641 12641 I A03d00/JSAPP: BrowserShell tab event: managerTabs=2 uiTabs=1 dirty=true
+10-06 14:51:17.226 12641 12641 I A03d00/JSAPP: NeoDashboardPage back to BrowserShell
+10-06 14:51:17.227 12641 12641 I A03d00/JSAPP: BrowserShell onPageShow: resync tab state
+10-06 14:51:17.227 12641 12641 I A03d00/JSAPP: BrowserShell sync: managerTabs=2 uiTabs=2 active=tab_1_1791269211364 dirty=true
+10-06 14:55:22.976 15677 15677 I A03d00/JSAPP: EntryAbility entry page: pages/BrowserShell (onboardingCompleted=true)
+10-06 14:55:23.030 15677 15677 I A03d00/JSAPP: BrowserShell aboutToAppear start
+10-06 14:55:23.030 15677 15677 I A03d00/JSAPP: BrowserShell tabs loaded: 0
+10-06 14:55:23.030 15677 15677 I A03d00/JSAPP: BrowserShell created tab: tab_1_1791269723030
+10-06 14:55:23.030 15677 15677 I A03d00/JSAPP: BrowserShell aboutToAppear done
+10-06 14:55:23.034 15677 15677 I A03d00/JSAPP: BrowserShell onPageShow: resync tab state
+10-06 14:55:23.034 15677 15677 I A03d00/JSAPP: BrowserShell sync: managerTabs=1 uiTabs=1 active=tab_1_1791269723030 dirty=false
+10-06 14:56:44.561 15677 15677 I A03d00/JSAPP: BrowserShell navigate to NeoDashboardPage
+10-06 14:56:44.565 15677 15677 I A03d00/JSAPP: BrowserShell onPageHide: entering cover state
+10-06 14:56:54.146 15677 15677 I A03d00/JSAPP: BrowserShell tab event: managerTabs=2 uiTabs=1 dirty=true
+10-06 14:57:06.019 15677 15677 I A03d00/JSAPP: NeoDashboardPage back to BrowserShell
+10-06 14:57:06.020 15677 15677 I A03d00/JSAPP: BrowserShell onPageShow: resync tab state
+10-06 14:57:06.020 15677 15677 I A03d00/JSAPP: BrowserShell sync: managerTabs=2 uiTabs=2 active=tab_1_1791269723030 dirty=true
+10-06 14:57:06.023 15677 15677 I A03d00/JSAPP: BrowserShell rebuild tabs next frame: 2
+---SHORT---
+10-06 14:46:51.245 12641 12641 I A03d00/JSAPP: EntryAbility entry page: pages/BrowserShell (onboardingCompleted=true)
+10-06 14:46:51.364 12641 12641 I A03d00/JSAPP: BrowserShell aboutToAppear start
+10-06 14:46:51.364 12641 12641 I A03d00/JSAPP: BrowserShell tabs loaded: 0
+10-06 14:46:51.364 12641 12641 I A03d00/JSAPP: BrowserShell created tab: tab_1_1791269211364
+10-06 14:46:51.364 12641 12641 I A03d00/JSAPP: BrowserShell aboutToAppear done
+10-06 14:46:51.371 12641 12641 I A03d00/JSAPP: BrowserShell onPageShow: resync tab state
+10-06 14:46:51.371 12641 12641 I A03d00/JSAPP: BrowserShell sync: managerTabs=1 uiTabs=1 active=tab_1_1791269211364 dirty=false
+10-06 14:47:47.020 12641 12641 I A03d00/JSAPP: BrowserShell navigate to NeoDashboardPage
+10-06 14:51:07.692 12641 12641 I A03d00/JSAPP: BrowserShell tab event: managerTabs=2 uiTabs=1 dirty=true
+10-06 14:51:17.226 12641 12641 I A03d00/JSAPP: NeoDashboardPage back to BrowserShell
+10-06 14:51:17.227 12641 12641 I A03d00/JSAPP: BrowserShell onPageShow: resync tab state
+10-06 14:51:17.227 12641 12641 I A03d00/JSAPP: BrowserShell sync: managerTabs=2 uiTabs=2 active=tab_1_1791269211364 dirty=true
+10-06 14:55:22.976 15677 15677 I A03d00/JSAPP: EntryAbility entry page: pages/BrowserShell (onboardingCompleted=true)
+10-06 14:55:23.030 15677 15677 I A03d00/JSAPP: BrowserShell aboutToAppear start
+10-06 14:55:23.030 15677 15677 I A03d00/JSAPP: BrowserShell tabs loaded: 0
+10-06 14:55:23.030 15677 15677 I A03d00/JSAPP: BrowserShell created tab: tab_1_1791269723030
+10-06 14:55:23.030 15677 15677 I A03d00/JSAPP: BrowserShell aboutToAppear done
+10-06 14:55:23.034 15677 15677 I A03d00/JSAPP: BrowserShell onPageShow: resync tab state
+10-06 14:55:23.034 15677 15677 I A03d00/JSAPP: BrowserShell sync: managerTabs=1 uiTabs=1 active=tab_1_1791269723030 dirty=false
+10-06 14:56:44.561 15677 15677 I A03d00/JSAPP: BrowserShell navigate to NeoDashboardPage
+10-06 14:56:44.565 15677 15677 I A03d00/JSAPP: BrowserShell onPageHide: entering cover state
+10-06 14:56:54.146 15677 15677 I A03d00/JSAPP: BrowserShell tab event: managerTabs=2 uiTabs=1 dirty=true
+10-06 14:57:06.019 15677 15677 I A03d00/JSAPP: NeoDashboardPage back to BrowserShell
+10-06 14:57:06.020 15677 15677 I A03d00/JSAPP: BrowserShell onPageShow: resync tab state
+10-06 14:57:06.020 15677 15677 I A03d00/JSAPP: BrowserShell sync: managerTabs=2 uiTabs=2 active=tab_1_1791269723030 dirty=true
+10-06 14:57:06.023 15677 15677 I A03d00/JSAPP: BrowserShell rebuild tabs next frame: 2

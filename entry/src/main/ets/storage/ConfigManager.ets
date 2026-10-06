@@ -70,6 +70,15 @@ class ConfigManagerImpl {
     if (config.telemetryEnabled !== undefined) {
       this.config.telemetryEnabled = config.telemetryEnabled
     }
+    if (config.llmBaseUrl !== undefined) {
+      this.config.llmBaseUrl = AppConfig.sanitizeLlmBaseUrl(config.llmBaseUrl)
+    }
+    if (config.llmApiKey !== undefined) {
+      this.config.llmApiKey = config.llmApiKey.trim()
+    }
+    if (config.llmModel !== undefined) {
+      this.config.llmModel = config.llmModel.trim()
+    }
   }
 
   async update(config: AppConfigUpdate): Promise<boolean> {
@@ -91,6 +100,22 @@ class ConfigManagerImpl {
 
   isNeoMode(): boolean {
     return this.config.isNeoMode
+  }
+
+  getLlmBaseUrl(): string {
+    return this.config.llmBaseUrl
+  }
+
+  getLlmApiKey(): string {
+    return this.config.llmApiKey
+  }
+
+  getLlmModel(): string {
+    return this.config.llmModel
+  }
+
+  isLlmConfigured(): boolean {
+    return this.config.llmBaseUrl.length > 0
   }
 }
 

@@ -1,4 +1,5 @@
 import { SensitiveOperationType } from '../common/Types'
+import { EventBus, EventBusEvents } from '../infra/EventBus'
 
 @Component
 export struct ConfirmDialog {
@@ -16,6 +17,33 @@ export struct ConfirmDialog {
     this.targetUrl = targetUrl
     this.targetElement = targetElement
     this.isVisible = true
+  }
+
+  /** P5: 事件结构（SENSITIVE_OPERATION_DETECTED 载荷） */
+  static readonly EVENT_DETECTED: string = 'sensitive_operation_detected'
+
+  aboutToAppear(): void {
+    // P5: 自监听敏感操作事件（BrowserShell 挂载本组件即闭环 requestConfirmation）
+    EventBus.on(EventBusEvents.SENSITIVE_OPERATION_DETECTED, this.onDetected)
+    console.info('ConfirmDialog mounted, listening SENSITIVE_OPERATION_DETECTED')
+  }
+
+  aboutToDisappear(): void {
+    EventBus.off(EventBusEvents.SENSITIVE_OPERATION_DETECTED, this.onDetected)
+  }
+
+  private onDetected = (data: Object): void => {
+    try {
+      const detail = data as Record<string, Object>
+      const agentId = detail['agentId'] as string
+      const operationType = detail['operationType'] as SensitiveOperationType
+      const targetUrl = (detail['targetUrl'] as string) || ''
+      const targetElement = (detail['targetElement'] as string) || ''
+      console.info('ConfirmDialog onDetected agent=' + agentId + ' type=' + operationType + ' url=' + targetUrl)
+      this.show(agentId, operationType, targetUrl, targetElement)
+    } catch (e) {
+      console.error('ConfirmDialog onDetected error: ' + e)
+    }
   }
 
   hide(): void {

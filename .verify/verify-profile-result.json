@@ -1,0 +1,32 @@
+{
+  "verifiedPassed": true,
+  "message": "OK",
+  "content": {
+    "version-name": "2.0.0",
+    "version-code": 2,
+    "app-distribution-type": "os_integration",
+    "uuid": "6b3a8c1d-7e42-4f59-8a61-b2c9d0e4f7a3",
+    "validity": {
+      "not-before": 1594865258,
+      "not-after": 4102444800
+    },
+    "type": "release",
+    "bundle-info": {
+      "developer-id": "OpenHarmony",
+      "distribution-certificate": "-----BEGIN CERTIFICATE-----\nMIICMTCCAbigAwIBAgIIMkiDYTptotwwCgYIKoZIzj0EAwMwYzELMAkGA1UEBhMC\nQ04xFDASBgNVBAoTC09wZW5IYXJtb255MRkwFwYDVQQLExBPcGVuSGFybW9ueSBU\nZWFtMSMwIQYDVQQDExpPcGVuSGFybW9ueSBBcHBsaWNhdGlvbiBDQTAeFw0yNTEw\nMjEwMjM5MzFaFw0zNTEwMTkwMjM5MzFaMEoxFTATBgNVBAMMDGlkZV9kZW1vX2Fw\ncDENMAsGA1UECxMEVW5pdDEVMBMGA1UEChMMT3JnYW5pemF0aW9uMQswCQYDVQQG\nEwJDTjB2MBAGByqGSM49AgEGBSuBBAAiA2IABMj4lYzMvq7kfvzKuFCByN3SLYzJ\nPEYGA21kynTavP7h7VawQ+yCGS4IyvkGNwUNH35NwiSD5UiAa2AA5N8gltBy19W4\nl6SUTBc97i/kU5QIUeNJjE715s/iHtCMjty10aNSMFAwHQYDVR0OBBYEFA7u3y59\n2gOATn5T3iIlC90BKh+VMA4GA1UdDwEB/wQEAwIHgDAfBgNVHSMEGDAWgBTbhrci\nFtULoUu33SV7ufEFfaItRzAKBggqhkjOPQQDAwNnADBkAjAJUk9zKh3nDFYIrorc\nxeo6l64vlppPwZJgLBd04RqIR2nlOdPFAj5bxj/Xou5/k28CMFP+kDGnMqw42oZR\nkBSuhB3dZ2Avgya73Wdzn90d3TO2KdHRXEFqq8L83F+Hi2gRtA==\n-----END CERTIFICATE-----\n",
+      "bundle-name": "com.browseros.kaihong",
+      "apl": "system_core",
+      "app-feature": "hos_system_app"
+    },
+    "acls": {
+      "allowed-acls": []
+    },
+    "permissions": {
+      "restricted-permissions": []
+    },
+    "issuer": "pki_internal",
+    "app-privilege-capabilities": [
+      "AllowAbilityExcludeFromMissions"
+    ]
+  }
+}

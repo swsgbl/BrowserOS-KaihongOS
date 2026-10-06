@@ -27,7 +27,7 @@ export enum ToolType {
   SCREENSHOT = 'screenshot',
   SNAPSHOT = 'snapshot',
   SCROLL = 'scroll',
-  GET_TEXT = 'get_text',
+  GET_TEXT = 'getText',
   WAIT = 'wait',
   BACK = 'back',
   FORWARD = 'forward'

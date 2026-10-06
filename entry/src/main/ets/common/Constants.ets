@@ -22,7 +22,7 @@ export class Constants {
   }
   static readonly RECORDING_INTERVAL_MAP: Record<string, number> = {
     'low': 5000,
-    'medium': 2000,
+    'medium': 3000,
     'high': 1000
   }
   static readonly STORAGE_BASE_PATH: string = '/data/storage'

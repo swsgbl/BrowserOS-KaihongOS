@@ -1,0 +1,19 @@
+              [Button] ← 返回 @ None
+            [Text] BrowserOS neo @ None
+            [Text] AI代理驱动浏览器 - 深开鸿版本 @ None
+              [Text] LLM 设置 @ None
+              [Text]  (未配置) @ None
+              [Text] 创建新代理 @ None
+              [Button] 创建代理 @ None
+              [Text] 代理列表 @ None
+              [Text] 暂无代理 @ None
+                [Text] 20:59 @ None
+                [Text] 10月05日 @ None
+            [Text] 应用中心 @ None
+            [Text] Miracast投屏助手 @ None
+            [Text] 浏览器 @ None
+            [Text] vscode @ None
+            [Text] files @ None
+            [Text] 设置 @ None
+            [Text] 文件管理器 @ None
+            [Text] BrowserOS @ None

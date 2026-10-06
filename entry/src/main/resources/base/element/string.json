@@ -1,1 +1,28 @@
-{"string": [{"name": "app_name", "value": "BrowserOS"}, {"name": "module_desc", "value": "BrowserOS KaihongOS - AI Agent Browser"}, {"name": "EntryAbility_desc", "value": "BrowserOS KaihongOS Main Entry"}, {"name": "EntryAbility_label", "value": "BrowserOS"}, {"name": "internet_permission_reason", "value": "BrowserOS needs internet access to load web pages and connect AI agents"}, {"name": "file_access_permission_reason", "value": "BrowserOS needs file access to import Chrome login state and store session recordings"}, {"name": "storage_permission_reason", "value": "BrowserOS needs storage access to save agent configurations and session data locally"}]}
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "BrowserOS KaihongOS - AI Agent Browser"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "BrowserOS KaihongOS Main Entry"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "BrowserOS"
+    },
+    {
+      "name": "internet_permission_reason",
+      "value": "BrowserOS needs internet access to load web pages and connect AI agents"
+    },
+    {
+      "name": "file_access_permission_reason",
+      "value": "BrowserOS needs file access to import Chrome login state and store session recordings"
+    },
+    {
+      "name": "storage_permission_reason",
+      "value": "BrowserOS needs storage access to save agent configurations and session data locally"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+matched 8
+10-06 14:51:07.692 12641 12641 I A03d00/JSAPP: BrowserShell tab event: managerTabs=2 uiTabs=1 dirty=true
+10-06 14:56:54.146 15677 15677 I A03d00/JSAPP: BrowserShell tab event: managerTabs=2 uiTabs=1 dirty=true
+10-06 14:58:09.827 15677 15677 I A03d00/JSAPP: BrowserShell tab event: managerTabs=2 uiTabs=2 dirty=false
+10-06 14:58:09.827 15677 15677 I A03d00/JSAPP: BrowserShell tab event: managerTabs=2 uiTabs=2 dirty=false
+10-06 14:58:09.829 15677 15677 I A03d00/JSAPP: BrowserShell tab event: managerTabs=2 uiTabs=2 dirty=false
+10-06 14:58:09.831 15677 15677 I A03d00/JSAPP: BrowserShell tab event: managerTabs=2 uiTabs=2 dirty=false
+10-06 14:58:09.831 15677 15677 I A03d00/JSAPP: BrowserShell tab event: managerTabs=2 uiTabs=2 dirty=false
+10-06 14:58:09.832 15677 15677 I A03d00/JSAPP: BrowserShell tab event: managerTabs=2 uiTabs=2 dirty=false
+---SHORT---
+10-06 14:51:07.692 12641 12641 I A03d00/JSAPP: BrowserShell tab event: managerTabs=2 uiTabs=1 dirty=true
+10-06 14:56:54.146 15677 15677 I A03d00/JSAPP: BrowserShell tab event: managerTabs=2 uiTabs=1 dirty=true
+10-06 14:58:09.827 15677 15677 I A03d00/JSAPP: BrowserShell tab event: managerTabs=2 uiTabs=2 dirty=false
+10-06 14:58:09.827 15677 15677 I A03d00/JSAPP: BrowserShell tab event: managerTabs=2 uiTabs=2 dirty=false
+10-06 14:58:09.829 15677 15677 I A03d00/JSAPP: BrowserShell tab event: managerTabs=2 uiTabs=2 dirty=false
+10-06 14:58:09.831 15677 15677 I A03d00/JSAPP: BrowserShell tab event: managerTabs=2 uiTabs=2 dirty=false
+10-06 14:58:09.831 15677 15677 I A03d00/JSAPP: BrowserShell tab event: managerTabs=2 uiTabs=2 dirty=false
+10-06 14:58:09.832 15677 15677 I A03d00/JSAPP: BrowserShell tab event: managerTabs=2 uiTabs=2 dirty=false
