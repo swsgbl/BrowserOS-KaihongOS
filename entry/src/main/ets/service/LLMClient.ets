@@ -194,6 +194,9 @@ export interface LLMRequestOptions {
 const TAG = 'LLMClient'
 
 class LLMClientImpl {
+  /** p10c: 最近一次 chat 失败的可读错误（成功路径清空），供设置页「测试连接」展示 */
+  lastError: string = ''
+
   /** 把 baseUrl 归一化成完整 endpoint：{base}/v1/chat/completions（base 已含 /v1 时不重复加） */
   buildEndpoint(baseUrl: string): string {
     let base = baseUrl.trim()
@@ -211,6 +214,7 @@ class LLMClientImpl {
    * 返回 null 表示失败（错误已走 ErrorHandler）。
    */
   async chat(options: LLMRequestOptions): Promise<LLMResponse | null> {
+    this.lastError = ''
     const endpoint = this.buildEndpoint(options.baseUrl)
     const body = new LLMRequestBody()
     body.model = options.model
@@ -245,11 +249,13 @@ class LLMClientImpl {
         const snippet = resultText.length > 300 ? resultText.substring(0, 300) : resultText
         ErrorHandler.handle(new AppError(ErrorCodes.SYS_001,
           `LLM HTTP ${statusCode}: ${snippet}`))
+        this.lastError = `HTTP ${statusCode}: ${snippet.substring(0, 120)}`
         return null
       }
       const parsed = this.parseResponse(resultText)
       if (!parsed) {
         ErrorHandler.handle(new AppError(ErrorCodes.SYS_001, 'LLM response parse failed'))
+        this.lastError = '响应解析失败（非 OpenAI 兼容格式）'
         return null
       }
       return parsed
@@ -260,6 +266,7 @@ class LLMClientImpl {
       const detail = be.code !== undefined ? be.code + '/' + be.message : JSON.stringify(e)
       console.error(`[${TAG}] request exception: code=${be.code !== undefined ? be.code : 'N/A'} message=${detail}`)
       ErrorHandler.handle(new AppError(ErrorCodes.SYS_001, `LLM request failed: ${detail}`))
+      this.lastError = `请求异常: ${detail.substring(0, 120)}`
       return null
     } finally {
       httpRequest.destroy()

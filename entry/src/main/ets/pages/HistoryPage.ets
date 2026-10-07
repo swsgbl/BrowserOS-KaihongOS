@@ -6,6 +6,7 @@ import { HistoryManager, HistoryEntry } from '../service/HistoryManager'
 import { SessionManager } from '../service/SessionManager'
 import { SessionRecord } from '../model/SessionRecord'
 import { router } from '@kit.ArkUI'
+import { Palette } from '../common/Palette'
 
 interface GroupedEntry {
   key: string
@@ -16,6 +17,13 @@ interface GroupedEntry {
 @Entry
 @Component
 struct HistoryPage {
+  /** p10a: AppStorage('darkMode') 消费 —— EntryAbility 启动时与设置页开关写入 */
+  @StorageProp('darkMode') darkMode: boolean = false
+
+  private pal(): Palette {
+    return Palette.of(this.darkMode)
+  }
+
   @State keyword: string = ''
   @State entries: HistoryEntry[] = []
   @State grouped: GroupedEntry[] = []
@@ -80,7 +88,7 @@ struct HistoryPage {
       Row() {
         Text('←')
           .fontSize(18)
-          .fontColor('#5F6368')
+          .fontColor(this.pal().text2)
           .width(36)
           .textAlign(TextAlign.Center)
           .onClick(() => {
@@ -89,16 +97,16 @@ struct HistoryPage {
         Text('历史记录')
           .fontSize(17)
           .fontWeight(FontWeight.Bold)
-          .fontColor('#202124')
+          .fontColor(this.pal().text)
           .layoutWeight(1)
         Text(`${this.entries.length} 条`)
           .fontSize(11)
-          .fontColor('#5F6368')
+          .fontColor(this.pal().text2)
       }
       .width('100%')
       .height(48)
       .padding({ left: 8, right: 16 })
-      .backgroundColor('#F1F3F4')
+      .backgroundColor(this.pal().surfaceAlt)
 
       // 搜索框
       Row() {
@@ -106,7 +114,7 @@ struct HistoryPage {
           .fontSize(13)
           .width(28)
           .textAlign(TextAlign.Center)
-        TextInput({ text: this.keyword, placeholder: '搜索历史记录' })
+        TextInput({ text: this.keyword, placeholder: '搜索历史记录' }).fontColor(this.pal().text).placeholderColor(this.pal().text2)
           .layoutWeight(1)
           .height(34)
           .fontSize(13)
@@ -119,7 +127,7 @@ struct HistoryPage {
       .width('94%')
       .height(36)
       .borderRadius(18)
-      .backgroundColor('#F1F3F4')
+      .backgroundColor(this.pal().surfaceAlt)
       .margin({ top: 12 })
 
       // 列表
@@ -130,7 +138,7 @@ struct HistoryPage {
             Text('代理会话')
               .fontSize(12)
               .fontWeight(FontWeight.Medium)
-              .fontColor('#5F6368')
+              .fontColor(this.pal().text2)
               .width('100%')
               .margin({ top: 16, bottom: 6 })
 
@@ -151,11 +159,11 @@ struct HistoryPage {
                 Column() {
                   Text(`代理 ${s.agentId.substring(0, 14)}…`)
                     .fontSize(13)
-                    .fontColor('#202124')
+                    .fontColor(this.pal().text)
                     .maxLines(1)
                   Text(`${s.operationLogs.length} 步操作 · ${this.timeOf(s.startTime)}`)
                     .fontSize(10)
-                    .fontColor('#5F6368')
+                    .fontColor(this.pal().text2)
                     .margin({ top: 1 })
                 }
                 .alignItems(HorizontalAlign.Start)
@@ -167,7 +175,7 @@ struct HistoryPage {
                   .fontColor('#1A73E8')
                   .padding({ left: 10, right: 10, top: 5, bottom: 5 })
                   .borderRadius(12)
-                  .backgroundColor('#E8F0FE')
+                  .backgroundColor(this.pal().selected)
                   .onClick(() => {
                     console.info('HistoryPage replay: ' + s.sessionId)
                     router.pushUrl({
@@ -189,7 +197,7 @@ struct HistoryPage {
                 .fontColor('#DADCE0')
               Text('暂无历史记录')
                 .fontSize(13)
-                .fontColor('#5F6368')
+                .fontColor(this.pal().text2)
                 .margin({ top: 8 })
             }
             .width('100%')
@@ -201,7 +209,7 @@ struct HistoryPage {
                   Text(g.group)
                     .fontSize(12)
                     .fontWeight(FontWeight.Medium)
-                    .fontColor('#5F6368')
+                    .fontColor(this.pal().text2)
                     .width('100%')
                     .margin({ top: 14, bottom: 6 })
                 }
@@ -214,12 +222,12 @@ struct HistoryPage {
                   Column() {
                     Text(g.entry.title && g.entry.title.length > 0 ? g.entry.title : g.entry.url)
                       .fontSize(13)
-                      .fontColor('#202124')
+                      .fontColor(this.pal().text)
                       .maxLines(1)
                       .textOverflow({ overflow: TextOverflow.Ellipsis })
                     Text(g.entry.url)
                       .fontSize(10)
-                      .fontColor('#5F6368')
+                      .fontColor(this.pal().text2)
                       .maxLines(1)
                       .textOverflow({ overflow: TextOverflow.Ellipsis })
                       .margin({ top: 1 })
@@ -243,10 +251,10 @@ struct HistoryPage {
       .layoutWeight(1)
       .align(Alignment.Top)
       .scrollBar(BarState.Off)
-      .backgroundColor('#FFFFFF')
+      .backgroundColor(this.pal().surface)
     }
     .width('100%')
     .height('100%')
-    .backgroundColor('#FFFFFF')
+    .backgroundColor(this.pal().surface)
   }
 }

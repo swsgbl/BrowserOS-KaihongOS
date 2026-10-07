@@ -3,6 +3,7 @@
  */
 import { BookmarkManager } from '../service/BookmarkManager'
 import { router } from '@kit.ArkUI'
+import { Palette } from '../common/Palette'
 
 interface BookmarkRow {
   id: string
@@ -14,6 +15,13 @@ interface BookmarkRow {
 @Entry
 @Component
 struct BookmarksPage {
+  /** p10a: AppStorage('darkMode') 消费 —— EntryAbility 启动时与设置页开关写入 */
+  @StorageProp('darkMode') darkMode: boolean = false
+
+  private pal(): Palette {
+    return Palette.of(this.darkMode)
+  }
+
   @State items: BookmarkRow[] = []
   @State editingId: string = ''
   @State editTitle: string = ''
@@ -35,7 +43,7 @@ struct BookmarksPage {
       Row() {
         Text('←')
           .fontSize(18)
-          .fontColor('#5F6368')
+          .fontColor(this.pal().text2)
           .width(36)
           .textAlign(TextAlign.Center)
           .onClick(() => {
@@ -44,16 +52,16 @@ struct BookmarksPage {
         Text('书签')
           .fontSize(17)
           .fontWeight(FontWeight.Bold)
-          .fontColor('#202124')
+          .fontColor(this.pal().text)
           .layoutWeight(1)
         Text(`${this.items.length} 条`)
           .fontSize(11)
-          .fontColor('#5F6368')
+          .fontColor(this.pal().text2)
       }
       .width('100%')
       .height(48)
       .padding({ left: 8, right: 16 })
-      .backgroundColor('#F1F3F4')
+      .backgroundColor(this.pal().surfaceAlt)
 
       if (this.items.length === 0) {
         Column() {
@@ -62,7 +70,7 @@ struct BookmarksPage {
             .fontColor('#DADCE0')
           Text('暂无书签 —— 在页面点击地址栏旁星标添加')
             .fontSize(13)
-            .fontColor('#5F6368')
+            .fontColor(this.pal().text2)
             .margin({ top: 8 })
         }
         .width('100%')
@@ -79,11 +87,11 @@ struct BookmarksPage {
                     .width(26)
                     .textAlign(TextAlign.Center)
                   if (this.editingId === b.id) {
-                    TextInput({ text: this.editTitle })
+                    TextInput({ text: this.editTitle }).fontColor(this.pal().text).placeholderColor(this.pal().text2)
                       .layoutWeight(1)
                       .height(32)
                       .fontSize(13)
-                      .backgroundColor('#F1F3F4')
+                      .backgroundColor(this.pal().surfaceAlt)
                       .borderRadius(6)
                       .onChange((v: string) => { this.editTitle = v })
                     Text('保存')
@@ -99,12 +107,12 @@ struct BookmarksPage {
                     Column() {
                       Text(b.title.length > 0 ? b.title : b.url)
                         .fontSize(13)
-                        .fontColor('#202124')
+                        .fontColor(this.pal().text)
                         .maxLines(1)
                         .textOverflow({ overflow: TextOverflow.Ellipsis })
                       Text(b.url)
                         .fontSize(10)
-                        .fontColor('#5F6368')
+                        .fontColor(this.pal().text2)
                         .maxLines(1)
                         .textOverflow({ overflow: TextOverflow.Ellipsis })
                         .margin({ top: 1 })
@@ -145,6 +153,6 @@ struct BookmarksPage {
     }
     .width('100%')
     .height('100%')
-    .backgroundColor('#FFFFFF')
+    .backgroundColor(this.pal().surface)
   }
 }

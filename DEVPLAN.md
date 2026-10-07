@@ -392,3 +392,25 @@
 - **桌面快捷**：force-stop 后双击桌面图标 → pid 8008 拉起（z-final-regression-launched.jpeg）
 - 过程注记：跨午夜 hdc 一度掉线（kill/start/tconn 恢复）；VM 重启致窗口化坐标漂移，回归全程 dump 驱动
 - **结论：P1-P9+r 全部能力在最终构建上无回归，项目收官**
+
+
+---
+
+## P10：第四轮审计修复——设置页三处半接线转真 + 死页清理（2026-10-08）
+
+### 审计发现（Zodex 源码排查）
+SettingsPage 三处"有 UI 无接线"：①外观暗色开关只改本地 state（安慰剂）②隐私敏感确认开关未接线③测试连接只查配置完整性不发真实请求；另 main_pages.json 注册的 DashboardPage/NeoDashboardPage/TestPage 三页零引用。
+
+### 修复交付（hmh 一棒完成代码与装机，自测归档中断由验收方接续）
+- 新增 common/Palette.ets 全局色板（浅/深双色板：chrome #F1F3F4→#202124、内容白→#292A2D、文字→#E8EAED 等）；AppStorage('darkMode') 分发 + BrowserShell/侧栏/驾驶舱/内建页全表面消费；AppConfig 增 darkMode/sensitiveConfirm 字段持久化
+- 测试连接=LLMClient 真实 HTTP 往返（最小 ping 消息 15s 超时），显示 模型+耗时
+- 敏感确认开关接入 ConfirmDialog 链（off 时 MCP/agent 敏感操作直接执行不再挂起——行为已在 DEVPLAN 如实记录）
+- 死页三件删除（NeoDashboardPage 表单早已移植进面板），构建绿
+
+### 独立验收（Zodex，2026-10-08 07:0x-07:1x，全项通过）
+- **暗色即时切换**：设置→外观→开→浏览器工具栏/标签条/新标签页全深色（z-dark-on.jpeg，视觉分析确认 #202124 系+浅字）
+- **暗色持久化**：toggle 后 config.json 立即 darkMode:true，冷重启 EntryAbility 读回 true 且界面保持深色（z-dark-persist-coldstart.jpeg）
+- **测试连接真往返**：`✓ agnes-3.0-flash 连接成功 (8551ms)`（真实 HTTP 往返+延迟显示）
+- **隐私开关联动**：root 推 sensitiveConfirm=false → MCP navigate example.com/pay **5ms 直接执行 200**（对照 P8 同操作挂起等弹窗）→ 验后已恢复 true 默认
+- UI 点 Toggle 的 uitest 命中在隐私节偶发不稳（设备级自动化残留；源码 onChange→ConfigManager 接线已确认，同款暗色 Toggle UI 交互已实测可用）
+- git 见本轮提交

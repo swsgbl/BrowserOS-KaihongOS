@@ -17,6 +17,8 @@ interface AppConfigJSON {
   isOnboardingCompleted: boolean
   isNeoMode: boolean
   telemetryEnabled: boolean
+  darkMode: boolean
+  sensitiveConfirm: boolean
   llmBaseUrl: string
   llmApiKey: string
   llmModel: string
@@ -32,6 +34,8 @@ export interface AppConfigUpdate {
   isOnboardingCompleted?: boolean
   isNeoMode?: boolean
   telemetryEnabled?: boolean
+  darkMode?: boolean
+  sensitiveConfirm?: boolean
   llmBaseUrl?: string
   llmApiKey?: string
   llmModel?: string
@@ -54,6 +58,8 @@ export class AppConfig {
   isOnboardingCompleted: boolean = false
   isNeoMode: boolean = false
   telemetryEnabled: boolean = false
+  darkMode: boolean = false
+  sensitiveConfirm: boolean = true
   llmBaseUrl: string = ''
   llmApiKey: string = ''
   llmModel: string = ''
@@ -76,6 +82,8 @@ export class AppConfig {
       isOnboardingCompleted: this.isOnboardingCompleted,
       isNeoMode: this.isNeoMode,
       telemetryEnabled: this.telemetryEnabled,
+      darkMode: this.darkMode,
+      sensitiveConfirm: this.sensitiveConfirm,
       llmBaseUrl: this.llmBaseUrl,
       llmApiKey: this.llmApiKey,
       llmModel: this.llmModel
@@ -100,7 +108,10 @@ export class AppConfig {
     config.virtualListThreshold = json['virtualListThreshold'] as number
     config.isOnboardingCompleted = json['isOnboardingCompleted'] as boolean
     config.isNeoMode = json['isNeoMode'] as boolean
-    config.telemetryEnabled = json['telemetryEnabled'] as boolean
+    config.telemetryEnabled = json['telemetryEnabled'] === true
+    // p10: tolerant reads — old config.json without these fields keeps defaults
+    config.darkMode = json['darkMode'] === true
+    config.sensitiveConfirm = json['sensitiveConfirm'] !== false
     config.llmBaseUrl = AppConfig.sanitizeLlmBaseUrl((json['llmBaseUrl'] as string) || '')
     config.llmApiKey = (json['llmApiKey'] as string) || ''
     config.llmModel = (json['llmModel'] as string) || ''

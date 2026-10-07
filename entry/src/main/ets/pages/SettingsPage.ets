@@ -6,8 +6,10 @@
 import { ConfigManager } from '../storage/ConfigManager'
 import { AppConfigUpdate } from '../model/AppConfig'
 import { MCPServer } from '../service/MCPServer'
+import { LLMClient, LLMChatMessage } from '../service/LLMClient'
 import { pasteboard } from '@kit.BasicServicesKit'
 import { router } from '@kit.ArkUI'
+import { Palette } from '../common/Palette'
 
 interface NavItem {
   key: string
@@ -18,20 +20,27 @@ interface NavItem {
 @Entry
 @Component
 struct SettingsPage {
+  /** p10a: AppStorage('darkMode') 消费 —— EntryAbility 启动时与设置页开关写入 */
+  @StorageProp('darkMode') darkMode: boolean = false
+
+  private pal(): Palette {
+    return Palette.of(this.darkMode)
+  }
+
   @State navSelection: number = 0
   // LLM 表单
   @State llmBaseUrlInput: string = ''
   @State llmApiKeyInput: string = ''
   @State llmModelInput: string = ''
   @State llmSaveHint: string = ''
-  // 外观
-  @State darkMode: boolean = false
+  @State llmTesting: boolean = false
+  // 外观（darkMode 改由 @StorageProp 提供）
   // 隐私
   @State sensitiveConfirmOn: boolean = true
   // MCP
   @State mcpCopiedHint: string = ''
   // 版本
-  private readonly appVersion: string = '1.0.0 (P9)'
+  private readonly appVersion: string = '1.0.1 (P10)'
 
   private readonly navItems: NavItem[] = [
     { key: 'ai', icon: '🤖', label: 'AI 与 Agent' },
@@ -46,6 +55,7 @@ struct SettingsPage {
     this.llmBaseUrlInput = cfg.llmBaseUrl
     this.llmApiKeyInput = cfg.llmApiKey
     this.llmModelInput = cfg.llmModel
+    this.sensitiveConfirmOn = ConfigManager.isSensitiveConfirm()
     console.info('SettingsPage mounted')
   }
 
@@ -72,7 +82,7 @@ struct SettingsPage {
       Column() {
         Text('←')
           .fontSize(18)
-          .fontColor('#5F6368')
+          .fontColor(this.pal().text2)
           .width(36)
           .height(40)
           .textAlign(TextAlign.Center)
@@ -83,7 +93,7 @@ struct SettingsPage {
         Text('设置')
           .fontSize(20)
           .fontWeight(FontWeight.Bold)
-          .fontColor('#202124')
+          .fontColor(this.pal().text)
           .width('100%')
           .padding({ left: 20, top: 24, bottom: 16 })
 
@@ -109,7 +119,7 @@ struct SettingsPage {
       }
       .width(240)
       .height('100%')
-      .backgroundColor('#F1F3F4')
+      .backgroundColor(this.pal().surfaceAlt)
 
       // 右内容
       Scroll() {
@@ -133,7 +143,7 @@ struct SettingsPage {
       .layoutWeight(1)
       .align(Alignment.Top)
       .scrollBar(BarState.Off)
-      .backgroundColor('#FFFFFF')
+      .backgroundColor(this.pal().surface)
     }
     .width('100%')
     .height('100%')
@@ -145,11 +155,11 @@ struct SettingsPage {
       Text(title)
         .fontSize(15)
         .fontWeight(FontWeight.Medium)
-        .fontColor('#202124')
+        .fontColor(this.pal().text)
       if (subtitle.length > 0) {
         Text(subtitle)
           .fontSize(11)
-          .fontColor('#5F6368')
+          .fontColor(this.pal().text2)
           .margin({ top: 4 })
       }
     }
@@ -164,40 +174,40 @@ struct SettingsPage {
 
       Text('API 端点')
         .fontSize(12)
-        .fontColor('#5F6368')
+        .fontColor(this.pal().text2)
         .margin({ top: 16, bottom: 4 })
         .alignSelf(ItemAlign.Start)
-      TextInput({ text: this.llmBaseUrlInput, placeholder: 'https://api.example.com/v1' })
+      TextInput({ text: this.llmBaseUrlInput, placeholder: 'https://api.example.com/v1' }).fontColor(this.pal().text).placeholderColor(this.pal().text2)
         .width('100%')
         .height(38)
         .fontSize(13)
-        .backgroundColor('#F1F3F4')
+        .backgroundColor(this.pal().surfaceAlt)
         .borderRadius(8)
         .onChange((v: string) => { this.llmBaseUrlInput = v })
 
       Text('API Key')
         .fontSize(12)
-        .fontColor('#5F6368')
+        .fontColor(this.pal().text2)
         .margin({ top: 10, bottom: 4 })
         .alignSelf(ItemAlign.Start)
-      TextInput({ text: this.llmApiKeyInput, placeholder: 'sk-...（本地服务可留空）' })
+      TextInput({ text: this.llmApiKeyInput, placeholder: 'sk-...（本地服务可留空）' }).fontColor(this.pal().text).placeholderColor(this.pal().text2)
         .width('100%')
         .height(38)
         .fontSize(13)
-        .backgroundColor('#F1F3F4')
+        .backgroundColor(this.pal().surfaceAlt)
         .borderRadius(8)
         .onChange((v: string) => { this.llmApiKeyInput = v })
 
       Text('模型名')
         .fontSize(12)
-        .fontColor('#5F6368')
+        .fontColor(this.pal().text2)
         .margin({ top: 10, bottom: 4 })
         .alignSelf(ItemAlign.Start)
-      TextInput({ text: this.llmModelInput, placeholder: '如 agnes-3.0-flash' })
+      TextInput({ text: this.llmModelInput, placeholder: '如 agnes-3.0-flash' }).fontColor(this.pal().text).placeholderColor(this.pal().text2)
         .width('100%')
         .height(38)
         .fontSize(13)
-        .backgroundColor('#F1F3F4')
+        .backgroundColor(this.pal().surfaceAlt)
         .borderRadius(8)
         .onChange((v: string) => { this.llmModelInput = v })
 
@@ -216,21 +226,47 @@ struct SettingsPage {
             } as AppConfigUpdate)
             this.llmSaveHint = ok ? '已保存' : '保存失败：校验未通过'
           })
-        Button('测试连接')
+        Button(this.llmTesting ? '测试中…' : '测试连接')
           .fontSize(13)
           .height(34)
-          .backgroundColor('#FFFFFF')
+          .backgroundColor(this.pal().surface)
           .fontColor('#1A73E8')
           .borderRadius(17)
-          .border({ width: 1, color: '#DADCE0' })
+          .border({ width: 1, color: this.pal().border })
           .margin({ left: 10 })
-          .onClick(() => {
-            this.llmSaveHint = ConfigManager.isLlmConfigured() ? '连接配置有效' : '配置不完整'
+          .enabled(!this.llmTesting)
+          .onClick(async () => {
+            const base = this.llmBaseUrlInput.trim()
+            if (base.length === 0) {
+              this.llmSaveHint = '✗ 请先填写 API 端点'
+              return
+            }
+            this.llmTesting = true
+            this.llmSaveHint = '测试中…'
+            const t0 = Date.now()
+            const resp = await LLMClient.chat({
+              baseUrl: base,
+              apiKey: this.llmApiKeyInput.trim(),
+              model: this.llmModelInput.trim(),
+              messages: [LLMChatMessage.user('ping')],
+              tools: [],
+              timeoutMs: 15000
+            })
+            const ms = Date.now() - t0
+            this.llmTesting = false
+            if (resp) {
+              const m = this.llmModelInput.trim().length > 0 ? this.llmModelInput.trim() : 'default'
+              this.llmSaveHint = `✓ ${m} 连接成功 (${ms}ms)`
+              console.info('SettingsPage llm test OK: ' + m + ' ' + ms + 'ms')
+            } else {
+              this.llmSaveHint = '✗ ' + (LLMClient.lastError.length > 0 ? LLMClient.lastError : '未知错误')
+              console.warn('SettingsPage llm test FAIL: ' + LLMClient.lastError)
+            }
           })
         if (this.llmSaveHint.length > 0) {
           Text(this.llmSaveHint)
             .fontSize(12)
-            .fontColor(this.llmSaveHint === '已保存' || this.llmSaveHint === '连接配置有效' ? '#137333' : '#C5221F')
+            .fontColor(this.llmSaveHint.startsWith('✗') ? (this.darkMode ? '#F28B82' : '#C5221F') : (this.llmSaveHint === '已保存' || this.llmSaveHint.startsWith('✓') ? (this.darkMode ? '#81C995' : '#137333') : this.pal().text2))
             .margin({ left: 10 })
         }
       }
@@ -240,8 +276,8 @@ struct SettingsPage {
     .width('100%')
     .padding(20)
     .borderRadius(12)
-    .backgroundColor('#FFFFFF')
-    .border({ width: 1, color: '#E0E0E0' })
+    .backgroundColor(this.pal().surface)
+    .border({ width: 1, color: this.pal().border })
     .alignItems(HorizontalAlign.Start)
   }
 
@@ -254,10 +290,10 @@ struct SettingsPage {
         Column() {
           Text('深色模式')
             .fontSize(13)
-            .fontColor('#202124')
-          Text('工具栏与内建页使用深色 chrome（实验性）')
+            .fontColor(this.pal().text)
+          Text('工具栏、侧栏与内建页即时切换深色配色（Chrome 系色板）')
             .fontSize(11)
-            .fontColor('#5F6368')
+            .fontColor(this.pal().text2)
             .margin({ top: 2 })
         }
         .alignItems(HorizontalAlign.Start)
@@ -266,6 +302,8 @@ struct SettingsPage {
         Toggle({ type: ToggleType.Switch, isOn: this.darkMode })
           .onChange((on: boolean) => {
             this.darkMode = on
+            AppStorage.setOrCreate('darkMode', on)
+            ConfigManager.update({ darkMode: on } as AppConfigUpdate)
             console.info('SettingsPage darkMode=' + on)
           })
       }
@@ -275,8 +313,8 @@ struct SettingsPage {
     .width('100%')
     .padding(20)
     .borderRadius(12)
-    .backgroundColor('#FFFFFF')
-    .border({ width: 1, color: '#E0E0E0' })
+    .backgroundColor(this.pal().surface)
+    .border({ width: 1, color: this.pal().border })
     .alignItems(HorizontalAlign.Start)
   }
 
@@ -288,32 +326,33 @@ struct SettingsPage {
       Row() {
         Text('启用敏感操作确认')
           .fontSize(13)
-          .fontColor('#202124')
+          .fontColor(this.pal().text)
           .layoutWeight(1)
         Toggle({ type: ToggleType.Switch, isOn: this.sensitiveConfirmOn })
           .onChange((on: boolean) => {
             this.sensitiveConfirmOn = on
+            ConfigManager.update({ sensitiveConfirm: on } as AppConfigUpdate)
             console.info('SettingsPage sensitiveConfirm=' + on)
           })
       }
       .width('100%')
       .margin({ top: 16 })
 
-      Divider().color('#E0E0E0').margin({ top: 16, bottom: 12 })
+      Divider().color(this.pal().border).margin({ top: 16, bottom: 12 })
 
       Text('本地数据说明')
         .fontSize(13)
-        .fontColor('#202124')
+        .fontColor(this.pal().text)
       Text('书签 / 历史 / 会话录制 / 登录态均存储在应用沙盒内，不上传任何远端服务器。MCP 服务仅监听本机端口，凭 token 鉴权。')
         .fontSize(11)
-        .fontColor('#5F6368')
+        .fontColor(this.pal().text2)
         .margin({ top: 6 })
     }
     .width('100%')
     .padding(20)
     .borderRadius(12)
-    .backgroundColor('#FFFFFF')
-    .border({ width: 1, color: '#E0E0E0' })
+    .backgroundColor(this.pal().surface)
+    .border({ width: 1, color: this.pal().border })
     .alignItems(HorizontalAlign.Start)
   }
 
@@ -327,7 +366,7 @@ struct SettingsPage {
           .fontSize(11)
           .fontFamily('monospace')
           .fontColor('#1A73E8')
-          .backgroundColor('#F1F3F4')
+          .backgroundColor(this.pal().surfaceAlt)
           .borderRadius(6)
           .padding({ left: 8, right: 8, top: 6, bottom: 6 })
           .layoutWeight(1)
@@ -349,14 +388,14 @@ struct SettingsPage {
 
       Text(`服务状态：${MCPServer.isRunning() ? '运行中 · 端口 ' + MCPServer.getPort() : '未启动'}`)
         .fontSize(11)
-        .fontColor('#5F6368')
+        .fontColor(this.pal().text2)
         .margin({ top: 10 })
     }
     .width('100%')
     .padding(20)
     .borderRadius(12)
-    .backgroundColor('#FFFFFF')
-    .border({ width: 1, color: '#E0E0E0' })
+    .backgroundColor(this.pal().surface)
+    .border({ width: 1, color: this.pal().border })
     .alignItems(HorizontalAlign.Start)
   }
 
@@ -368,11 +407,11 @@ struct SettingsPage {
       Row() {
         Text('版本')
           .fontSize(13)
-          .fontColor('#202124')
+          .fontColor(this.pal().text)
           .layoutWeight(1)
         Text(this.appVersion)
           .fontSize(13)
-          .fontColor('#5F6368')
+          .fontColor(this.pal().text2)
       }
       .width('100%')
       .margin({ top: 16 })
@@ -380,11 +419,11 @@ struct SettingsPage {
       Row() {
         Text('构建')
           .fontSize(13)
-          .fontColor('#202124')
+          .fontColor(this.pal().text)
           .layoutWeight(1)
-        Text('P9 · ' + '2026-10-07')
+        Text('P10 · ' + '2026-10-08')
           .fontSize(13)
-          .fontColor('#5F6368')
+          .fontColor(this.pal().text2)
       }
       .width('100%')
       .margin({ top: 10 })
@@ -403,8 +442,8 @@ struct SettingsPage {
     .width('100%')
     .padding(20)
     .borderRadius(12)
-    .backgroundColor('#FFFFFF')
-    .border({ width: 1, color: '#E0E0E0' })
+    .backgroundColor(this.pal().surface)
+    .border({ width: 1, color: this.pal().border })
     .alignItems(HorizontalAlign.Start)
   }
 }

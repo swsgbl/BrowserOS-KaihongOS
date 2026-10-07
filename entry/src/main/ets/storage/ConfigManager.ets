@@ -70,6 +70,12 @@ class ConfigManagerImpl {
     if (config.telemetryEnabled !== undefined) {
       this.config.telemetryEnabled = config.telemetryEnabled
     }
+    if (config.darkMode !== undefined) {
+      this.config.darkMode = config.darkMode
+    }
+    if (config.sensitiveConfirm !== undefined) {
+      this.config.sensitiveConfirm = config.sensitiveConfirm
+    }
     if (config.llmBaseUrl !== undefined) {
       this.config.llmBaseUrl = AppConfig.sanitizeLlmBaseUrl(config.llmBaseUrl)
     }
@@ -116,6 +122,14 @@ class ConfigManagerImpl {
 
   isLlmConfigured(): boolean {
     return this.config.llmBaseUrl.length > 0
+  }
+
+  isDarkMode(): boolean {
+    return this.config.darkMode
+  }
+
+  isSensitiveConfirm(): boolean {
+    return this.config.sensitiveConfirm
   }
 }
 

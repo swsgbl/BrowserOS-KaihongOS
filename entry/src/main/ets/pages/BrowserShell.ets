@@ -18,6 +18,7 @@ import { LoginStateManager } from '../service/LoginStateManager'
 import { ThreeDotMenu, OmniboxSuggestions, BookmarkBubble, SuggestItem } from '../components/ChromeWidgets'
 import { AgentSidePanel } from '../components/AgentSidePanel'
 import { common } from '@kit.AbilityKit'
+import { Palette } from '../common/Palette'
 
 interface PageLoadErrorData {
   tabId: string
@@ -32,6 +33,13 @@ interface PageLoadCompleteData {
 @Entry
 @Component
 struct BrowserShell {
+  /** p10a: AppStorage('darkMode') 消费 —— EntryAbility 启动时与设置页开关写入 */
+  @StorageProp('darkMode') darkMode: boolean = false
+
+  private pal(): Palette {
+    return Palette.of(this.darkMode)
+  }
+
   @State currentUrl: string = ''
   @State urlInput: string = ''
   @State tabs: TabInfo[] = []
@@ -218,7 +226,7 @@ struct BrowserShell {
       }
       .width('100%')
       .height('100%')
-      .backgroundColor('#FFFFFF')
+      .backgroundColor(this.pal().surface)
 
       // P9-A: chrome 覆盖层（挂 build 根 Stack，置顶不参与布局流）
       if (this.showSuggestions) {
@@ -264,7 +272,7 @@ struct BrowserShell {
         }
         .width(360)
         .height('100%')
-        .backgroundColor('#FFFFFF')
+        .backgroundColor(this.pal().surface)
         .shadow({ radius: 12, color: '#33000000', offsetX: -4, offsetY: 0 })
       }
       if (this.showMenu) {
@@ -288,7 +296,7 @@ struct BrowserShell {
       Button({ type: ButtonType.Normal }) {
         Text('←')
           .fontSize(18)
-          .fontColor('#666666')
+          .fontColor(this.pal().text2)
       }
       .width(36)
       .height(36)
@@ -306,7 +314,7 @@ struct BrowserShell {
       Button({ type: ButtonType.Normal }) {
         Text('→')
           .fontSize(18)
-          .fontColor('#666666')
+          .fontColor(this.pal().text2)
       }
       .width(36)
       .height(36)
@@ -324,7 +332,7 @@ struct BrowserShell {
       Button({ type: ButtonType.Normal }) {
         Text('↻')
           .fontSize(18)
-          .fontColor('#666666')
+          .fontColor(this.pal().text2)
       }
       .width(36)
       .height(36)
@@ -347,7 +355,7 @@ struct BrowserShell {
           .fontColor(this.currentUrl.startsWith('https://') ? '#137333' : '#5F6368')
           .width(22)
           .textAlign(TextAlign.Center)
-        TextInput({ text: this.urlInput, placeholder: '输入URL或搜索关键词' })
+        TextInput({ text: this.urlInput, placeholder: '输入URL或搜索关键词' }).fontColor(this.pal().text).placeholderColor(this.pal().text2)
           .layoutWeight(1)
           .height(32)
           .fontSize(13)
@@ -377,8 +385,8 @@ struct BrowserShell {
       .height(34)
       .padding({ left: 8, right: 8 })
       .borderRadius(17)
-      .backgroundColor('#FFFFFF')
-      .border({ width: 1, color: '#DADCE0' })
+      .backgroundColor(this.pal().surface)
+      .border({ width: 1, color: this.pal().border })
 
       if (this.isLoading) {
         Text(`${this.loadProgress}%`)
@@ -402,7 +410,7 @@ struct BrowserShell {
       Button({ type: ButtonType.Normal }) {
         Text('🕘')
           .fontSize(16)
-          .fontColor('#5F6368')
+          .fontColor(this.pal().text2)
       }
       .width(36)
       .height(36)
@@ -413,7 +421,7 @@ struct BrowserShell {
       Button({ type: ButtonType.Normal }) {
         Text('⌂')
           .fontSize(18)
-          .fontColor('#5F6368')
+          .fontColor(this.pal().text2)
       }
       .width(36)
       .height(36)
@@ -439,7 +447,7 @@ struct BrowserShell {
         Text('⋮')
           .fontSize(20)
           .fontWeight(FontWeight.Bold)
-          .fontColor('#5F6368')
+          .fontColor(this.pal().text2)
       }
       .width(36)
       .height(36)
@@ -451,7 +459,7 @@ struct BrowserShell {
     .width('100%')
     .height(48)
     .padding({ left: 8, right: 8 })
-    .backgroundColor('#F1F3F4')
+    .backgroundColor(this.pal().surfaceAlt)
   }
 
   /** P5: 书签切换（BookmarkManager 接线） */
@@ -523,7 +531,7 @@ struct BrowserShell {
         .fontSize(12)
         .fontColor('#8B949E')
         .margin({ top: 8 })
-      TextInput({ text: this.importPath, placeholder: 'files/cookies.json' })
+      TextInput({ text: this.importPath, placeholder: 'files/cookies.json' }).fontColor(this.pal().text).placeholderColor(this.pal().text2)
         .width('100%')
         .height(40)
         .margin({ top: 12 })
@@ -618,7 +626,7 @@ struct BrowserShell {
           Button({ type: ButtonType.Normal }) {
             Text('×')
               .fontSize(14)
-              .fontColor('#999999')
+              .fontColor(this.pal().text2)
           }
           .width(20)
           .height(20)
@@ -643,7 +651,7 @@ struct BrowserShell {
         .height(32)
         .layoutWeight(1)
         .borderRadius({ topLeft: 8, topRight: 8 })
-        .backgroundColor(tab.tabId === this.activeTabId ? '#FFFFFF' : '#DEE1E6')
+        .backgroundColor('#292A2D')
         .onClick(() => {
           // P5: 点击 tab —— switchTab + emit 驱动 onTabStatusChange 全同步
           TabManager.switchTab(tab.tabId)
@@ -659,7 +667,7 @@ struct BrowserShell {
       Button({ type: ButtonType.Normal }) {
         Text('+')
           .fontSize(16)
-          .fontColor('#666666')
+          .fontColor(this.pal().text2)
       }
       .width(32)
       .height(32)
@@ -675,7 +683,7 @@ struct BrowserShell {
     .width('100%')
     .height(36)
     .padding({ left: 4, right: 4 })
-    .backgroundColor('#F1F3F4')
+    .backgroundColor(this.pal().surfaceAlt)
   }
 
   @Builder
@@ -943,7 +951,7 @@ struct BrowserShell {
     }
     .width('100%')
     .layoutWeight(1)
-    .backgroundColor('#FFFFFF')
+    .backgroundColor(this.pal().surface)
   }
 
   private getOrCreateController(tabId: string): webview.WebviewController {

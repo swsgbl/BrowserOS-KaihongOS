@@ -10,6 +10,7 @@ import { MCPServer } from '../service/MCPServer'
 import { SessionManager } from '../service/SessionManager'
 import { SessionRecord } from '../model/SessionRecord'
 import { pasteboard } from '@kit.BasicServicesKit'
+import { Palette } from '../common/Palette'
 /**
  * P8: 官网 UI 一比一复刻 —— NeoDashboardPanel 全面重排。
  * C1 新标签页 Cockpit：3 列磁贴网格（首块 2x 宽 hero 渐变卡）+ 深色页脚最近会话卡 + 空态。
@@ -33,6 +34,13 @@ function monoText(): void {
 
 @Component
 export struct NeoDashboardPanel {
+  /** p10a: AppStorage('darkMode') 消费 —— EntryAbility 启动时与设置页开关写入 */
+  @StorageProp('darkMode') darkMode: boolean = false
+
+  private pal(): Palette {
+    return Palette.of(this.darkMode)
+  }
+
   @State agentStatuses: AgentStatusInfo[] = []
   @State connectedTools: string[] = []
   @State sessions: SessionRecord[] = []
@@ -156,7 +164,7 @@ export struct NeoDashboardPanel {
     }
     .width('100%')
     .height('100%')
-    .backgroundColor('#F0F0F0')
+    .backgroundColor(this.pal().surfaceAlt)
   }
 
   // ---------- C1: Cockpit 新标签页 ----------
@@ -168,7 +176,7 @@ export struct NeoDashboardPanel {
         Text('BrowserOS neo')
           .fontSize(16)
           .fontWeight(FontWeight.Bold)
-          .fontColor('#1A1A1A')
+          .fontColor(this.pal().text)
           .layoutWeight(1)
 
         Button('MCP 安装板')
@@ -185,8 +193,8 @@ export struct NeoDashboardPanel {
         Button('关闭 ×')
           .fontSize(12)
           .height(30)
-          .backgroundColor('#E0E0E0')
-          .fontColor('#333333')
+          .backgroundColor(this.pal().surfaceInput)
+          .fontColor(this.pal().text)
           .borderRadius(15)
           .margin({ left: 8 })
           .onClick(() => {
@@ -258,7 +266,7 @@ export struct NeoDashboardPanel {
         Button('查看代理')
           .fontSize(11)
           .height(28)
-          .backgroundColor('#FFFFFF')
+          .backgroundColor(this.pal().surface)
           .fontColor('#2E6FE8')
           .borderRadius(14)
           .onClick(() => {
@@ -294,16 +302,16 @@ export struct NeoDashboardPanel {
       Text('暂无代理')
         .fontSize(13)
         .fontWeight(FontWeight.Medium)
-        .fontColor('#666666')
+        .fontColor(this.pal().text2)
       Text('在下方创建第一个 AI 代理')
         .fontSize(10)
-        .fontColor('#999999')
+        .fontColor(this.pal().text2)
         .margin({ top: 4 })
     }
     .width('100%')
     .height(150)
     .borderRadius(14)
-    .backgroundColor('#E4E4E4')
+    .backgroundColor(this.pal().surfaceInput)
     .justifyContent(FlexAlign.Center)
     .alignItems(HorizontalAlign.Center)
   }
@@ -318,7 +326,7 @@ export struct NeoDashboardPanel {
       }
       .width('100%')
       .layoutWeight(1)
-      .backgroundColor('#FFFFFF')
+      .backgroundColor(this.pal().surface)
       .borderRadius({ topLeft: 12, topRight: 12 })
 
       // 底部信息条
@@ -330,7 +338,7 @@ export struct NeoDashboardPanel {
           Text(status.agentId.length > 12 ? status.agentId.substring(0, 12) : status.agentId)
             .fontSize(11)
             .fontWeight(FontWeight.Medium)
-            .fontColor('#1A1A1A')
+            .fontColor(this.pal().text)
             .layoutWeight(1)
             .maxLines(1)
             .textOverflow({ overflow: TextOverflow.Ellipsis })
@@ -347,7 +355,7 @@ export struct NeoDashboardPanel {
 
         Text(this.getAgentUrl(status.agentId) || 'about:blank')
           .fontSize(9)
-          .fontColor('#888888')
+          .fontColor(this.pal().text2)
           .maxLines(1)
           .textOverflow({ overflow: TextOverflow.Ellipsis })
           .margin({ top: 2 })
@@ -365,7 +373,7 @@ export struct NeoDashboardPanel {
         }
         .width('100%')
         .height(3)
-        .backgroundColor('#DDDDDD')
+        .backgroundColor(this.pal().surfaceInput)
         .borderRadius(2)
         .margin({ top: 5, bottom: 5 })
 
@@ -390,7 +398,7 @@ export struct NeoDashboardPanel {
     .width('100%')
     .height(150)
     .borderRadius(12)
-    .backgroundColor('#E8E8E8')
+    .backgroundColor(this.pal().surfaceInput)
     .clip(true)
     .onClick(() => {
       // 点击磁贴切到该 agent 的 tab
@@ -468,42 +476,42 @@ export struct NeoDashboardPanel {
       Text('LLM 接入（OpenAI 兼容）')
         .fontSize(14)
         .fontWeight(FontWeight.Bold)
-        .fontColor('#1A1A1A')
+        .fontColor(this.pal().text)
         .alignSelf(ItemAlign.Start)
 
       Text('API 端点')
         .fontSize(11)
-        .fontColor('#666666')
+        .fontColor(this.pal().text2)
         .margin({ top: 10, bottom: 4 })
         .alignSelf(ItemAlign.Start)
-      TextInput({ text: this.llmBaseUrlInput, placeholder: 'https://api.example.com/v1' })
+      TextInput({ text: this.llmBaseUrlInput, placeholder: 'https://api.example.com/v1' }).fontColor(this.pal().text).placeholderColor(this.pal().text2)
         .width('100%')
         .height(36)
-        .backgroundColor('#F5F5F5')
+        .backgroundColor(this.pal().surfaceInput)
         .borderRadius(8)
         .onChange((value: string) => { this.llmBaseUrlInput = value })
 
       Text('API Key')
         .fontSize(11)
-        .fontColor('#666666')
+        .fontColor(this.pal().text2)
         .margin({ top: 8, bottom: 4 })
         .alignSelf(ItemAlign.Start)
-      TextInput({ text: this.llmApiKeyInput, placeholder: 'sk-...（本地服务可留空）' })
+      TextInput({ text: this.llmApiKeyInput, placeholder: 'sk-...（本地服务可留空）' }).fontColor(this.pal().text).placeholderColor(this.pal().text2)
         .width('100%')
         .height(36)
-        .backgroundColor('#F5F5F5')
+        .backgroundColor(this.pal().surfaceInput)
         .borderRadius(8)
         .onChange((value: string) => { this.llmApiKeyInput = value })
 
       Text('模型名')
         .fontSize(11)
-        .fontColor('#666666')
+        .fontColor(this.pal().text2)
         .margin({ top: 8, bottom: 4 })
         .alignSelf(ItemAlign.Start)
-      TextInput({ text: this.llmModelInput, placeholder: '如 agnes-3.0-flash' })
+      TextInput({ text: this.llmModelInput, placeholder: '如 agnes-3.0-flash' }).fontColor(this.pal().text).placeholderColor(this.pal().text2)
         .width('100%')
         .height(36)
-        .backgroundColor('#F5F5F5')
+        .backgroundColor(this.pal().surfaceInput)
         .borderRadius(8)
         .onChange((value: string) => { this.llmModelInput = value })
 
@@ -534,48 +542,48 @@ export struct NeoDashboardPanel {
       .margin({ top: 12 })
 
       Divider()
-        .color('#EEEEEE')
+        .color(this.pal().border)
         .margin({ top: 14, bottom: 12 })
 
       Text('创建并启动代理')
         .fontSize(14)
         .fontWeight(FontWeight.Bold)
-        .fontColor('#1A1A1A')
+        .fontColor(this.pal().text)
         .alignSelf(ItemAlign.Start)
 
       Text('代理名称')
         .fontSize(11)
-        .fontColor('#666666')
+        .fontColor(this.pal().text2)
         .margin({ top: 10, bottom: 4 })
         .alignSelf(ItemAlign.Start)
-      TextInput({ text: this.newAgentName, placeholder: '如 p8c-e2e' })
+      TextInput({ text: this.newAgentName, placeholder: '如 p8c-e2e' }).fontColor(this.pal().text).placeholderColor(this.pal().text2)
         .width('100%')
         .height(36)
-        .backgroundColor('#F5F5F5')
+        .backgroundColor(this.pal().surfaceInput)
         .borderRadius(8)
         .onChange((value: string) => { this.newAgentName = value })
 
       Text('目标 URL')
         .fontSize(11)
-        .fontColor('#666666')
+        .fontColor(this.pal().text2)
         .margin({ top: 8, bottom: 4 })
         .alignSelf(ItemAlign.Start)
-      TextInput({ text: this.newAgentUrl, placeholder: 'https://example.com' })
+      TextInput({ text: this.newAgentUrl, placeholder: 'https://example.com' }).fontColor(this.pal().text).placeholderColor(this.pal().text2)
         .width('100%')
         .height(36)
-        .backgroundColor('#F5F5F5')
+        .backgroundColor(this.pal().surfaceInput)
         .borderRadius(8)
         .onChange((value: string) => { this.newAgentUrl = value })
 
       Text('任务描述')
         .fontSize(11)
-        .fontColor('#666666')
+        .fontColor(this.pal().text2)
         .margin({ top: 8, bottom: 4 })
         .alignSelf(ItemAlign.Start)
-      TextInput({ text: this.newAgentTask, placeholder: '如 open the page and tell me the page title' })
+      TextInput({ text: this.newAgentTask, placeholder: '如 open the page and tell me the page title' }).fontColor(this.pal().text).placeholderColor(this.pal().text2)
         .width('100%')
         .height(36)
-        .backgroundColor('#F5F5F5')
+        .backgroundColor(this.pal().surfaceInput)
         .borderRadius(8)
         .onChange((value: string) => { this.newAgentTask = value })
 
@@ -616,7 +624,7 @@ export struct NeoDashboardPanel {
     .width('100%')
     .padding(14)
     .borderRadius(14)
-    .backgroundColor('#FFFFFF')
+    .backgroundColor(this.pal().surface)
     .margin({ top: 12 })
     .alignItems(HorizontalAlign.Start)
   }
@@ -634,8 +642,8 @@ export struct NeoDashboardPanel {
           Button('← 返回驾驶舱')
             .fontSize(12)
             .height(30)
-            .backgroundColor('#E0E0E0')
-            .fontColor('#333333')
+            .backgroundColor(this.pal().surfaceInput)
+            .fontColor(this.pal().text)
             .borderRadius(15)
             .onClick(() => {
               this.showMcpBoard = false
@@ -722,7 +730,7 @@ export struct NeoDashboardPanel {
                       Text(h.name)
                         .fontSize(13)
                         .fontWeight(FontWeight.Medium)
-                        .fontColor('#1A1A1A')
+                        .fontColor(this.pal().text)
                         .margin({ left: 10 })
                         .layoutWeight(1)
                     }
@@ -730,7 +738,7 @@ export struct NeoDashboardPanel {
 
                     Text(h.desc)
                       .fontSize(10)
-                      .fontColor('#777777')
+                      .fontColor(this.pal().text2)
                       .maxLines(1)
                       .textOverflow({ overflow: TextOverflow.Ellipsis })
                       .margin({ top: 6 })
@@ -753,7 +761,7 @@ export struct NeoDashboardPanel {
                   .width('100%')
                   .padding(12)
                   .borderRadius(12)
-                  .backgroundColor('#FFFFFF')
+                  .backgroundColor(this.pal().surface)
                   .alignItems(HorizontalAlign.Start)
                 }
               }, (h: HarnessDesc) => h.name)

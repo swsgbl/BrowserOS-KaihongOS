@@ -6,6 +6,8 @@
  * 设计语言：#F1F3F4 chrome / #FFFFFF 卡 / #5F6368 图标 / #1A73E8 强调 / 分隔 #E0E0E0
  */
 
+import { Palette } from '../common/Palette'
+
 export interface SuggestItem {
   kind: string // 'history' | 'bookmark'
   title: string
@@ -23,6 +25,11 @@ interface MenuEntry {
 export struct ThreeDotMenu {
   onAction: (action: string) => void = (action: string) => {}
   onClose: () => void = () => {}
+  @StorageProp('darkMode') darkMode: boolean = false
+
+  private pal(): Palette {
+    return Palette.of(this.darkMode)
+  }
 
   private readonly group1: MenuEntry[] = [
     { icon: '＋', label: '新建标签页', action: 'new_tab' },
@@ -52,11 +59,11 @@ export struct ThreeDotMenu {
       // 菜单卡（右上下锚定，宽 240）
       Column() {
         this.MenuGroup(this.group1)
-        Divider().color('#E0E0E0').margin({ top: 4, bottom: 4 })
+        Divider().color(this.pal().border).margin({ top: 4, bottom: 4 })
         this.MenuGroup(this.group2)
-        Divider().color('#E0E0E0').margin({ top: 4, bottom: 4 })
+        Divider().color(this.pal().border).margin({ top: 4, bottom: 4 })
         this.MenuGroup(this.group3)
-        Divider().color('#E0E0E0').margin({ top: 4, bottom: 4 })
+        Divider().color(this.pal().border).margin({ top: 4, bottom: 4 })
         Row() {
           Text('⏻')
             .fontSize(16)
@@ -79,7 +86,7 @@ export struct ThreeDotMenu {
       .constraintSize({ maxHeight: 420 })
       .padding(6)
       .borderRadius(12)
-      .backgroundColor('#FFFFFF')
+      .backgroundColor(this.pal().surface)
       .shadow({ radius: 16, color: '#33000000', offsetX: 0, offsetY: 4 })
       .margin({ top: 44, right: 8 })
     }
@@ -93,12 +100,12 @@ export struct ThreeDotMenu {
       Row() {
         Text(entry.icon)
           .fontSize(16)
-          .fontColor('#5F6368')
+          .fontColor(this.pal().text2)
           .width(28)
           .textAlign(TextAlign.Center)
         Text(entry.label)
           .fontSize(14)
-          .fontColor('#202124')
+          .fontColor(this.pal().text)
           .margin({ left: 4 })
       }
       .width('100%')
@@ -115,6 +122,12 @@ export struct ThreeDotMenu {
 /** omnibox 聚焦建议下拉（历史+书签匹配，图标+标题+URL） */
 @Component
 export struct OmniboxSuggestions {
+  @StorageProp('darkMode') darkMode: boolean = false
+
+  private pal(): Palette {
+    return Palette.of(this.darkMode)
+  }
+
   items: SuggestItem[] = []
   onPick: (url: string) => void = (url: string) => {}
   onClose: () => void = () => {}
@@ -141,12 +154,12 @@ export struct OmniboxSuggestions {
               Column() {
                 Text(item.title.length > 0 ? item.title : item.url)
                   .fontSize(13)
-                  .fontColor('#202124')
+                  .fontColor(this.pal().text)
                   .maxLines(1)
                   .textOverflow({ overflow: TextOverflow.Ellipsis })
                 Text(item.url)
                   .fontSize(10)
-                  .fontColor('#5F6368')
+                  .fontColor(this.pal().text2)
                   .maxLines(1)
                   .textOverflow({ overflow: TextOverflow.Ellipsis })
                   .margin({ top: 1 })
@@ -158,7 +171,7 @@ export struct OmniboxSuggestions {
             .height(44)
             .padding({ left: 12, right: 12 })
             .borderRadius(6)
-            .backgroundColor(index === 0 ? '#F0F6FF' : '#FFFFFF')
+            .backgroundColor(index === 0 ? this.pal().selected : this.pal().surface)
             .onClick(() => {
               this.onPick(item.url)
             })
@@ -168,7 +181,7 @@ export struct OmniboxSuggestions {
         .constraintSize({ maxHeight: 360 })
         .padding(6)
         .borderRadius(12)
-        .backgroundColor('#FFFFFF')
+        .backgroundColor(this.pal().surface)
         .shadow({ radius: 16, color: '#33000000', offsetX: 0, offsetY: 4 })
         .margin({ top: 50, left: 128 })
       }
@@ -181,6 +194,12 @@ export struct OmniboxSuggestions {
 /** 星标书签气泡：名称可编辑 + 完成/删除 */
 @Component
 export struct BookmarkBubble {
+  @StorageProp('darkMode') darkMode: boolean = false
+
+  private pal(): Palette {
+    return Palette.of(this.darkMode)
+  }
+
   title: string = ''
   url: string = ''
   editingExisting: boolean = false
@@ -203,12 +222,12 @@ export struct BookmarkBubble {
         Text(this.editingExisting ? '修改书签' : '已添加书签')
           .fontSize(14)
           .fontWeight(FontWeight.Medium)
-          .fontColor('#202124')
+          .fontColor(this.pal().text)
           .alignSelf(ItemAlign.Start)
 
         Text(this.url)
           .fontSize(10)
-          .fontColor('#5F6368')
+          .fontColor(this.pal().text2)
           .maxLines(1)
           .textOverflow({ overflow: TextOverflow.Ellipsis })
           .margin({ top: 4 })
@@ -216,14 +235,14 @@ export struct BookmarkBubble {
 
         Text('名称')
           .fontSize(11)
-          .fontColor('#5F6368')
+          .fontColor(this.pal().text2)
           .margin({ top: 10, bottom: 4 })
           .alignSelf(ItemAlign.Start)
         TextInput({ text: this.title })
           .width('100%')
           .height(36)
           .fontSize(13)
-          .backgroundColor('#F1F3F4')
+          .backgroundColor(this.pal().surfaceAlt)
           .borderRadius(8)
           .onChange((value: string) => {
             this.onTitleChange(value)
@@ -234,10 +253,10 @@ export struct BookmarkBubble {
             Button('删除')
               .fontSize(13)
               .height(34)
-              .backgroundColor('#FFFFFF')
+              .backgroundColor(this.pal().surface)
               .fontColor('#C5221F')
               .borderRadius(17)
-              .border({ width: 1, color: '#DADCE0' })
+              .border({ width: 1, color: this.pal().border })
               .onClick(() => {
                 this.onRemove()
               })
@@ -259,7 +278,7 @@ export struct BookmarkBubble {
       .width(280)
       .padding(14)
       .borderRadius(12)
-      .backgroundColor('#FFFFFF')
+      .backgroundColor(this.pal().surface)
       .shadow({ radius: 16, color: '#33000000', offsetX: 0, offsetY: 4 })
       .margin({ top: 44, right: 52 })
     }

@@ -7,6 +7,7 @@ import { AgentEngine } from '../service/AgentEngine'
 import { ConfigManager } from '../storage/ConfigManager'
 import { RunStrategy } from '../common/Types'
 import { AgentStatusInfo } from '../model/AgentStatus'
+import { Palette } from '../common/Palette'
 
 interface ChatMessage {
   role: string // 'user' | 'agent' | 'hint'
@@ -16,6 +17,13 @@ interface ChatMessage {
 
 @Component
 export struct AgentSidePanel {
+  /** p10a: AppStorage('darkMode') 消费 —— EntryAbility 启动时与设置页开关写入 */
+  @StorageProp('darkMode') darkMode: boolean = false
+
+  private pal(): Palette {
+    return Palette.of(this.darkMode)
+  }
+
   @State messages: ChatMessage[] = []
   @State inputText: string = ''
   @State modelSelection: number = 0
@@ -67,7 +75,7 @@ export struct AgentSidePanel {
         Text('Agent')
           .fontSize(15)
           .fontWeight(FontWeight.Bold)
-          .fontColor('#202124')
+          .fontColor(this.pal().text)
           .layoutWeight(1)
 
         // 模型下拉（简化：点击循环切换）
@@ -79,7 +87,7 @@ export struct AgentSidePanel {
           .constraintSize({ maxWidth: 110 })
           .padding({ left: 8, right: 8, top: 4, bottom: 4 })
           .borderRadius(12)
-          .backgroundColor('#E8F0FE')
+          .backgroundColor(this.pal().selected)
           .onClick(() => {
             this.modelSelection = (this.modelSelection + 1) % this.modelOptions.length
             console.info('AgentSidePanel model switch: ' + this.modelOptions[this.modelSelection])
@@ -87,13 +95,13 @@ export struct AgentSidePanel {
 
         Text('⚙')
           .fontSize(15)
-          .fontColor('#5F6368')
+          .fontColor(this.pal().text2)
           .width(28)
           .textAlign(TextAlign.Center)
 
         Text('×')
           .fontSize(16)
-          .fontColor('#5F6368')
+          .fontColor(this.pal().text2)
           .width(28)
           .textAlign(TextAlign.Center)
           .onClick(() => {
@@ -103,8 +111,8 @@ export struct AgentSidePanel {
       .width('100%')
       .height(40)
       .padding({ left: 12, right: 8 })
-      .backgroundColor('#F1F3F4')
-      .border({ width: { bottom: 1 }, color: '#E0E0E0' })
+      .backgroundColor(this.pal().surfaceAlt)
+      .border({ width: { bottom: 1 }, color: this.pal().border })
 
       // 消息列表
       List() {
@@ -128,10 +136,10 @@ export struct AgentSidePanel {
               Row() {
                 Text(msg.text)
                   .fontSize(12)
-                  .fontColor('#5F6368')
+                  .fontColor(this.pal().text2)
                   .padding({ left: 12, right: 12, top: 8, bottom: 8 })
                   .borderRadius(12)
-                  .backgroundColor('#F1F3F4')
+                  .backgroundColor(this.pal().surfaceAlt)
                   .constraintSize({ maxWidth: 260 })
               }
               .width('100%')
@@ -151,7 +159,7 @@ export struct AgentSidePanel {
           .width('100%')
           .height(72)
           .fontSize(13)
-          .backgroundColor('#F1F3F4')
+          .backgroundColor(this.pal().surfaceAlt)
           .borderRadius(10)
           .onChange((v: string) => {
             this.inputText = v
@@ -177,11 +185,11 @@ export struct AgentSidePanel {
       .width('100%')
       .padding({ left: 12, right: 12 })
       .padding({ top: 8, bottom: 10 })
-      .backgroundColor('#FFFFFF')
-      .border({ width: { top: 1 }, color: '#E0E0E0' })
+      .backgroundColor(this.pal().surface)
+      .border({ width: { top: 1 }, color: this.pal().border })
     }
     .width('100%')
     .height('100%')
-    .backgroundColor('#FFFFFF')
+    .backgroundColor(this.pal().surface)
   }
 }

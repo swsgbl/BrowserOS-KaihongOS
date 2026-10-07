@@ -45,6 +45,9 @@ export default class EntryAbility extends UIAbility {
   onWindowStageCreate(windowStage: window.WindowStage): void {
     console.info('BrowserOS KaihongOS EntryAbility onWindowStageCreate')
     // P5: 首启动 Onboarding —— 未完成配置则进入引导页
+    // p10a: dark dispatch via AppStorage
+    AppStorage.setOrCreate('darkMode', ConfigManager.get().darkMode)
+    console.info('EntryAbility darkMode=' + ConfigManager.get().darkMode + ' sensitiveConfirm=' + ConfigManager.isSensitiveConfirm())
     const entryPage = ConfigManager.isOnboardingCompleted() ? 'pages/BrowserShell' : 'pages/OnboardingPage'
     console.info('EntryAbility entry page: ' + entryPage + ' (onboardingCompleted=' + ConfigManager.isOnboardingCompleted() + ')')
     windowStage.loadContent(entryPage, (err: BusinessError) => {

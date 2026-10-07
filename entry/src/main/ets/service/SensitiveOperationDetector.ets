@@ -1,5 +1,6 @@
 import { SensitiveOperationType } from '../common/Types'
 import { EventBus, EventBusEvents } from '../infra/EventBus'
+import { ConfigManager } from '../storage/ConfigManager'
 
 interface SensitiveOperationRequest {
   agentId: string
@@ -96,6 +97,12 @@ class SensitiveOperationDetectorImpl {
   requestConfirmation(agentId: string, operationType: SensitiveOperationType,
     targetUrl: string, targetElement: string): Promise<boolean> {
     return new Promise(resolve => {
+      // p10b: sensitiveConfirm=false 时自动放行 —— 不弹 ConfirmDialog、MCP tools/call 不挂起直接执行（DEVPLAN P10 决策）
+      if (!ConfigManager.isSensitiveConfirm()) {
+        console.info('[SensitiveOp] sensitiveConfirm off -> AUTO-ALLOW ' + operationType + ' agent=' + agentId + ' url=' + targetUrl)
+        resolve(true)
+        return
+      }
       const request: SensitiveOperationRequest = {
         agentId,
         operationType,
