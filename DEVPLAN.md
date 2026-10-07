@@ -384,3 +384,11 @@
 - **帮助菜单项**：⋮→帮助 → 新建标签 + 🔒 + 10% 进度导航 https://www.browseros.com——z-accept-p9r-help-navigating.jpeg
 - 设置页返回钮已修（hmh）；历史页 ← 返回实测可用
 - git 5716614
+
+
+### 终回归（Zodex，2026-10-08 02:0x，p9r 最终构建全链绿）
+- **Agent 闭环**：驾驶舱表单建 p9final-reg → example.com → 6 步 → task complete 答案 Example Domain（agnes-3.0-flash）
+- **MCP 外部连接**：fport 9222 + 新 token → initialize HTTP 200 + Mcp-Session-Id + serverInfo browseros-kaihong/1.0.0
+- **桌面快捷**：force-stop 后双击桌面图标 → pid 8008 拉起（z-final-regression-launched.jpeg）
+- 过程注记：跨午夜 hdc 一度掉线（kill/start/tconn 恢复）；VM 重启致窗口化坐标漂移，回归全程 dump 驱动
+- **结论：P1-P9+r 全部能力在最终构建上无回归，项目收官**
