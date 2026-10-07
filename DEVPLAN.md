@@ -343,3 +343,12 @@
 - P6 红线守住：多 Web 常驻架构未动，tab layoutWeight(1) 保留，覆盖态两帧重建逻辑未触碰。
 - uitest inputText 会与已有框值拼接导致 omnibox scheme 实测受阻（代码分支与菜单路由同构已验证）。
 
+
+
+### P9 独立验收（Zodex，2026-10-07 20:4x-20:5x，全项通过）
+- 装机 20:36 构建；桌面快捷在位；冷启动 pid 实证
+- 工具栏：ⓘ 安全图标 + ☆/🕘/⌂ + **❐ 侧栏切换 + ⋮ 菜单**（均实测可见）
+- ⋮ 菜单展开：＋新建标签页/⧉新窗口/🕘历史/★书签/⭳下载/⚙设置/?帮助/⏻退出——8 项全带图标（z-accept-menu-open.jpeg）
+- 设置页：左导航 🤖AI 与 Agent/🎨外观/🔒隐私与安全/🔌MCP/ℹ️关于 + LLM 表单（预填 agnes）+ 保存/测试连接（z-accept-settings.jpeg）
+- Agent 侧栏：Agent 标题+模型下拉 agnes-3.0-flash+⚙/×、任务输入占位+发送、"N 个代理在跑"状态行（z-accept-agent-panel.jpeg）
+- 已知交互残留：router 内建页（设置等）物理返回键不回 BrowserShell（keyEvent 137 无效，需冷启动或菜单切换）；后续可加左上返回按钮
