@@ -977,10 +977,42 @@ struct BrowserShell {
   }
 
   private onAddressInput(input: string): void {
+    // P9-D: 内建 scheme —— browseros://settings|history|bookmarks|downloads|newtab
+    const lower = input.trim().toLowerCase()
+    if (lower.startsWith('browseros://')) {
+      this.openBuiltinPage(lower)
+      return
+    }
     if (this.isUrl(input)) {
       this.navigate(this.normalizeUrl(input))
     } else {
       this.navigate(Constants.DEFAULT_SEARCH_ENGINE + encodeURIComponent(input))
+    }
+  }
+
+  /** P9-D: browseros:// 内建页路由 */
+  private openBuiltinPage(schemeUrl: string): void {
+    console.info('BrowserShell builtin scheme: ' + schemeUrl)
+    const page = schemeUrl.substring('browseros://'.length).replace(/\/$/, '')
+    switch (page) {
+      case 'settings':
+        router.pushUrl({ url: 'pages/SettingsPage' })
+        break
+      case 'history':
+        router.pushUrl({ url: 'pages/HistoryPage' })
+        break
+      case 'bookmarks':
+        router.pushUrl({ url: 'pages/BookmarksPage' })
+        break
+      case 'downloads':
+        router.pushUrl({ url: 'pages/DownloadsPage' })
+        break
+      case 'newtab':
+        this.createNewTab()
+        break
+      default:
+        console.info('BrowserShell unknown builtin page: ' + page)
+        break
     }
   }
 
