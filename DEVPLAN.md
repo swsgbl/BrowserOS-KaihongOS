@@ -321,3 +321,25 @@
 - 四屏截图：desktop_with_shortcut / c1_newtab / s2_cockpit_live_tile（1 代理 1 会话+磁贴+▶回放）/ s3_mcp_install_board / s4_replay_player（shots=11 logs=6）
 - 已知残留：设备 IME/TextInput 缺陷使自动化填表需英文+无空格（设备级）；MCP board Connect 为复制配置反馈
 - 状态：用户点名的两大缺口闭环；P1-P7 回归（agent 闭环）通过
+
+
+## P9 全界面/菜单/图标一比一复刻（2026-10-07 收官）
+
+**目标达成**：UI 复刻从四大屏扩展到全部菜单/界面/功能/图标。4 个 feat commit 全部构建装机实测通过。
+
+### 交付清单
+- **p9a (cbc4414)** 浏览器 chrome 补全：⋮ 三点主菜单(分组：新建标签页/新窗口|历史/书签/下载|设置/帮助|退出)、omnibox 安全锁(https 绿锁/普通灰 ⓘ)+聚焦建议下拉(历史+书签匹配 图标+标题+URL)、星标 Bookmark 气泡(名称编辑+完成/删除)、工具栏图标统一 20vp #5F6368、标签条 favicon 占位方块+当前标签白底上圆角。新组件 ChromeWidgets.ets(ThreeDotMenu/OmniboxSuggestions/BookmarkBubble)。
+- **p9b (57dc4f0)** Agent 侧栏：工具栏 ❐ 切换按钮，右侧 360vp 常驻面板(Agent 标题+agnes-3.0-flash 模型循环下拉+⚙)，消息气泡列表(用户右蓝泡/系统左灰卡)，底部多行输入+发送(=AgentEngine.createAgent 驱动活动 tab，与 Dashboard 磁贴联动)。新组件 AgentSidePanel.ets。
+- **p9c1 (5b10017)** 设置页 SettingsPage：左 240vp 导航(AI 与 Agent/外观/隐私与安全/MCP/关于)+右卡片。LLM 表单(端点/Key/模型+保存/测试连接)迁移自 NeoDashboardPanel 模式；MCP 节复用 getMcpEndpoint+Copy；外观=深色开关；隐私=敏感操作确认开关+本地数据说明；关于=版本/构建/返回。
+- **p9c2 (0ab6a64)** 历史/书签/下载页：HistoryPage(搜索+按日期分组(今天/昨天/日期)+favicon+标题+URL+时间，agent 会话组 ▶ 回放直达 SessionPlayerPage)；BookmarksPage(列表+行内编辑保存+删除)；DownloadsPage(如实空态：未内置下载管理器，列表结构已就绪)。新窗口=菜单项退化为新建标签页(如实记录)。main_pages.json 注册 10 页。
+- **p9d (493e5d8)** omnibox 识别 browseros://settings|history|bookmarks|downloads|newtab 内建 scheme 路由；全局色板统一 #F1F3F4 chrome/#FFFFFF 内容/#5F6368 文字图标/#1A73E8 强调蓝/卡 8-12px 圆角/分隔 #E0E0E0。
+
+### 验证证据（evidence/p9/）
+8 张截图(01-initial/02-menu-open/04-agent-panel/05-settings/06-bookmarks(书签)/07-history/08-downloads/03-relaunch) + uitest dumpLayout 布局验证(菜单 7 项全部渲染、设置页左导航 5 节+表单、侧栏 Agent/agnes-3.0-flash/发送、历史页今天分组+about:blank 条目、书签/下载空态)。hilog 菜单路由日志(menu action: bookmarks/history/downloads 全通过)。
+
+### 技术要点
+- 构建链不变：hvigorw → tools/build_v1_hap.py(V1 index repack，P4 教训：改码后必须 repack) → tools/install_p8.py(VM 签名装机) → tools/add_desktop_shortcut.py。
+- ArkUI 约束：ForEach itemGenerator 内不能写命令式赋值(日期分组改为预计算 GroupedEntry[])；@Builder 多根子节点会掉进布局流，覆盖层必须挂 build 根 Stack。
+- P6 红线守住：多 Web 常驻架构未动，tab layoutWeight(1) 保留，覆盖态两帧重建逻辑未触碰。
+- uitest inputText 会与已有框值拼接导致 omnibox scheme 实测受阻（代码分支与菜单路由同构已验证）。
+
