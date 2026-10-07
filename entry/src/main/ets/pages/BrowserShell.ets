@@ -15,6 +15,8 @@ import { NeoDashboardPanel } from '../components/NeoDashboardPanel'
 import { webview } from '@kit.ArkWeb'
 import { router } from '@kit.ArkUI'
 import { LoginStateManager } from '../service/LoginStateManager'
+import { ThreeDotMenu, OmniboxSuggestions, BookmarkBubble, SuggestItem } from '../components/ChromeWidgets'
+import { common } from '@kit.AbilityKit'
 
 interface PageLoadErrorData {
   tabId: string
@@ -38,6 +40,14 @@ struct BrowserShell {
   @State loadProgress: number = 0
   @State isBookmarked: boolean = false
   @State showHistory: boolean = false
+  // P9-A: chrome 补全 —— ⋮ 菜单 / omnibox 建议 / 书签气泡
+  @State showMenu: boolean = false
+  @State showSuggestions: boolean = false
+  @State suggestItems: SuggestItem[] = []
+  @State showBookmarkBubble: boolean = false
+  @State bookmarkBubbleTitle: string = ''
+  @State bookmarkBubbleUrl: string = ''
+  @State bookmarkBubbleExisting: boolean = false
   // P6: NeoDashboard 内嵌覆盖层（不再 router.pushUrl，规避覆盖态不渲染）
   @State showNeo: boolean = false
   @State historyItems: HistoryEntry[] = []
@@ -160,9 +170,10 @@ struct BrowserShell {
   }
 
   build(): void {
-    Column() {
-      this.AddressBar()
-      this.TabBar()
+    Stack() {
+      Column() {
+        this.AddressBar()
+        this.TabBar()
       // P6 治本：Web 层常驻 —— 所有 tab 的 Web 组件始终挂载（非激活 Hidden 保活），
       // dashboard/NeoDashboard 作为覆盖层置顶。修复「dashboard 激活时全部 Web 销毁、
       // 覆盖态 ForEach 不新增」的时序缺口：agent tab 创建即有 WebView，BCP 立即可用。
@@ -201,10 +212,57 @@ struct BrowserShell {
           SensitiveOperationDetector.rejectOperation(agentId, operationType)
         }
       })
+      }
+      .width('100%')
+      .height('100%')
+      .backgroundColor('#FFFFFF')
+
+      // P9-A: chrome 覆盖层（挂 build 根 Stack，置顶不参与布局流）
+      if (this.showSuggestions) {
+        OmniboxSuggestions({
+          items: this.suggestItems,
+          onPick: (url: string) => {
+            console.info('BrowserShell suggestion picked: ' + url)
+            this.showSuggestions = false
+            this.navigate(this.normalizeUrl(url))
+          },
+          onClose: () => {
+            this.showSuggestions = false
+          }
+        })
+      }
+      if (this.showBookmarkBubble) {
+        BookmarkBubble({
+          title: this.bookmarkBubbleTitle,
+          url: this.bookmarkBubbleUrl,
+          editingExisting: this.bookmarkBubbleExisting,
+          onTitleChange: (title: string) => {
+            this.bookmarkBubbleTitle = title
+          },
+          onDone: () => {
+            this.finishBookmarkEdit()
+          },
+          onRemove: () => {
+            this.removeCurrentBookmark()
+          },
+          onClose: () => {
+            this.showBookmarkBubble = false
+          }
+        })
+      }
+      if (this.showMenu) {
+        ThreeDotMenu({
+          onAction: (action: string) => {
+            this.onMenuAction(action)
+          },
+          onClose: () => {
+            this.showMenu = false
+          }
+        })
+      }
     }
     .width('100%')
     .height('100%')
-    .backgroundColor('#FFFFFF')
   }
 
   @Builder
@@ -265,16 +323,45 @@ struct BrowserShell {
         }
       })
 
-      TextInput({ text: this.urlInput, placeholder: '输入URL或搜索关键词' })
-        .layoutWeight(1)
-        .height(36)
-        .type(InputType.Normal)
-        .onChange((value: string) => {
-          this.urlInput = value
-        })
-        .onSubmit(() => {
-          this.onAddressInput(this.urlInput)
-        })
+      // P9-A: omnibox —— 安全锁图标（https 绿锁 / 普通灰）+ 输入框胶囊
+      Row() {
+        Text(this.currentUrl.startsWith('https://') ? '🔒' : 'ⓘ')
+          .fontSize(13)
+          .fontColor(this.currentUrl.startsWith('https://') ? '#137333' : '#5F6368')
+          .width(22)
+          .textAlign(TextAlign.Center)
+        TextInput({ text: this.urlInput, placeholder: '输入URL或搜索关键词' })
+          .layoutWeight(1)
+          .height(32)
+          .fontSize(13)
+          .type(InputType.Normal)
+          .backgroundColor(Color.Transparent)
+          .padding({ left: 0, right: 0 })
+          .onChange((value: string) => {
+            this.urlInput = value
+            this.updateSuggestions(value)
+          })
+          .onFocus(() => {
+            this.updateSuggestions(this.urlInput)
+            this.showSuggestions = this.suggestItems.length > 0
+          })
+          .onBlur(() => {
+            // 延迟关闭：给建议项点击留出事件窗口
+            setTimeout(() => {
+              this.showSuggestions = false
+            }, 150)
+          })
+          .onSubmit(() => {
+            this.showSuggestions = false
+            this.onAddressInput(this.urlInput)
+          })
+      }
+      .layoutWeight(1)
+      .height(34)
+      .padding({ left: 8, right: 8 })
+      .borderRadius(17)
+      .backgroundColor('#FFFFFF')
+      .border({ width: 1, color: '#DADCE0' })
 
       if (this.isLoading) {
         Text(`${this.loadProgress}%`)
@@ -283,21 +370,22 @@ struct BrowserShell {
           .margin({ left: 4 })
       }
 
+      // P9-A: 星标 —— 点击弹 Bookmark 气泡（名称编辑+完成/删除）
       Button({ type: ButtonType.Normal }) {
         Text(this.isBookmarked ? '★' : '☆')
           .fontSize(18)
-          .fontColor(this.isBookmarked ? '#FF9800' : '#666666')
+          .fontColor(this.isBookmarked ? '#F9AB00' : '#5F6368')
       }
       .width(36)
       .height(36)
       .onClick(() => {
-        this.toggleBookmark()
+        this.openBookmarkBubble()
       })
 
       Button({ type: ButtonType.Normal }) {
         Text('🕘')
           .fontSize(16)
-          .fontColor('#666666')
+          .fontColor('#5F6368')
       }
       .width(36)
       .height(36)
@@ -308,18 +396,32 @@ struct BrowserShell {
       Button({ type: ButtonType.Normal }) {
         Text('⌂')
           .fontSize(18)
-          .fontColor('#666666')
+          .fontColor('#5F6368')
       }
       .width(36)
       .height(36)
       .onClick(() => {
         this.goHome()
       })
+
+      // P9-A: ⋮ 三点主菜单
+      Button({ type: ButtonType.Normal }) {
+        Text('⋮')
+          .fontSize(20)
+          .fontWeight(FontWeight.Bold)
+          .fontColor('#5F6368')
+      }
+      .width(36)
+      .height(36)
+      .onClick(() => {
+        console.info('BrowserShell three-dot menu toggled: ' + !this.showMenu)
+        this.showMenu = !this.showMenu
+      })
     }
     .width('100%')
     .height(48)
     .padding({ left: 8, right: 8 })
-    .backgroundColor('#F5F5F5')
+    .backgroundColor('#F1F3F4')
   }
 
   /** P5: 书签切换（BookmarkManager 接线） */
@@ -456,12 +558,26 @@ struct BrowserShell {
     Row() {
       ForEach(this.tabs, (tab: TabInfo) => {
         Row() {
+          // P9-A: favicon 占位方块（agent tab 蓝，普通 tab 灰）
+          Column() {
+            Text(tab.agentId ? 'A' : '◇')
+              .fontSize(10)
+              .fontColor('#FFFFFF')
+          }
+          .width(16)
+          .height(16)
+          .borderRadius(4)
+          .backgroundColor(tab.agentId ? '#1A73E8' : '#9AA0A6')
+          .margin({ right: 6 })
+          .justifyContent(FlexAlign.Center)
+          .alignItems(HorizontalAlign.Center)
+
           Text(tab.title || (tab.agentId ? '代理 ' + tab.agentId.substring(0, 12) : '新标签页'))
             .fontSize(12)
             .maxLines(1)
             .textOverflow({ overflow: TextOverflow.Ellipsis })
             .layoutWeight(1)
-            .fontColor(tab.tabId === this.activeTabId ? '#007DFF' : '#333333')
+            .fontColor(tab.tabId === this.activeTabId ? '#202124' : '#5F6368')
 
           if (tab.tabId === this.activeTabId) {
             Text(' ●')
@@ -496,8 +612,8 @@ struct BrowserShell {
         .padding({ left: 8, right: 4 })
         .height(32)
         .layoutWeight(1)
-        .borderRadius(4)
-        .backgroundColor(tab.tabId === this.activeTabId ? '#E6F2FF' : '#FFFFFF')
+        .borderRadius({ topLeft: 8, topRight: 8 })
+        .backgroundColor(tab.tabId === this.activeTabId ? '#FFFFFF' : '#DEE1E6')
         .onClick(() => {
           // P5: 点击 tab —— switchTab + emit 驱动 onTabStatusChange 全同步
           TabManager.switchTab(tab.tabId)
@@ -529,7 +645,7 @@ struct BrowserShell {
     .width('100%')
     .height(36)
     .padding({ left: 4, right: 4 })
-    .backgroundColor('#F0F0F0')
+    .backgroundColor('#F1F3F4')
   }
 
   @Builder
@@ -878,5 +994,130 @@ struct BrowserShell {
   private isUrl(input: string): boolean {
     // P3 修复：host 支持端口号（如 http://host:11435/path）
     return /^(https?:\/\/)?([\w-]+\.)+[\w-]+(:\d{1,5})?(\/[\w-./?%&=]*)?$/.test(input)
+  }
+
+  // ---------- P9-A: chrome 补全 ----------
+
+  /** omnibox 建议列表：书签匹配 + 历史匹配（各取前几条，去重） */
+  private updateSuggestions(input: string): void {
+    const kw = input.trim().toLowerCase()
+    const items: SuggestItem[] = []
+    const seen = new Set<string>()
+    if (kw.length > 0) {
+      const bms = BookmarkManager.searchBookmarks(kw)
+      for (const b of bms.slice(0, 3)) {
+        if (!seen.has(b.url)) {
+          seen.add(b.url)
+          items.push({ kind: 'bookmark', title: b.title, url: b.url })
+        }
+      }
+      const his = HistoryManager.getAllHistory(100).filter((e: HistoryEntry) =>
+        e.url.toLowerCase().includes(kw) || (e.title || '').toLowerCase().includes(kw))
+      for (const e of his.slice(0, 5)) {
+        if (!seen.has(e.url)) {
+          seen.add(e.url)
+          items.push({ kind: 'history', title: e.title || '', url: e.url })
+        }
+      }
+    }
+    this.suggestItems = items.slice(0, 6)
+    if (this.showSuggestions && this.suggestItems.length === 0) {
+      this.showSuggestions = false
+    }
+  }
+
+  /** 打开书签气泡（已收藏=编辑态，未收藏=新增态） */
+  private openBookmarkBubble(): void {
+    if (this.currentUrl.length === 0) {
+      console.info('BrowserShell bookmark bubble skipped: no url')
+      return
+    }
+    this.bookmarkBubbleUrl = this.currentUrl
+    this.bookmarkBubbleExisting = BookmarkManager.isBookmarked(this.currentUrl)
+    if (this.bookmarkBubbleExisting) {
+      const id = BookmarkManager.getBookmarkIdByUrl(this.currentUrl)
+      const bm = id ? BookmarkManager.getBookmark(id) : null
+      this.bookmarkBubbleTitle = bm && bm.title ? bm.title : this.currentUrl
+    } else {
+      const tab = TabManager.getTab(this.activeTabId)
+      this.bookmarkBubbleTitle = tab && tab.title ? tab.title : this.currentUrl
+    }
+    this.showBookmarkBubble = true
+    console.info('BrowserShell bookmark bubble opened: ' + this.currentUrl + ' existing=' + this.bookmarkBubbleExisting)
+  }
+
+  /** 气泡"完成"：新增或改名 */
+  private finishBookmarkEdit(): void {
+    const url = this.bookmarkBubbleUrl
+    const title = this.bookmarkBubbleTitle.trim().length > 0 ? this.bookmarkBubbleTitle.trim() : url
+    if (BookmarkManager.isBookmarked(url)) {
+      const id = BookmarkManager.getBookmarkIdByUrl(url)
+      if (id) {
+        BookmarkManager.updateBookmark(id, undefined, title)
+        console.info('BrowserShell bookmark renamed: ' + title)
+      }
+    } else {
+      BookmarkManager.addBookmark(url, title)
+      console.info('BrowserShell bookmark added: ' + url + ' title=' + title)
+    }
+    this.showBookmarkBubble = false
+    this.refreshBookmarkState()
+  }
+
+  /** 气泡"删除" */
+  private removeCurrentBookmark(): void {
+    const id = BookmarkManager.getBookmarkIdByUrl(this.bookmarkBubbleUrl)
+    if (id) {
+      BookmarkManager.removeBookmark(id)
+      console.info('BrowserShell bookmark removed via bubble: ' + this.bookmarkBubbleUrl)
+    }
+    this.showBookmarkBubble = false
+    this.refreshBookmarkState()
+  }
+
+  /** ⋮ 菜单动作分发 */
+  private onMenuAction(action: string): void {
+    console.info('BrowserShell menu action: ' + action)
+    this.showMenu = false
+    switch (action) {
+      case 'new_tab':
+        this.createNewTab()
+        break
+      case 'new_window':
+        // P9-C5：多窗口退化为新建标签页（如实记录）
+        this.createNewTab()
+        break
+      case 'history':
+        router.pushUrl({ url: 'pages/HistoryPage' })
+        break
+      case 'bookmarks':
+        router.pushUrl({ url: 'pages/BookmarksPage' })
+        break
+      case 'downloads':
+        router.pushUrl({ url: 'pages/DownloadsPage' })
+        break
+      case 'settings':
+        router.pushUrl({ url: 'pages/SettingsPage' })
+        break
+      case 'help':
+        this.showNeo = true
+        break
+      case 'exit':
+        (this.getUIContext().getHostContext() as common.UIAbilityContext).terminateSelf()
+        break
+      default:
+        break
+    }
+  }
+
+  /** 新建空白标签页（切到 dashboard 态） */
+  private createNewTab(): void {
+    const newTab = TabManager.createTab(true)
+    this.tabs = TabManager.getAllTabs()
+    this.activeTabId = newTab.tabId
+    this.showDashboard = true
+    this.urlInput = ''
+    this.currentUrl = ''
+    console.info('BrowserShell new tab created: ' + newTab.tabId)
   }
 }
