@@ -377,3 +377,10 @@
 构建链：harmony_build(BUILD SUCCESSFUL) → tools/build_v1_hap.py(V1 repack 360530B) → tools/install_p8.py(VM 15566 sign+install+launch OK)。
 证据：evidence/p9/z-p9r-history-persisted.jpeg、z-p9r-help-tab.jpeg、p9r_1..13 系列截图；hilog 详录 .verify/p9r_h*.txt。
 备注：VM 上 com.oneaiterm.terminal 反复抢前台（未处置，任务书禁动 oneaiterm）；验证以 hilog+dumpLayout 铁证为准。
+
+
+### P9r 独立验收（Zodex，2026-10-07 22:4x-22:5x，全项通过）
+- **持久化会话列表**：冷启动 → 菜单→历史 → "代理会话"组列出 9+ 个磁盘历史会话（agent_id+步数+时间+▶回放）；点击回放 → SessionPlayerPage `loaded session=ses_1791372301051 shots=11 logs=6` 播放器完整（跨重启会话回放全链闭环，P4"重启后无会话入口"UX 债了结）——z-accept-p9r-history-persisted.jpeg
+- **帮助菜单项**：⋮→帮助 → 新建标签 + 🔒 + 10% 进度导航 https://www.browseros.com——z-accept-p9r-help-navigating.jpeg
+- 设置页返回钮已修（hmh）；历史页 ← 返回实测可用
+- git 5716614
