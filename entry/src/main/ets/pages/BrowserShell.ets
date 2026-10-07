@@ -16,6 +16,7 @@ import { webview } from '@kit.ArkWeb'
 import { router } from '@kit.ArkUI'
 import { LoginStateManager } from '../service/LoginStateManager'
 import { ThreeDotMenu, OmniboxSuggestions, BookmarkBubble, SuggestItem } from '../components/ChromeWidgets'
+import { AgentSidePanel } from '../components/AgentSidePanel'
 import { common } from '@kit.AbilityKit'
 
 interface PageLoadErrorData {
@@ -48,6 +49,8 @@ struct BrowserShell {
   @State bookmarkBubbleTitle: string = ''
   @State bookmarkBubbleUrl: string = ''
   @State bookmarkBubbleExisting: boolean = false
+  // P9-B: Agent 侧栏
+  @State showAgentPanel: boolean = false
   // P6: NeoDashboard 内嵌覆盖层（不再 router.pushUrl，规避覆盖态不渲染）
   @State showNeo: boolean = false
   @State historyItems: HistoryEntry[] = []
@@ -250,6 +253,20 @@ struct BrowserShell {
           }
         })
       }
+      if (this.showAgentPanel) {
+        Column() {
+          AgentSidePanel({
+            onClose: () => {
+              console.info('BrowserShell agent panel closed')
+              this.showAgentPanel = false
+            }
+          })
+        }
+        .width(360)
+        .height('100%')
+        .backgroundColor('#FFFFFF')
+        .shadow({ radius: 12, color: '#33000000', offsetX: -4, offsetY: 0 })
+      }
       if (this.showMenu) {
         ThreeDotMenu({
           onAction: (action: string) => {
@@ -402,6 +419,19 @@ struct BrowserShell {
       .height(36)
       .onClick(() => {
         this.goHome()
+      })
+
+      // P9-B: Agent 侧栏切换按钮
+      Button({ type: ButtonType.Normal }) {
+        Text('❐')
+          .fontSize(16)
+          .fontColor(this.showAgentPanel ? '#1A73E8' : '#5F6368')
+      }
+      .width(36)
+      .height(36)
+      .onClick(() => {
+        console.info('BrowserShell agent panel toggled: ' + !this.showAgentPanel)
+        this.showAgentPanel = !this.showAgentPanel
       })
 
       // P9-A: ⋮ 三点主菜单
