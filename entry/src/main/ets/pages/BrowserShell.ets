@@ -534,17 +534,28 @@ struct BrowserShell {
 
   @Builder
   DashboardContent(): void {
+    // P8 C1 空态：产品名 + 副标题 + 入口（查看代理/导入登录态/书签历史），对齐官网 neo 新标签页
     Column() {
-      Text('BrowserOS KaihongOS')
-        .fontSize(24)
-        .fontWeight(FontWeight.Bold)
-        .fontColor('#E6EDF3')
-        .margin({ top: 40 })
+      Column() {
+        Text('BrowserOS neo')
+          .fontSize(26)
+          .fontWeight(FontWeight.Bold)
+          .fontColor('#FFFFFF')
+          .margin({ top: 24 })
 
-      Text('AI代理浏览器 - 深开鸿版本')
-        .fontSize(14)
-        .fontColor('#8B949E')
-        .margin({ top: 8 })
+        Text('给 AI 代理用的浏览器 —— 实时驾驶舱')
+          .fontSize(13)
+          .fontColor('#E8EAF6')
+          .margin({ top: 8, bottom: 24 })
+      }
+      .width('86%')
+      .borderRadius(20)
+      .alignItems(HorizontalAlign.Center)
+      .linearGradient({
+        angle: 135,
+        colors: [['#2E6FE8', 0.0], ['#8B5CF6', 1.0]]
+      })
+      .margin({ top: 40 })
 
       Row() {
         Button('新建标签页')

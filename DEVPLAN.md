@@ -296,3 +296,28 @@
 - **视觉走查全取证**：三标签并存+主体渲染 Example Domain（w3_tabs.jpeg）；暗色主题仪表盘+书签计数动态更新『书签 1 条 · 历史 4 条』（w3_dark.jpeg）；历史面板 4 条（w3_history.jpeg）；书签添加 hilog（bookmark added）
 - 已知设备级残留：TextInput 受控回灌缺陷致地址栏输入偶发拼接（设备问题，应用侧已有 sanitize 缓解）
 - 状态：BrowserOS neo 七卖点全部落地并逐一实证；项目计划全部结束
+
+
+---
+
+## P8：桌面快捷启动 + 官网 UI 一比一复刻（2026-10-07，用户点名的两大缺口）
+
+### 根因与机制（Zodex 实测破解）
+- **桌面快捷机制**：launcher=com.ohos.launcher；布局库 /data/app/el1/100/database/com.ohos.launcher/entry/rdb/（DesktopItem.db + AppDockTable.db）；桌面=Docs Desktop 目录视图，图标=*.app JSON 描述符+DB 行；**桌面网格只渲染 x=0 列**；force-stop 后 ~2s 自启 → 改库必须单条 shell 原子完成；交互=双击启动
+- **图标加载根因**：API26 工具链产出的 resources.index 为 RestoolV2 6.1.0.003，API14 设备 resourceManager 解析失败 → launcher DesktopImageLoader 9001001 → 桌面图标点击中断。需 V1 格式（Restool 5.0.1.011）；本机 API14 SDK：D:\OHOS-QEMU\sdk-5.0.2\14
+- 嫁接实验（oneaiterm V1 索引换装）证实根因后 hmh 落地正规修复
+
+### 交付（hmh 三会话，两次上下文耗尽由验收方接续收尾）
+- tools/build_v1_hap.py：restool 5.0.1.011 重编 V1 索引（module.json 符号引用数字化+AppScope 合并）→ 装机 HAP 索引头=Restool 5.0.1.011 实测
+- tools/add_desktop_shortcut.py：桌面快捷部署（描述符+DesktopItem x0y6+AppDockTable+原子序列）
+- tools/install_p8.py：装机编排
+- 图标：BrowserClaw logo 多尺寸 48/96/192/216
+- UI 复刻（对齐官网四屏）：C1 新标签页（产品名+副标题+三入口）、C2 MCP 安装板（端点 hero+Copy/Docs+五 harness Connect 网格）、Cockpit（三列马赛克+渐变 hero+代理磁贴+最近会话）、回放播放器（视口+播放/停止+倍速+进度条+操作时间线）
+- 缺陷修复：P8 重构曾把创建代理表单孤儿化（showLlmSettings 死状态）→ 已移植表单常驻驾驶舱（LLM 接入+创建并启动代理）
+
+### 验收实证（evidence/p8/）
+- 桌面：BrowserClaw 图标渲染于左列+任务栏同步；双击启动 pid 实证；hilog 无 9001001
+- e2e：表单创建 p8z-e2e（agnes-3.0-flash）→ 自动导航 example.com → 7 步 → task complete 答案 Example Domain
+- 四屏截图：desktop_with_shortcut / c1_newtab / s2_cockpit_live_tile（1 代理 1 会话+磁贴+▶回放）/ s3_mcp_install_board / s4_replay_player（shots=11 logs=6）
+- 已知残留：设备 IME/TextInput 缺陷使自动化填表需英文+无空格（设备级）；MCP board Connect 为复制配置反馈
+- 状态：用户点名的两大缺口闭环；P1-P7 回归（agent 闭环）通过

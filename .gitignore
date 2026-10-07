@@ -40,3 +40,13 @@ com.oneaiterm.terminal.app
 # Logs
 *.log
 hilog_*.txt
+
+# P8c: verify artifacts
+.verify/
+.zcode/
+entry-p8-v1-unsigned.hap  
+
+
+# P8: app icons and evidence must be tracked
+!entry/src/main/resources/base/media/*.png
+!evidence/**
