@@ -28,6 +28,11 @@ struct HistoryPage {
   private reload(): void {
     this.entries = HistoryManager.getAllHistory(200)
     this.sessions = SessionManager.getSessionList()
+    // P9r: 磁盘会话异步就绪后再刷新一次（冷启动首次渲染可能先拿到空列表）
+    SessionManager.getSessionListAsync().then((list: SessionRecord[]) => {
+      this.sessions = list
+      console.info('HistoryPage sessions refreshed: ' + list.length)
+    })
     if (this.keyword.trim().length > 0) {
       const kw = this.keyword.trim().toLowerCase()
       this.entries = this.entries.filter((e: HistoryEntry) =>

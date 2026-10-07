@@ -352,3 +352,28 @@
 - 设置页：左导航 🤖AI 与 Agent/🎨外观/🔒隐私与安全/🔌MCP/ℹ️关于 + LLM 表单（预填 agnes）+ 保存/测试连接（z-accept-settings.jpeg）
 - Agent 侧栏：Agent 标题+模型下拉 agnes-3.0-flash+⚙/×、任务输入占位+发送、"N 个代理在跑"状态行（z-accept-agent-panel.jpeg）
 - 已知交互残留：router 内建页（设置等）物理返回键不回 BrowserShell（keyEvent 137 无效，需冷启动或菜单切换）；后续可加左上返回按钮
+
+## P9r 修复（hmh，2026-10-07 21:4x-22:3x，全项装机自测通过）
+
+**Zodex 缺陷修复：冷启动历史页 agent 会话为空**
+- 根因：SessionManager.activeSessions 纯内存 Map；stopRecording 先写盘再 delete 内存；getSessionList() 只读内存，磁盘 13 份 ses_*.json 完全不可见（清偿 P4「重启丢历史」债）
+- 修复（service/SessionManager.ets）：
+  - 新增 persistedSessions 磁盘会话缓存 + ensurePersistedSessions() 异步枚举 sessions/*.json（StorageManager.listDir，screenshots 置空省内存，回放走 getSessionDetail 重读盘）
+  - getSessionList() 改为「活跃内存 + 磁盘历史」合并去重（sessionId，活跃优先，startTime 降序）
+  - 新增 getSessionListAsync()（懒加载触发，规避早于 EntryAbility.setBasePath 的时序竞态）
+  - deleteSession/stopRecording 同步维护 persistedSessions（删除即剔除；结束即入列）
+- HistoryPage.reload() 增加异步二段刷新（磁盘就绪后重渲染）
+- 实证：hilog `persisted sessions loaded: 13` + `HistoryPage sessions refreshed: 13`；dumpLayout 历史页「代理会话」分组 13 条全渲染、每条带「▶ 回放」；点击回放进 SessionPlayerPage（`loaded session=ses_1791372301051 shots=11 logs=6`）
+
+**次要修复 A：?帮助 菜单**
+- 原实现 case 'help' 打开 NeoDashboard 侧栏（名不副实）；改为 createNewTab + navigate https://www.browseros.com（真实 Web 标签）
+- 实证 hilog：menu action: help → new tab created → navigate to https://www.browseros.com → loadUrl dispatched → onPageBegin url=https://www.browseros.com/
+
+**次要修复 B：设置页左上 ← 返回钮**
+- P9 验收已知残留（物理返回键不回 BrowserShell）；SettingsPage 左导航顶部加 ← router.back()
+- 实证：dumpLayout ← [86,38][116,71] 可见，点击后回 BrowserShell（地址栏 https://www.browseros.com 助证同帧状态）
+- 其余三内建页（History/Bookmarks/Downloads）本就有 ← 返回钮（P9 已验收）
+
+构建链：harmony_build(BUILD SUCCESSFUL) → tools/build_v1_hap.py(V1 repack 360530B) → tools/install_p8.py(VM 15566 sign+install+launch OK)。
+证据：evidence/p9/z-p9r-history-persisted.jpeg、z-p9r-help-tab.jpeg、p9r_1..13 系列截图；hilog 详录 .verify/p9r_h*.txt。
+备注：VM 上 com.oneaiterm.terminal 反复抢前台（未处置，任务书禁动 oneaiterm）；验证以 hilog+dumpLayout 铁证为准。

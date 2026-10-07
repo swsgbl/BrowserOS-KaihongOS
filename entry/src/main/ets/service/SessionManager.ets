@@ -19,6 +19,10 @@ class SessionManagerImpl {
   private recordingTimers: Map<string, number> = new Map()
   private maxStorageSpace: number = Constants.RECORDING_MAX_SPACE_MB * 1024 * 1024
   private sessionTabs: Map<string, string> = new Map()
+  /** P9r: 磁盘枚举的历史会话（仅元数据，screenshots 置空省内存；回放走 getSessionDetail 重读盘） */
+  private persistedSessions: SessionRecord[] = []
+  private persistedLoading: boolean = false
+  private persistedReady: boolean = false
 
   startRecording(agentId: string, tabId: string = ''): SessionRecord | null {
     const sessionId = this.generateSessionId()
@@ -47,6 +51,9 @@ class SessionManagerImpl {
     this.stopRecordingTimer(sessionId)
 
     this.persistSession(session)
+    if (!this.persistedSessions.some((s: SessionRecord) => s.sessionId === sessionId)) {
+      this.persistedSessions.push(session)
+    }
     this.activeSessions.delete(sessionId)
     this.sessionTabs.delete(sessionId)
 
@@ -54,8 +61,59 @@ class SessionManagerImpl {
     return session
   }
 
+  /** P9r: 异步枚举 sessions/*.json 元数据（截图字段跳过） */
+  async ensurePersistedSessions(): Promise<void> {
+    if (this.persistedReady || this.persistedLoading) {
+      return
+    }
+    this.persistedLoading = true
+    try {
+      const files = await StorageManager.listDir('sessions')
+      const jsonFiles = files.filter((f: string) => f.endsWith('.json')).sort().reverse()
+      const loaded: SessionRecord[] = []
+      for (const f of jsonFiles) {
+        const content = await StorageManager.load('sessions/' + f)
+        if (!content) {
+          continue
+        }
+        try {
+          const json = JSON.parse(content) as Record<string, Object>
+          const rec = SessionRecord.fromJSON(json)
+          rec.screenshots = []
+          loaded.push(rec)
+        } catch (e) {
+          console.warn('[SessionManager] skip corrupted session file: ' + f)
+        }
+      }
+      this.persistedSessions = loaded
+      this.persistedReady = true
+      console.info('[SessionManager] persisted sessions loaded: ' + loaded.length)
+    } finally {
+      this.persistedLoading = false
+    }
+  }
+
+  /** P9r: 活跃内存会话 + 磁盘历史会话合并去重（sessionId，活跃优先，startTime 降序） */
   getSessionList(): SessionRecord[] {
-    return Array.from(this.activeSessions.values())
+    const merged: SessionRecord[] = []
+    const seen = new Set<string>()
+    for (const s of this.activeSessions.values()) {
+      seen.add(s.sessionId)
+      merged.push(s)
+    }
+    for (const s of this.persistedSessions) {
+      if (!seen.has(s.sessionId)) {
+        seen.add(s.sessionId)
+        merged.push(s)
+      }
+    }
+    merged.sort((a: SessionRecord, b: SessionRecord): number => b.startTime - a.startTime)
+    return merged
+  }
+
+  async getSessionListAsync(): Promise<SessionRecord[]> {
+    await this.ensurePersistedSessions()
+    return this.getSessionList()
   }
 
   async getSessionDetail(sessionId: string): Promise<SessionRecord | null> {
@@ -79,6 +137,7 @@ class SessionManagerImpl {
   async deleteSession(sessionId: string): Promise<boolean> {
     this.stopRecordingTimer(sessionId)
     this.activeSessions.delete(sessionId)
+    this.persistedSessions = this.persistedSessions.filter((s: SessionRecord) => s.sessionId !== sessionId)
     return StorageManager.delete(`sessions/${sessionId}.json`)
   }
 

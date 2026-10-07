@@ -1162,7 +1162,9 @@ struct BrowserShell {
         router.pushUrl({ url: 'pages/SettingsPage' })
         break
       case 'help':
-        this.showNeo = true
+        // P9r: 帮助 = 新标签页导航官网（真实 Web 标签）
+        this.createNewTab()
+        this.navigate('https://www.browseros.com')
         break
       case 'exit':
         (this.getUIContext().getHostContext() as common.UIAbilityContext).terminateSelf()

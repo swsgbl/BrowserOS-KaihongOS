@@ -70,6 +70,16 @@ struct SettingsPage {
     Row() {
       // 左导航 240
       Column() {
+        Text('←')
+          .fontSize(18)
+          .fontColor('#5F6368')
+          .width(36)
+          .height(40)
+          .textAlign(TextAlign.Center)
+          .margin({ top: 8 })
+          .onClick(() => {
+            router.back()
+          })
         Text('设置')
           .fontSize(20)
           .fontWeight(FontWeight.Bold)
