@@ -55,9 +55,12 @@ class SensitiveOperationDetectorImpl {
   detectNavigation(agentId: string, url: string): SensitiveOperationType | null {
     const lowerUrl = url.toLowerCase()
 
-    for (const keyword of this.sensitiveKeywords[SensitiveOperationType.SETTINGS_CHANGE]) {
-      if (lowerUrl.includes(keyword)) {
-        return SensitiveOperationType.SETTINGS_CHANGE
+    for (const type of [SensitiveOperationType.PAYMENT, SensitiveOperationType.DELETE, SensitiveOperationType.SETTINGS_CHANGE]) {
+      const keywords = this.sensitiveKeywords[type]
+      for (const keyword of keywords) {
+        if (lowerUrl.includes(keyword)) {
+          return type
+        }
       }
     }
 

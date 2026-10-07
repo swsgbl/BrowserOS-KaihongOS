@@ -288,3 +288,11 @@
 - B7 回放视觉/B8 三标签视觉：数据链路已证（loaded shots=8），视觉截图因 agent 列表内存态重启后为空未取样——留走查项
 - **C 工程卫生**：97 个调试产物归档 attic/（git mv 保留历史）、__pycache__ 清除、根目录 14 个核心文件、清理后构建绿（1.1s）
 - P7 会话无 final 中断（上下文耗尽），A/B 项由 Zodex 接管验证、C 项由 Zodex 执行
+
+
+### 第三轮查缺补漏终验（2026-10-07 09:2x，Zodex 实证，全部通过——项目完全收官）
+- **SensitiveOperationDetector.detectNavigation 修复**（hmh 微任务）：原只查 SETTINGS 类关键词 → 改为 PAYMENT+DELETE+SETTINGS 三类（与 detectClick 对齐）
+- **ConfirmDialog 端到端全链**：MCP navigate example.com/pay → onPageEnd → 检测命中 payment → 弹窗（onDetected agent=mcp_http）→ tools/call 正确挂起等人类决策 → 点确认 → onConfirm（requestConfirmation resolve）→ 确认后导航继续、二次检测（每次敏感导航均询问，语义正确）。弹窗视觉：confirm_dlg.jpeg
+- **视觉走查全取证**：三标签并存+主体渲染 Example Domain（w3_tabs.jpeg）；暗色主题仪表盘+书签计数动态更新『书签 1 条 · 历史 4 条』（w3_dark.jpeg）；历史面板 4 条（w3_history.jpeg）；书签添加 hilog（bookmark added）
+- 已知设备级残留：TextInput 受控回灌缺陷致地址栏输入偶发拼接（设备问题，应用侧已有 sanitize 缓解）
+- 状态：BrowserOS neo 七卖点全部落地并逐一实证；项目计划全部结束
