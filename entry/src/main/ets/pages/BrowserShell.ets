@@ -18,7 +18,9 @@ import { LoginStateManager } from '../service/LoginStateManager'
 import { ThreeDotMenu, OmniboxSuggestions, BookmarkBubble, SuggestItem } from '../components/ChromeWidgets'
 import { AgentSidePanel } from '../components/AgentSidePanel'
 import { TabStrip, TabSearchPanel } from '../components/TabStrip'
+import { ContextMenu, CtxEntry, ctxDivider } from '../components/ContextMenu'
 import { common } from '@kit.AbilityKit'
+import { pasteboard } from '@kit.BasicServicesKit'
 import { Palette } from '../common/Palette'
 
 interface PageLoadErrorData {
@@ -296,6 +298,16 @@ struct BrowserShell {
           },
           onClose: () => {
             this.showTabSearch = false
+          }
+        })
+      }
+      if (this.ctxMenuX >= 0) {
+        ContextMenu({
+          x: this.ctxMenuX,
+          y: this.ctxMenuY,
+          entries: this.ctxEntries,
+          onClose: () => {
+            this.ctxMenuX = -1
           }
         })
       }
@@ -631,6 +643,11 @@ struct BrowserShell {
 
   // P11b: Chromium 标签条(内联 builder 换 TabStrip 组件);P11c: tab-search 面板
   @State showTabSearch: boolean = false
+  // P11c: 网页右键菜单(Web.onContextMenuShow 拦截,手动覆盖层)
+  @State ctxMenuX: number = -1
+  @State ctxMenuY: number = -1
+  @State ctxEntries: CtxEntry[] = []
+  @State ctxLinkUrl: string = ''
 
   @Builder
   TabBar(): void {
@@ -656,6 +673,9 @@ struct BrowserShell {
         },
         onSearchToggle: () => {
           this.showTabSearch = !this.showTabSearch
+        },
+        tabCtxEntries: (tabId: string): CtxEntry[] => {
+          return this.buildTabCtxEntries(tabId)
         }
       })
     }
@@ -678,6 +698,141 @@ struct BrowserShell {
       const activeTab = TabManager.getTab(this.activeTabId)
       this.showDashboard = activeTab?.isDashboard ?? true
     }
+  }
+
+  /** P11c: 网页右键菜单项(Chromium 标准项) */
+  private buildPageCtxEntries(tabId: string, linkUrl: string): CtxEntry[] {
+    const ctrl = this.getControllerFor(tabId)
+    const canBack = ctrl ? ctrl.accessBackward() : false
+    const canFwd = ctrl ? ctrl.accessForward() : false
+    const pageUrl = linkUrl && linkUrl.length > 0 ? linkUrl : this.currentUrl
+    const entries: CtxEntry[] = [
+      {
+        icon: $r('app.media.ic_back'), label: '后退', shortcut: 'Alt+←', enabled: canBack, divider: false,
+        onTap: () => { this.getActiveController()?.backward() }
+      },
+      {
+        icon: $r('app.media.ic_forward'), label: '前进', shortcut: 'Alt+→', enabled: canFwd, divider: false,
+        onTap: () => { this.getActiveController()?.forward() }
+      },
+      {
+        icon: $r('app.media.ic_reload'), label: '重新加载', shortcut: 'Ctrl+R', enabled: true, divider: true,
+        onTap: () => { this.getActiveController()?.refresh() }
+      },
+      {
+        icon: $r('app.media.ic_star_outline'), label: '将页面添加到书签', enabled: true, divider: true,
+        onTap: () => { this.addBookmarkSilently(pageUrl) }
+      },
+      {
+        icon: $r('app.media.ic_content_copy'), label: '复制网址', enabled: pageUrl.length > 0, divider: false,
+        onTap: () => { this.copyUrl(pageUrl) }
+      },
+      {
+        icon: $r('app.media.ic_code'), label: '查看网页源码', enabled: pageUrl.startsWith('http'), divider: false,
+        onTap: () => { this.openViewSource(pageUrl) }
+      }
+    ]
+    return entries
+  }
+
+  /** P11c: tab 右键菜单项 */
+  private buildTabCtxEntries(tabId: string): CtxEntry[] {
+    const idx = this.tabs.findIndex((t: TabInfo) => t.tabId === tabId)
+    const hasOther = this.tabs.length > 1
+    const hasRight = idx >= 0 && idx < this.tabs.length - 1
+    const tab = TabManager.getTab(tabId)
+    const entries: CtxEntry[] = [
+      {
+        icon: $r('app.media.ic_add'), label: '向右新建标签页', enabled: true, divider: false,
+        onTap: () => { this.createNewTab() }
+      },
+      { label: '重新打开已关闭的标签页', enabled: false, divider: true },
+      {
+        icon: $r('app.media.ic_content_copy'), label: '复制标签页网址', enabled: !!(tab && tab.currentUrl), divider: false,
+        onTap: () => { if (tab && tab.currentUrl) { this.copyUrl(tab.currentUrl) } }
+      },
+      {
+        icon: $r('app.media.ic_close'), label: '关闭', enabled: true, divider: true,
+        onTap: () => { this.closeTabById(tabId) }
+      },
+      {
+        icon: $r('app.media.ic_close'), label: '关闭其他标签页', enabled: hasOther, divider: false,
+        onTap: () => { this.closeOtherTabs(tabId) }
+      },
+      {
+        icon: $r('app.media.ic_close'), label: '关闭右侧标签页', enabled: hasRight, divider: false,
+        onTap: () => { this.closeRightTabs(tabId) }
+      }
+    ]
+    return entries
+  }
+
+  /** P11c: 仪表盘/非网页区右键菜单项 */
+  private buildDashboardCtxEntries(): CtxEntry[] {
+    return [
+      {
+        icon: $r('app.media.ic_reload'), label: '刷新', enabled: true, divider: false,
+        onTap: () => { this.getActiveController()?.refresh() }
+      },
+      {
+        icon: $r('app.media.ic_back'), label: '后退', enabled: this.getActiveController() ? this.getActiveController()!.accessBackward() : false, divider: false,
+        onTap: () => { this.getActiveController()?.backward() }
+      },
+      {
+        icon: $r('app.media.ic_star_outline'), label: '书签管理', enabled: true, divider: true,
+        onTap: () => { router.pushUrl({ url: 'pages/BookmarksPage' }) }
+      }
+    ]
+  }
+
+  private closeOtherTabs(keepId: string): void {
+    const ids = this.tabs.map((t: TabInfo) => t.tabId).filter((id: string) => id !== keepId)
+    for (const id of ids) {
+      this.controllers.delete(id)
+      this.attachedTabs.delete(id)
+      TabManager.closeTab(id)
+    }
+    TabManager.switchTab(keepId)
+    this.tabs = TabManager.getAllTabs()
+    this.activeTabId = keepId
+    console.info('BrowserShell closeOtherTabs: kept ' + keepId + ' closed ' + ids.length)
+  }
+
+  private closeRightTabs(tabId: string): void {
+    const idx = this.tabs.findIndex((t: TabInfo) => t.tabId === tabId)
+    if (idx < 0) {
+      return
+    }
+    const ids = this.tabs.slice(idx + 1).map((t: TabInfo) => t.tabId)
+    for (const id of ids) {
+      this.controllers.delete(id)
+      this.attachedTabs.delete(id)
+      TabManager.closeTab(id)
+    }
+    this.tabs = TabManager.getAllTabs()
+    console.info('BrowserShell closeRightTabs: closed ' + ids.length)
+  }
+
+  private addBookmarkSilently(url: string): void {
+    if (url.length === 0 || BookmarkManager.isBookmarked(url)) {
+      return
+    }
+    const tab = TabManager.getTab(this.activeTabId)
+    const title = tab && tab.title ? tab.title : url
+    BookmarkManager.addBookmark(url, title)
+    this.refreshBookmarkState()
+    console.info('BrowserShell ctx addBookmark: ' + url)
+  }
+
+  private copyUrl(url: string): void {
+    const pasteData = pasteboard.createData(pasteboard.MIMETYPE_TEXT_PLAIN, url)
+    pasteboard.getSystemPasteboard().setData(pasteData)
+    console.info('BrowserShell copyUrl: ' + url)
+  }
+
+  private openViewSource(url: string): void {
+    const navParams: Record<string, Object> = { 'url': url }
+    router.pushUrl({ url: 'pages/ViewSourcePage', params: navParams })
   }
 
   @Builder
@@ -759,6 +914,19 @@ struct BrowserShell {
     .justifyContent(FlexAlign.Start)
     .alignItems(HorizontalAlign.Center)
     .backgroundColor('#0D1117')
+    .bindContextMenu(this.DashboardCtxMenu(), ResponseType.LongPress)
+  }
+
+  /** P11c: 仪表盘右键菜单 Builder(系统弹窗,x=-1 仅卡体) */
+  @Builder
+  DashboardCtxMenu(): void {
+    ContextMenu({
+      x: -1,
+      y: -1,
+      entries: this.buildDashboardCtxEntries(),
+      onClose: () => {
+      }
+    })
   }
 
   /** P5: 历史记录面板（覆盖层） */
@@ -940,6 +1108,19 @@ struct BrowserShell {
               error: event.error ? event.error.getErrorInfo() : 'unknown'
             }
             EventBus.emit(EventBusEvents.PAGE_LOAD_ERROR, errData)
+          })
+          .onContextMenuShow((event) => {
+            // P11c: 拦截系统右键菜单,自绘 Chromium 风菜单(return true)
+            if (tab.tabId !== this.activeTabId) {
+              return false
+            }
+            const linkUrl = event.param.getLinkUrl()
+            this.ctxLinkUrl = linkUrl ? linkUrl : ''
+            this.ctxEntries = this.buildPageCtxEntries(tab.tabId, linkUrl)
+            this.ctxMenuX = event.param.x()
+            this.ctxMenuY = event.param.y() + 150
+            console.info('BrowserShell ctx menu at ' + this.ctxMenuX + ',' + this.ctxMenuY + ' link=' + linkUrl)
+            return true
           })
       }, (tab: TabInfo) => tab.tabId)
     }

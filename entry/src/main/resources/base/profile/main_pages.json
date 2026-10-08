@@ -6,6 +6,7 @@
     "pages/SettingsPage",
     "pages/HistoryPage",
     "pages/BookmarksPage",
-    "pages/DownloadsPage"
+    "pages/DownloadsPage",
+    "pages/ViewSourcePage"
   ]
 }

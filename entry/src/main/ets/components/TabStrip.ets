@@ -8,6 +8,7 @@
  */
 import { TabInfo } from '../model/TabInfo'
 import { Palette } from '../common/Palette'
+import { ContextMenu, CtxEntry } from './ContextMenu'
 
 @Component
 export struct TabStrip {
@@ -19,6 +20,20 @@ export struct TabStrip {
   onTabClose?: (tabId: string) => void
   onTabCreate?: () => void
   onSearchToggle?: () => void
+  /** P11c: 标签右键菜单构建器(shell 注入,避免循环依赖) */
+  tabCtxEntries?: (tabId: string) => CtxEntry[]
+
+  /** P11c: 标签右键菜单 Builder */
+  @Builder
+  TabCtxMenu(tabId: string): void {
+    ContextMenu({
+      x: -1,
+      y: -1,
+      entries: this.tabCtxEntries ? this.tabCtxEntries(tabId) : [],
+      onClose: () => {
+      }
+    })
+  }
 
   private pal(): Palette {
     return Palette.of(this.darkMode)
@@ -90,6 +105,7 @@ export struct TabStrip {
         }
         .layoutWeight(1)
         .height(30)
+        .bindContextMenu(this.TabCtxMenu(tab.tabId), ResponseType.LongPress)
       }, (tab: TabInfo) => tab.tabId)
 
       // 新标签按钮
