@@ -1,4 +1,11 @@
 import { StorageManager } from '../storage/StorageManager'
+import { EventBus, EventBusEvents } from '../infra/EventBus'
+
+interface BookmarksChangedData {
+  count: number
+  action: string
+}
+
 
 interface Bookmark {
   id: string
@@ -23,6 +30,7 @@ class BookmarkManagerImpl {
     const bookmark: Bookmark = { id, url, title, createdAt: Date.now() }
     this.bookmarks.set(id, bookmark)
     this.persist()
+    this.notifyChanged('add')
     return bookmark
   }
 
@@ -30,6 +38,7 @@ class BookmarkManagerImpl {
     const result = this.bookmarks.delete(id)
     if (result) {
       this.persist()
+      this.notifyChanged('remove')
     }
     return result
   }
@@ -46,6 +55,7 @@ class BookmarkManagerImpl {
       bookmark.title = title
     }
     this.persist()
+    this.notifyChanged('update')
     return true
   }
 
@@ -112,6 +122,12 @@ class BookmarkManagerImpl {
         })
       }
     }
+  }
+
+  /** P14b: 增删改后广播（订阅方: BrowserShell 书签条/星标、BookmarksPage 列表） */
+  private notifyChanged(action: string): void {
+    const data: BookmarksChangedData = { count: this.bookmarks.size, action: action }
+    EventBus.emit(EventBusEvents.BOOKMARKS_CHANGED, data)
   }
 
   getBookmarkCount(): number {

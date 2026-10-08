@@ -87,6 +87,8 @@ struct BrowserShell {
 
   aboutToAppear(): void {
     console.info('BrowserShell aboutToAppear start')
+    // P14b: 书签变更订阅驱动刷新
+    EventBus.on(EventBusEvents.BOOKMARKS_CHANGED, this.onBookmarksChanged)
     // P11d: 书签持久化加载(此前无人调用 load —— 存量 bug,重启即丢)
     BookmarkManager.load().then(() => {
       this.refreshBookmarkState()
@@ -118,6 +120,7 @@ struct BrowserShell {
 
   aboutToDisappear(): void {
     EventBus.off(EventBusEvents.TAB_STATUS_CHANGE, this.onTabStatusChange)
+    EventBus.off(EventBusEvents.BOOKMARKS_CHANGED, this.onBookmarksChanged)
   }
 
   /** P5: 页面回到前台（router.back 从 NeoDashboard 返回）时强制重同步标签栏
@@ -194,6 +197,12 @@ struct BrowserShell {
     } catch (e) {
       console.error('BrowserShell onTabStatusChange error: ' + e)
     }
+  }
+
+  /** P14b: 书签订阅（BookmarkManager 增删改广播 → 星标/书签条即时刷新，免手动 load） */
+  private onBookmarksChanged = (data: Object): void => {
+    this.refreshBookmarkState()
+    console.info('BrowserShell bookmarks-changed -> bar refreshed')
   }
 
   private refreshBookmarkState(): void {

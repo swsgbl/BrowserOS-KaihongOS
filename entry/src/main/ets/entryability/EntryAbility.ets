@@ -5,6 +5,7 @@ import { StorageManager } from '../storage/StorageManager'
 import { ConfigManager } from '../storage/ConfigManager'
 import { MCPServer } from '../service/MCPServer'
 import { HistoryManager } from '../service/HistoryManager'
+import { LoginStateManager } from '../service/LoginStateManager'
 
 export default class EntryAbility extends UIAbility {
   onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
@@ -22,6 +23,13 @@ export default class EntryAbility extends UIAbility {
       console.info('EntryAbility HistoryManager loadHistory done')
     }).catch((e: BusinessError) => {
       console.error('EntryAbility HistoryManager loadHistory error: ' + e.message)
+    })
+    // P14b: 登录态 Preferences 载体初始化 + 装载（含旧 login_state/*.json 一次性迁移）
+    LoginStateManager.init(this.context)
+    LoginStateManager.loadPersistedStates().then(() => {
+      console.info('EntryAbility LoginStateManager loadPersistedStates done, domains=' + LoginStateManager.getImportedDomains().length)
+    }).catch((e: BusinessError) => {
+      console.error('EntryAbility LoginStateManager loadPersistedStates error: ' + e.message)
     })
     ConfigManager.load().then((config) => {
       console.info('EntryAbility ConfigManager loaded, mcpPort=' + config.mcpPort)

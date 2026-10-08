@@ -2,6 +2,7 @@
  * P9-C3: 书签管理页 —— 列表（favicon+标题+URL+编辑/删除）
  */
 import { BookmarkManager } from '../service/BookmarkManager'
+import { EventBus, EventBusEvents } from '../infra/EventBus'
 import { router } from '@kit.ArkUI'
 import { Palette } from '../common/Palette'
 
@@ -26,10 +27,19 @@ struct BookmarksPage {
   @State editingId: string = ''
   @State editTitle: string = ''
 
-  aboutToAppear(): void {
+  /** P14b: 书签订阅——列表页停留期间其它入口（星标气泡等）改动即时同步 */
+  private onBookmarksChanged = (data: Object): void => {
     this.reload()
   }
 
+  aboutToAppear(): void {
+    EventBus.on(EventBusEvents.BOOKMARKS_CHANGED, this.onBookmarksChanged)
+    this.reload()
+  }
+
+  aboutToDisappear(): void {
+    EventBus.off(EventBusEvents.BOOKMARKS_CHANGED, this.onBookmarksChanged)
+  }
   private reload(): void {
     this.items = BookmarkManager.getAllBookmarks().map((b) => {
       const row: BookmarkRow = { id: b.id, url: b.url, title: b.title, createdAt: b.createdAt }

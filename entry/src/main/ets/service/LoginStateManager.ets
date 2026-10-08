@@ -1,6 +1,8 @@
 import { LoginStateData, CookieEntry } from '../model/LoginStateData'
 import { SecureStorageAdapter } from '../storage/SecureStorageAdapter'
 import { StorageManager } from '../storage/StorageManager'
+import { PrefsStore } from '../storage/PrefsStore'
+import { Context } from '@kit.AbilityKit'
 import { EventBus, EventBusEvents } from '../infra/EventBus'
 import { ErrorHandler, AppError } from '../infra/ErrorHandler'
 import { ErrorCodes } from '../common/ErrorCodes'
@@ -8,6 +10,10 @@ import { Constants } from '../common/Constants'
 import { fileIo as fs } from '@kit.CoreFileKit'
 import { util } from '@kit.ArkTS'
 import { webview } from '@kit.ArkWeb'
+
+interface LoginSessionAgg {
+  domains: Record<string, Object>
+}
 
 interface LoginStateImportedData {
   domains: string[]
@@ -25,6 +31,22 @@ interface CookieEntryJSONLike {
 class LoginStateManagerImpl {
   private importedDomains: Set<string> = new Set()
   private loginStates: Map<string, LoginStateData> = new Map()
+  /**
+   * P14b: 持久化载体迁 Preferences（login_state 实例，键 login_token/session_info_<domain>）。
+   * Preferences 单 Value 上限 16MB —— token/会话 JSON 实际远小于该值；
+   * 超限时 PrefsStore 降级截断并 hilog 警告。
+   */
+  private context: Context | null = null
+
+  /** EntryAbility 启动调用（先于任何导入/装载） */
+  init(context: Context): void {
+    this.context = context
+    PrefsStore.init(context).then(() => {
+      console.info('[LoginStateManager] PrefsStore login_state ready')
+    }).catch((e: Object) => {
+      console.error('[LoginStateManager] PrefsStore init error: ' + e)
+    })
+  }
 
   async importFromChrome(): Promise<LoginStateData[]> {
     try {
@@ -69,6 +91,7 @@ class LoginStateManagerImpl {
         results.push(state)
       }
 
+      await this.persistSessionInfo()
       const importedData: LoginStateImportedData = {
         domains: Array.from(this.importedDomains),
         count: results.length
@@ -166,6 +189,7 @@ class LoginStateManagerImpl {
         state.isEncrypted = SecureStorageAdapter.isSecureStorageAvailable()
         await this.persistLoginState(state)
       }
+      await this.persistSessionInfo()
       const importedData: LoginStateImportedData = {
         domains: Array.from(this.importedDomains),
         count: states.length
@@ -200,6 +224,8 @@ class LoginStateManagerImpl {
     this.importedDomains.clear()
     this.loginStates.clear()
 
+    // P14b: Preferences 载体一并清空（login_token + session_info）
+    await PrefsStore.clear('login_state')
     const files = await StorageManager.listDir('login_state')
     for (const file of files) {
       await StorageManager.delete(`login_state/${file}`)
@@ -224,12 +250,21 @@ class LoginStateManagerImpl {
   }
 
   private async persistLoginState(state: LoginStateData): Promise<boolean> {
+    // P14b: 首选 Preferences 载体（键 session_info_<domain>，JSON string）
+    const jsonStr = JSON.stringify(state.toJSON())
+    const prefsKey = 'session_info_' + state.domain
+    const ok = await PrefsStore.putString('login_state', prefsKey, jsonStr)
+    if (!ok) {
+      console.warn('[LoginStateManager] prefs persist failed, fallback to legacy file: ' + state.domain)
+    }
+    // 兼容链: 加密可用时同步落一份加密 JSON 文件（旧读取方/导出仍可用）
     const filePath = `login_state/${state.domain}.json`
     if (SecureStorageAdapter.isSecureStorageAvailable()) {
-      return SecureStorageAdapter.encryptStoreJSON(filePath, state.toJSON())
+      await SecureStorageAdapter.encryptStoreJSON(filePath, state.toJSON())
     } else {
-      return StorageManager.saveJSON(filePath, state.toJSON())
+      await StorageManager.saveJSON(filePath, state.toJSON())
     }
+    return ok
   }
 
   /** P7: 把已导入的 cookies 逐条注入 WebView（webview 级，全局 cookie 配置） */
@@ -281,27 +316,81 @@ class LoginStateManagerImpl {
   }
 
   async loadPersistedStates(): Promise<void> {
+    // P14b: 首选 Preferences（login_token + session_info_<domain>）
+    const token = await PrefsStore.getString('login_state', 'login_token', '')
+    const sessionRaw = await PrefsStore.getString('login_state', 'session_info', '')
+    if (sessionRaw.length > 0) {
+      // 会话信息聚合形态: { domains: { <domain>: <LoginStateDataJSON> } }
+      try {
+        const agg = JSON.parse(sessionRaw) as Record<string, Object>
+        const domains = agg['domains'] as Record<string, Object>
+        if (domains) {
+          for (const domain of Object.keys(domains)) {
+            const state = LoginStateData.fromJSON(domains[domain] as Record<string, Object>)
+            this.loginStates.set(domain, state)
+            this.importedDomains.add(domain)
+          }
+          console.info('[LoginStateManager] loaded from Preferences: domains=' + Object.keys(domains).length + ' token=' + (token.length > 0 ? 'yes' : 'no'))
+          return
+        }
+      } catch (e) {
+        console.error('[LoginStateManager] session_info parse failed, fallback to legacy files: ' + e)
+      }
+    }
+    // 旧载体一次性迁移: login_state/*.json -> Preferences 聚合键
     const files = await StorageManager.listDir('login_state')
+    let migrated = 0
+    const aggDomains: Record<string, Object> = {}
     for (const file of files) {
       const domain = file.replace('.json', '')
       let json: Record<string, Object> | null = null
-
       if (SecureStorageAdapter.isSecureStorageAvailable()) {
         json = await SecureStorageAdapter.decryptLoadJSON(`login_state/${file}`)
       } else {
         json = await StorageManager.loadJSON(`login_state/${file}`)
       }
-
       if (json) {
         try {
           const state = LoginStateData.fromJSON(json)
           this.loginStates.set(domain, state)
           this.importedDomains.add(domain)
+          aggDomains[domain] = state.toJSON()
+          migrated++
+          // 迁移完成后旧文件改名 .migrated（留档不删除）
+          const raw = await StorageManager.load(`login_state/${file}`)
+          if (raw !== null) {
+            await StorageManager.save(`login_state/${file}.migrated`, raw)
+            await StorageManager.delete(`login_state/${file}`)
+          }
         } catch (e) {
           console.error(`Failed to load login state for ${domain}: ${e}`)
         }
       }
     }
+    if (migrated > 0) {
+      const agg: LoginSessionAgg = { domains: aggDomains }
+      await PrefsStore.putString('login_state', 'session_info', JSON.stringify(agg))
+      console.info('[LoginStateManager] legacy login_state migrated to Preferences: ' + migrated + ' domains')
+    }
+  }
+
+  /** P14b: 聚合持久化（导入完成后调用）——把内存全部 state 写入 session_info 聚合键 */
+  async persistSessionInfo(): Promise<void> {
+    const aggDomains: Record<string, Object> = {}
+    this.loginStates.forEach((state: LoginStateData, domain: string) => {
+      aggDomains[domain] = state.toJSON()
+    })
+    const agg: LoginSessionAgg = { domains: aggDomains }
+    await PrefsStore.putString('login_state', 'session_info', JSON.stringify(agg))
+  }
+
+  /** P14b: token 存取（Preferences login_token 键） */
+  async saveLoginToken(token: string): Promise<boolean> {
+    return PrefsStore.putString('login_state', 'login_token', token)
+  }
+
+  async getLoginToken(): Promise<string> {
+    return PrefsStore.getString('login_state', 'login_token', '')
   }
 }
 

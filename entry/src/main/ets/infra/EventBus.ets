@@ -64,6 +64,7 @@ export class EventBusEvents {
   static readonly ERROR_OCCURRED: string = 'error_occurred'
   static readonly DASHBOARD_UPDATE: string = 'dashboard_update'
   static readonly LOGIN_STATE_IMPORTED: string = 'login_state_imported'
+  static readonly BOOKMARKS_CHANGED: string = 'bookmarks_changed'
   static readonly ONBOARDING_STEP_CHANGE: string = 'onboarding_step_change'
   static readonly PAGE_LOAD_COMPLETE: string = 'page_load_complete'
   static readonly PAGE_LOAD_ERROR: string = 'page_load_error'
