@@ -342,12 +342,16 @@ class LoginStateManagerImpl {
       }
     }
     // 旧载体一次性迁移: login_state/*.json -> Preferences 聚合键
+    // 含 .migrated 档案回灌: prefs 为空且档案在盘时自愈（修复早期竞态期 putString 静默失败导致的数据未落）
+    const MIGRATED_SUFFIX = '.migrated'
     const files = await StorageManager.listDir('login_state')
-      .then((raw: string[]) => raw.filter((f: string) => f.endsWith('.json') && !f.endsWith('.migrated')))
+      .then((raw: string[]) => raw.filter((f: string) =>
+        (f.endsWith('.json') && !f.endsWith(MIGRATED_SUFFIX)) || f.endsWith('.json' + MIGRATED_SUFFIX)))
     let migrated = 0
     const aggDomains: Record<string, Object> = {}
     for (const file of files) {
-      const domain = file.replace('.json', '')
+      const isArchive = file.endsWith(MIGRATED_SUFFIX)
+      const domain = (isArchive ? file.substring(0, file.length - MIGRATED_SUFFIX.length) : file).replace('.json', '')
       let json: Record<string, Object> | null = null
       if (SecureStorageAdapter.isSecureStorageAvailable()) {
         json = await SecureStorageAdapter.decryptLoadJSON(`login_state/${file}`)
@@ -361,11 +365,13 @@ class LoginStateManagerImpl {
           this.importedDomains.add(domain)
           aggDomains[domain] = state.toJSON()
           migrated++
-          // 迁移完成后旧文件改名 .migrated（留档不删除）
-          const raw = await StorageManager.load(`login_state/${file}`)
-          if (raw !== null) {
-            await StorageManager.save(`login_state/${file}.migrated`, raw)
-            await StorageManager.delete(`login_state/${file}`)
+          // 迁移完成后旧文件改名 .migrated（留档不删除; 档案文件本身不再重复改名）
+          if (!isArchive) {
+            const raw = await StorageManager.load(`login_state/${file}`)
+            if (raw !== null) {
+              await StorageManager.save(`login_state/${file}.migrated`, raw)
+              await StorageManager.delete(`login_state/${file}`)
+            }
           }
         } catch (e) {
           console.error(`Failed to load login state for ${domain}: ${e}`)
