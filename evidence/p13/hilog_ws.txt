@@ -1,0 +1,25 @@
+10-09 01:12:02.047  4961  4961 I A03d00/JSAPP: [MCP-WS] close frame id=1, echoing close
+10-09 01:12:02.050  4961  4961 I A03d00/JSAPP: [MCP-WS] client closed id=1 total=0
+10-09 01:12:09.325  4961  4961 I A03d00/JSAPP: [MCP-WS] client connected id=2 total=1
+10-09 01:12:09.326  4961  4961 I A03d00/JSAPP: [MCP-WS] handshake GET /mcp?token=WRONGTOKEN client=2
+10-09 01:12:09.326  4961  4961 W A03d00/JSAPP: [MCP-WS] 401 unauthorized ws handshake (token len=10) client=2
+10-09 01:12:09.327  4961  4961 I A03d00/JSAPP: [MCP-WS] client closed id=2 total=0
+10-09 01:12:16.070  4961  4961 I A03d00/JSAPP: [MCP-HTTP] client connected id=3 total=1
+10-09 01:12:16.071  4961  4961 I A03d00/JSAPP: [MCP-HTTP] onMessage id=3 bytes=322
+10-09 01:12:16.071  4961  4961 I A03d00/JSAPP: [MCP-HTTP] onBytes id=3 len=322 head=50 4f 53 54 20 2f 6d 63 70 3f 74 6f 6b 65 6e 3d 4d 65 41 54 77 70 69 47 
+10-09 01:12:16.072  4961  4961 I A03d00/JSAPP: [MCP-HTTP] POST /mcp?token=MeATwpiGxubG6mYxlPQcKBUHLCb6ZKSE client=3 bodyLen=58
+10-09 01:12:16.072  4961  4961 I A03d00/JSAPP: [MCP-RPC] method=initialize id=1 via=mcp_http
+10-09 01:12:16.081  4961  4961 I A03d00/JSAPP: [MCP-HTTP] client closed id=3 total=0
+10-09 01:12:22.539  4961  4961 I A03d00/JSAPP: [MCP-WS] client connected id=4 total=1
+10-09 01:12:22.539  4961  4961 I A03d00/JSAPP: [MCP-WS] handshake GET /mcp?token=MeATwpiGxubG6mYxlPQcKBUHLCb6ZKSE client=4
+10-09 01:12:22.540  4961  4961 I A03d00/JSAPP: [MCP-WS] 101 switching protocols client=4
+10-09 01:12:22.541  4961  4961 I A03d00/JSAPP: [MCP-WS] text frame id=4 len=153
+10-09 01:12:22.541  4961  4961 I A03d00/JSAPP: [MCP-RPC] method=initialize id=1 via=mcp_ws
+10-09 01:12:22.542  4961  4961 I A03d00/JSAPP: [MCP-WS] session bound id=4 session=2f348588-dcdf-439b-b378-aed1f04f7edc
+10-09 01:12:22.543  4961  4961 I A03d00/JSAPP: [MCP-WS] text frame id=4 len=46
+10-09 01:12:22.543  4961  4961 I A03d00/JSAPP: [MCP-RPC] method=tools/list id=2 via=mcp_ws
+10-09 01:12:22.544  4961  4961 I A03d00/JSAPP: [MCP-WS] text frame id=4 len=117
+10-09 01:12:22.544  4961  4961 I A03d00/JSAPP: [MCP-RPC] method=tools/call id=3 via=mcp_ws
+10-09 01:12:22.548  4961  4961 I A03d00/JSAPP: [MCP-WS] ping id=4 -> pong
+10-09 01:12:22.549  4961  4961 I A03d00/JSAPP: [MCP-WS] close frame id=4, echoing close
+10-09 01:12:22.549  4961  4961 I A03d00/JSAPP: [MCP-WS] client closed id=4 total=0

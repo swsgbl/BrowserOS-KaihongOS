@@ -2,6 +2,7 @@ import { RecordingQuality } from '../common/Types'
 
 interface AppConfigJSON {
   mcpPort: number
+  wsPort: number
   maxAgents: number
   recordingQuality: RecordingQuality
   recordingMaxSpaceMb: number
@@ -43,6 +44,7 @@ export interface AppConfigUpdate {
 
 export class AppConfig {
   mcpPort: number = 9222
+  wsPort: number = 8765
   maxAgents: number = 5
   recordingQuality: RecordingQuality = RecordingQuality.MEDIUM
   recordingMaxSpaceMb: number = 500
@@ -67,6 +69,7 @@ export class AppConfig {
   toJSON(): AppConfigJSON {
     const result: AppConfigJSON = {
       mcpPort: this.mcpPort,
+      wsPort: this.wsPort,
       maxAgents: this.maxAgents,
       recordingQuality: this.recordingQuality,
       recordingMaxSpaceMb: this.recordingMaxSpaceMb,
@@ -94,6 +97,8 @@ export class AppConfig {
   static fromJSON(json: Record<string, Object>): AppConfig {
     const config = new AppConfig()
     config.mcpPort = json['mcpPort'] as number
+    // p13: tolerant read — old config.json without wsPort keeps default 8765
+    config.wsPort = json['wsPort'] !== undefined && json['wsPort'] !== null ? json['wsPort'] as number : 8765
     config.maxAgents = json['maxAgents'] as number
     config.recordingQuality = json['recordingQuality'] as RecordingQuality
     config.recordingMaxSpaceMb = json['recordingMaxSpaceMb'] as number
@@ -140,6 +145,9 @@ export class AppConfig {
     const errors: string[] = []
     if (this.mcpPort < 1024 || this.mcpPort > 65535) {
       errors.push('mcpPort must be between 1024 and 65535')
+    }
+    if (this.wsPort < 1024 || this.wsPort > 65535) {
+      errors.push('wsPort must be between 1024 and 65535')
     }
     if (this.maxAgents < 1 || this.maxAgents > 20) {
       errors.push('maxAgents must be between 1 and 20')

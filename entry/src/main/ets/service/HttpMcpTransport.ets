@@ -1,10 +1,12 @@
 import { socket } from '@kit.NetworkKit'
 import { util } from '@kit.ArkTS'
 import { BusinessError } from '@kit.BasicServicesKit'
-import { MCPToolResponse } from '../common/Types'
+import { McpJsonRpcCore, McpHttpDelegate } from './McpJsonRpcCore'
 
 /**
  * P3: MCP Streamable HTTP 传输层（简化子集）。
+ * P13: JSON-RPC 分发核心已下沉 McpJsonRpcCore（与 WsMcpTransport 8765 共用），
+ *      本文件只负责 HTTP/1.1 分帧/路由/鉴权与响应编码——HTTP 路径行为保持不变。
  * 基于 @ohos.net.socket TCPSocketServer 的最小 HTTP/1.1 服务：
  * - POST /mcp?token=xxx : JSON-RPC 2.0（initialize / tools/list / tools/call）
  * - GET  /mcp           : 405
@@ -21,84 +23,9 @@ const TAG = 'MCP-HTTP'
 const MAX_HEADER_BYTES: number = 8192
 const MAX_BODY_BYTES: number = 1048576
 
-/** MCPServer 注入的回调接口（避免 transport->server 循环依赖） */
-export interface McpHttpDelegate {
-  validateToken(token: string): boolean
-  callTool(toolName: string, params: Record<string, Object>, agentId: string,
-    token: string): Promise<MCPToolResponse>
-  getToolNames(): string[]
-}
-
-// ---------- JSON-RPC / MCP 显式类型（ArkTS 严格模式：禁无类型对象字面量） ----------
-
-class JsonRpcErrorObj {
-  code: number = 0
-  message: string = ''
-}
-
-class JsonRpcResponse {
-  jsonrpc: string = '2.0'
-  id: Object | null = null
-  result: Object | null = null
-  error: JsonRpcErrorObj | null = null
-}
-
-class McpParamProp {
-  type: string = 'string'
-  description: string = ''
-
-  constructor(type: string, description: string) {
-    this.type = type
-    this.description = description
-  }
-}
-
-class McpInputSchema {
-  type: string = 'object'
-  properties: Record<string, McpParamProp> = {}
-  required: string[] = []
-}
-
-class McpToolDescriptor {
-  name: string = ''
-  description: string = ''
-  inputSchema: McpInputSchema = new McpInputSchema()
-}
-
-class McpToolsCapability {
-  listChanged: boolean = false
-}
-
-class McpCapabilities {
-  tools: McpToolsCapability = new McpToolsCapability()
-}
-
-class McpServerInfo {
-  name: string = ''
-  version: string = ''
-}
-
-class McpInitializeResult {
-  protocolVersion: string = '2024-11-05'
-  capabilities: McpCapabilities = new McpCapabilities()
-  serverInfo: McpServerInfo = new McpServerInfo()
-}
-
-class McpToolsListResult {
-  tools: McpToolDescriptor[] = []
-}
-
-class McpContentItem {
-  type: string = 'text'
-  text: string = ''
-}
-
-class McpToolCallResult {
-  content: McpContentItem[] = []
-  isError: boolean = false
-}
-
-/** 单连接状态：累积字节流 + 已 attach 的 client */
+// P13: McpHttpDelegate 与 JSON-RPC/MCP 显式类型全部移至 McpJsonRpcCore.ets（re-export 保持外部 import 兼容）
+export { McpHttpDelegate }
+// 单连接状态：累积字节流 + 已 attach 的 client */
 class ConnectionState {
   client: socket.TCPSocketConnection
   buffer: Uint8Array = new Uint8Array(0)
@@ -122,6 +49,7 @@ class HttpMcpTransportImpl {
       return true
     }
     this.delegate = delegate
+    McpJsonRpcCore.setDelegate(delegate)
     const server = socket.constructTCPSocketServerInstance()
     server.on('connect', (client: socket.TCPSocketConnection) => {
       this.onClientConnected(client)
@@ -347,147 +275,14 @@ class HttpMcpTransportImpl {
     }
   }
 
-  // ---------- JSON-RPC 2.0 ----------
+  // ---------- JSON-RPC 2.0（P13: 核心下沉 McpJsonRpcCore） ----------
 
   private async handleJsonRpc(conn: ConnectionState, bodyText: string, token: string): Promise<void> {
-    let root: Record<string, Object> | null = null
-    try {
-      root = JSON.parse(bodyText) as Record<string, Object>
-    } catch (e) {
-      await this.sendRpc(conn, null, this.rpcError(-32700, 'Parse error'), [])
-      return
+    const outcome = await McpJsonRpcCore.handleRpc(bodyText, token, 'mcp_http')
+    if (outcome.sessionId !== '') {
+      this.sessions.add(outcome.sessionId)
     }
-    if (!root || root['jsonrpc'] === undefined) {
-      await this.sendRpc(conn, null, this.rpcError(-32600, 'Invalid Request'), [])
-      return
-    }
-    const rpcId = root['id'] !== undefined && root['id'] !== null ? root['id'] : null
-    const rpcMethod = root['method'] !== undefined && root['method'] !== null ? `${root['method']}` : ''
-    const paramsObj = (root['params'] !== undefined && root['params'] !== null)
-      ? root['params'] as Record<string, Object> : null
-
-    console.info(`[${TAG}] rpc method=${rpcMethod} id=${JSON.stringify(rpcId)}`)
-
-    if (rpcMethod === 'initialize') {
-      const result = new McpInitializeResult()
-      result.protocolVersion = '2024-11-05'
-      result.capabilities = new McpCapabilities()
-      result.serverInfo.name = 'browseros-kaihong'
-      result.serverInfo.version = '1.0.0'
-      const sessionId = util.generateRandomUUID()
-      this.sessions.add(sessionId)
-      const extraHeaders: string[] = [`Mcp-Session-Id: ${sessionId}`]
-      await this.sendRpc(conn, rpcId, null, extraHeaders, result)
-      return
-    }
-
-    if (rpcMethod === 'tools/list') {
-      const result = new McpToolsListResult()
-      result.tools = this.buildToolDescriptors()
-      await this.sendRpc(conn, rpcId, null, [], result)
-      return
-    }
-
-    if (rpcMethod === 'tools/call') {
-      const toolName = paramsObj && paramsObj['name'] !== undefined && paramsObj['name'] !== null
-        ? `${paramsObj['name']}` : ''
-      let args: Record<string, Object> = {}
-      if (paramsObj && paramsObj['arguments'] !== undefined && paramsObj['arguments'] !== null) {
-        args = paramsObj['arguments'] as Record<string, Object>
-      }
-      if (!toolName) {
-        await this.sendRpc(conn, rpcId, this.rpcError(-32602, 'Invalid params: missing tool name'), [])
-        return
-      }
-      const response = await this.delegate!.callTool(toolName, args, 'mcp_http', token)
-      if (response.status === 'success') {
-        const result = new McpToolCallResult()
-        const item = new McpContentItem()
-        item.text = response.data === null ? 'ok' : JSON.stringify(response.data)
-        result.content = [item]
-        result.isError = false
-        await this.sendRpc(conn, rpcId, null, [], result)
-      } else {
-        await this.sendRpc(conn, rpcId, this.rpcError(-32000, response.error || 'tool call failed'), [])
-      }
-      return
-    }
-
-    await this.sendRpc(conn, rpcId, this.rpcError(-32601, `Method not found: ${rpcMethod}`), [])
-  }
-
-  // ---------- 工具表（名字与 MCPServer ToolType 一一对应） ----------
-
-  private buildToolDescriptors(): McpToolDescriptor[] {
-    const tools: McpToolDescriptor[] = []
-    tools.push(this.toolDef('navigate', 'Navigate the webview to a URL',
-      this.propMap([['url', new McpParamProp('string', 'The URL to navigate to')]]), ['url']))
-    tools.push(this.toolDef('click', 'Click an element by CSS selector',
-      this.propMap([['selector', new McpParamProp('string', 'CSS selector of the element')]]), ['selector']))
-    tools.push(this.toolDef('type', 'Type text into an input element',
-      this.propMap([
-        ['selector', new McpParamProp('string', 'CSS selector of the input element')],
-        ['text', new McpParamProp('string', 'Text to type')]
-      ]), ['selector', 'text']))
-    tools.push(this.toolDef('screenshot', 'Capture a screenshot of the current page',
-      this.propMap([['quality', new McpParamProp('string', 'low | medium | high')]]), []))
-    tools.push(this.toolDef('snapshot', 'Get DOM snapshot info of the current page', this.propMap([]), []))
-    tools.push(this.toolDef('scroll', 'Scroll the page',
-      this.propMap([
-        ['deltaX', new McpParamProp('number', 'Horizontal scroll pixels')],
-        ['deltaY', new McpParamProp('number', 'Vertical scroll pixels')]
-      ]), ['deltaY']))
-    tools.push(this.toolDef('getText', 'Get visible text of the current page', this.propMap([]), []))
-    tools.push(this.toolDef('wait', 'Wait for milliseconds or for a selector to appear',
-      this.propMap([
-        ['ms', new McpParamProp('number', 'Milliseconds to wait')],
-        ['selector', new McpParamProp('string', 'CSS selector to wait for')],
-        ['timeout', new McpParamProp('number', 'Selector wait timeout ms')]
-      ]), []))
-    tools.push(this.toolDef('back', 'Go back in history', this.propMap([]), []))
-    tools.push(this.toolDef('forward', 'Go forward in history', this.propMap([]), []))
-    return tools
-  }
-
-  private toolDef(name: string, description: string, props: Record<string, McpParamProp>,
-    required: string[]): McpToolDescriptor {
-    const schema = new McpInputSchema()
-    schema.properties = props
-    schema.required = required
-    const def = new McpToolDescriptor()
-    def.name = name
-    def.description = description
-    def.inputSchema = schema
-    return def
-  }
-
-  private propMap(pairs: [string, McpParamProp][]): Record<string, McpParamProp> {
-    const props: Record<string, McpParamProp> = {}
-    for (const pair of pairs) {
-      props[pair[0]] = pair[1]
-    }
-    return props
-  }
-
-  // ---------- 响应发送 ----------
-
-  private rpcError(code: number, message: string): JsonRpcErrorObj {
-    const err = new JsonRpcErrorObj()
-    err.code = code
-    err.message = message
-    return err
-  }
-
-  private async sendRpc(conn: ConnectionState, id: Object | null, error: JsonRpcErrorObj | null,
-    extraHeaders: string[], result?: Object): Promise<void> {
-    const resp = new JsonRpcResponse()
-    resp.id = id
-    resp.error = error
-    if (error === null && result !== undefined) {
-      resp.result = result
-    }
-    const bodyText = JSON.stringify(resp)
-    await this.sendSimple(conn, '200 OK', bodyText, extraHeaders)
+    await this.sendSimple(conn, '200 OK', outcome.bodyText, outcome.extraHeaders)
   }
 
   private async sendSimple(conn: ConnectionState, statusLine: string, bodyText: string,

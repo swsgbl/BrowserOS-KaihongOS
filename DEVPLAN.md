@@ -461,3 +461,26 @@ p11a-icons*/p11b-*（标签条 shape + tab-search）/p11c-*（右键菜单三屏
 - **p12b 紧凑 Markdown 快照**：JSBridgeInjector `__bcp_snapshot_md`（页面侧 clone body→过滤 script/style/noscript/template/iframe/svg/canvas/form/link/meta→可见性过滤（display:none/visibility:hidden）→h1-h6 转 # 标题、a 转 [text](绝对href)、li 转 - 列表、button 转 [按钮 x]、img alt 转 [图: x]、table 转竖线行→30000 字符截断）；**同步 return + runJavaScript 表达式求值直取**（不依赖 registerJavaScriptProxy 回调——该 proxy 换页后失效是 MCP 冷调 snapshot 旧 bug 根因）；BCPEngine.snapshotMarkdown 带"函数丢失自动重注入+双引号解包+__SNAP_ERR__ 错误透传"；SnapshotGenerator 统一透传（根治旧 compress(null.tag) 崩溃）；AgentEngine snapshot 工具与 MCP snapshot 工具双双切换
 - **e2e 实证**：①流式→降级链：POST(stream)→SSE headers→（agnes 免费端点帧不标准/429 限流）→自动非流式 200→tool_calls 派发→循环续跑至 step 6+ ②快照格式：MCP 直调 navigate iana.org/help/example-domains → snapshot 返回 `# Example Domains` 标题行 + `- Domains/- Protocols` 列表行 + 段落文本——紧凑 Markdown 结构成型（example.com 2026 改版已无 h1，故换 iana 验证标题分支）
 - 设备级注记：agnes 免费端点 SSE 帧格式与其限流策略导致流式常走降级路径——降级保障了功能不回归；端点升级后流式自然生效
+
+---
+
+## P13: MCP WebSocket 传输端点（8765）——用户 MCP 服务端任务书真缺口补齐（2026-10-09）
+
+### 技术决策记录
+- **@ohos.net.webSocket 仅客户端**（createWebSocket 连出），API14 无 WS 服务端 API → WS 服务端自建于 @ohos.net.socket TCPSocketServer（HttpMcpTransport 同款模式）
+- 9222 Streamable HTTP 端点保留不动（MCP 现行标准传输）；WS 为任务书指定 8765 补充端点，同一 JSON-RPC 核心 McpJsonRpcCore.ets（从 HttpMcpTransport 平移抽出，HTTP 行为等价）
+- 敏感确认链不在 WS 层重复实现——callTool 内 SensitiveOperationDetector 走页面层 ConfirmDialog，与 HTTP 端点同语义
+
+### 交付
+- **service/McpJsonRpcCore.ets**（新建）：initialize/tools/list/tools/call 分发核心 + 10 工具描述表 + RpcOutcome（传输层无关的响应载体），HTTP/WS 双端共用
+- **service/WsMcpTransport.ets**（新建）：握手（GET /mcp?token= + Upgrade → 101 + Sec-WebSocket-Accept=Base64(SHA1(key+GUID))，公式宿主 node 先行验证）→ 客户端帧 mask 解析（126/127 长度扩展 + XOR 解码）→ opcode 分发（0x1 text=JSON-RPC、0x8 Close 回显后清理、0x9 Ping→0xA Pong、0xA 忽略、0x0 continuation 如实记录不支持）→ 服务器帧不掩码编码（util.TextEncoder UTF-8）→ Map<sessionId,conn> 多客户端会话管理、断开清理、响应单播
+- **HttpMcpTransport.ets 瘦身**：JSON-RPC 核心改 import McpJsonRpcCore（re-export McpHttpDelegate 保持兼容），HTTP 分帧/路由/鉴权原地保留——回归实测 initialize 200 正常
+- **接线**：MCPServer.start(port, token, wsPort=8765) 同起双传输（WS 失败不阻断 HTTP）；stop 同停；AppConfig 增 wsPort 字段（默认 8765，tolerant read，1024-65535 校验）；EntryAbility 传 config.wsPort
+- **tools/p13_ws_test.cjs**（新建）：node 原生 net 手写最小 WS 客户端自测（握手→initialize→tools/list→navigate→Ping/Pong→Close 回显）
+
+### 实测（evidence/p13/，2026-10-09 01:10-01:12 装机后）
+- hilog: [MCP-WS] listening on 8765（MCPServer.start 同起）
+- 自测 6/6 PASS：handshake-101（accept key 验证）/ initialize serverInfo=browseros-kaihong/1.0.0 / tools/list 10 工具 / tools/call navigate 返回 {url,result=https://example.com}（BCP 真实执行，后台 WebView 生效）/ ping-pong 回显 / close 帧回显
+- 负向：错 token 握手 → HTTP/1.1 401 Unauthorized（发完即断）
+- 回归：HTTP 9222 initialize 200 正常（MCP-RPC via=mcp_http 铁证）
+- 注记：navigate 后屏幕截图显示 Dashboard——激活 tab 是仪表盘，导航发生在绑定 WebView（P6 多 Web 常驻架构），RPC 响应即执行证据

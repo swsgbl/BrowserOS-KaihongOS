@@ -11,7 +11,9 @@ import { ErrorHandler, AppError } from '../infra/ErrorHandler'
 import { ErrorCodes } from '../common/ErrorCodes'
 import { Constants } from '../common/Constants'
 import { SensitiveOperationType } from '../common/Types'
-import { HttpMcpTransport, McpHttpDelegate } from './HttpMcpTransport'
+import { HttpMcpTransport } from './HttpMcpTransport'
+import { McpHttpDelegate } from './McpJsonRpcCore'
+import { WsMcpTransport } from './WsMcpTransport'
 import { StorageManager } from '../storage/StorageManager'
 
 type ToolHandler = (params: Record<string, Object>, agentId: string) => Promise<MCPToolResponse>
@@ -52,7 +54,7 @@ class MCPServerImpl implements McpHttpDelegate {
   private toolHandlers: Map<string, ToolHandler> = new Map()
   private connections: Set<string> = new Set()
 
-  async start(port: number, authToken: string): Promise<boolean> {
+  async start(port: number, authToken: string, wsPort: number = 8765): Promise<boolean> {
     this.port = port
     this.authToken = authToken
     this.registerToolHandlers()
@@ -62,6 +64,12 @@ class MCPServerImpl implements McpHttpDelegate {
     if (!listening) {
       ErrorHandler.handle(new AppError(ErrorCodes.MCP_004, `Port ${port} unavailable`))
       return false
+    }
+
+    // P13: WS 传输端点（任务书指定 8765）与 HTTP 同起；失败不阻断 HTTP 已成的启动
+    const wsListening = await WsMcpTransport.start(wsPort, this)
+    if (!wsListening) {
+      console.error('[MCPServer] WS transport start FAILED on port ' + wsPort + ' (HTTP on ' + port + ' stays up)')
     }
 
     this.running = true
@@ -82,6 +90,7 @@ class MCPServerImpl implements McpHttpDelegate {
 
   async stop(): Promise<void> {
     await HttpMcpTransport.stop()
+    await WsMcpTransport.stop()
     this.running = false
     this.connections.clear()
     const stopData: MCPConnectionChangeData = { status: 'stopped', port: this.port }

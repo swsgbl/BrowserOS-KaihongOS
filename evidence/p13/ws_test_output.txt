@@ -1,0 +1,8 @@
+PASS handshake-101 accept key verified
+PASS initialize serverInfo=browseros-kaihong/1.0.0
+PASS tools/list 10 tools: navigate,click,type,screenshot,snapshot,scroll,getText,wait,back,forward
+PASS tools/call navigate {"url":"https://example.com","result":"https://example.com"}
+PASS ping-pong echo payload verified
+PASS close-echo server echoed close frame
+ALL PASS (6/6)
+--- hilog WS --- 

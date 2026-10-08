@@ -20,7 +20,7 @@ export default class EntryAbility extends UIAbility {
       console.info('EntryAbility ConfigManager loaded, mcpPort=' + config.mcpPort)
       // P3: 启动 MCP 网络层（HTTP transport 监听 0.0.0.0:{mcpPort}，token 每次启动新生成）
       const token = MCPServer.generateAuthToken()
-      MCPServer.start(config.mcpPort, token).then((ok) => {
+      MCPServer.start(config.mcpPort, token, config.wsPort).then((ok) => {
         if (ok) {
           console.info('EntryAbility MCPServer started on port ' + config.mcpPort)
         } else {
