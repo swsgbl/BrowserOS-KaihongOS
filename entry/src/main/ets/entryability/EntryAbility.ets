@@ -4,6 +4,7 @@ import { BusinessError } from '@kit.BasicServicesKit'
 import { StorageManager } from '../storage/StorageManager'
 import { ConfigManager } from '../storage/ConfigManager'
 import { MCPServer } from '../service/MCPServer'
+import { HistoryManager } from '../service/HistoryManager'
 
 export default class EntryAbility extends UIAbility {
   onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
@@ -16,6 +17,12 @@ export default class EntryAbility extends UIAbility {
     } catch (e) {
       console.error('EntryAbility setBasePath error: ' + e)
     }
+    // P14a: 历史持久化装载链（RDB 建表 → 旧 JSON 一次性迁移 → 镜像装载 → 异步清理策略）
+    HistoryManager.loadHistory(this.context).then(() => {
+      console.info('EntryAbility HistoryManager loadHistory done')
+    }).catch((e: BusinessError) => {
+      console.error('EntryAbility HistoryManager loadHistory error: ' + e.message)
+    })
     ConfigManager.load().then((config) => {
       console.info('EntryAbility ConfigManager loaded, mcpPort=' + config.mcpPort)
       // P3: 启动 MCP 网络层（HTTP transport 监听 0.0.0.0:{mcpPort}，token 每次启动新生成）
