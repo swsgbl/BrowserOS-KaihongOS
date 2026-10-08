@@ -1,4 +1,5 @@
 import { http } from '@kit.NetworkKit'
+import { util } from '@kit.ArkTS'
 import { BusinessError } from '@kit.BasicServicesKit'
 import { ErrorHandler, AppError } from '../infra/ErrorHandler'
 import { ErrorCodes } from '../common/ErrorCodes'
@@ -273,6 +274,204 @@ class LLMClientImpl {
     }
   }
 
+  /**
+   * P12a：SSE 流式 chat/completions。onDelta 每收到增量 content 回调一次（partial=本帧增量, total=累计）。
+   * 返回拼装完整的 LLMResponse；未收到任何 delta 且失败时返回 null（调用方可降级 chat()）。
+   */
+  async chatStream(options: LLMRequestOptions, onDelta: (partial: string, total: string) => void): Promise<LLMResponse | null> {
+    this.lastError = ''
+    const endpoint = this.buildEndpoint(options.baseUrl)
+    const body = new LLMRequestBody()
+    body.model = options.model
+    body.messages = options.messages.map(m => m.toJSON())
+    if (options.tools.length > 0) {
+      body.tools = options.tools.map(t => this.toolToJSON(t))
+    }
+    body.stream = true
+    const bodyText = JSON.stringify(body)
+    console.info(`[${TAG}] POST(stream) ${endpoint} model=${options.model} messages=${options.messages.length} tools=${options.tools.length}`)
+
+    const st = new LLMStreamState()
+    const decoder = util.TextDecoder.create('utf-8')
+    const httpRequest = http.createHttp()
+    let frameBuf = ''
+
+    httpRequest.on('headersReceive', (header: Object) => {
+      console.info(`[${TAG}] SSE headers received`)
+    })
+    httpRequest.on('dataReceive', (chunk: ArrayBuffer) => {
+      // 增量解码（流式=true 处理跨块多字节 UTF-8），行帧可能跨块：保留 frameBuf 拼接
+      const piece = decoder.decodeWithStream(new Uint8Array(chunk), { stream: true } as util.DecodeWithStreamOptions)
+      frameBuf += piece
+      const lines = frameBuf.split('\n')
+      frameBuf = lines.length > 0 ? lines[lines.length - 1] : ''
+      for (let li = 0; li < lines.length - 1; li++) {
+        const line = lines[li].trim()
+        if (line.length === 0 || line.startsWith(':')) {
+          continue
+        }
+        if (!line.startsWith('data:')) {
+          continue
+        }
+        const payload = line.substring(5).trim()
+        if (payload === '[DONE]') {
+          continue
+        }
+        this.ingestSSEPayload(payload, st, onDelta)
+      }
+    })
+
+    try {
+      const header: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'Accept': 'text/event-stream'
+      }
+      if (options.apiKey.length > 0) {
+        header['Authorization'] = `Bearer ${options.apiKey}`
+      }
+      const response = await httpRequest.request(endpoint, {
+        method: http.RequestMethod.POST,
+        header: header as Object,
+        extraData: bodyText,
+        connectTimeout: options.timeoutMs,
+        readTimeout: options.timeoutMs,
+        usingCache: false
+      })
+      // 请求 resolve 后流已结束；若服务器无视 stream:true 返回整体 JSON，这里兜底整体解析
+      const statusCode = response.responseCode
+      if (statusCode !== 200) {
+        const resultText = `${response.result}`
+        const snippet = resultText.length > 200 ? resultText.substring(0, 200) : resultText
+        this.lastError = `HTTP ${statusCode}: ${snippet}`
+        console.error(`[${TAG}] stream HTTP ${statusCode}`)
+        return st.sawDelta ? this.assembleStreamResponse(st) : null
+      }
+      if (!st.sawDelta && frameBuf.trim().length === 0) {
+        // 无 SSE 帧：可能整包 JSON 返回
+        const resultText = `${response.result}`
+        if (resultText.length > 0) {
+          const direct = this.parseResponse(resultText)
+          if (direct) {
+            console.info(`[${TAG}] stream fallback: non-SSE JSON parsed`)
+            if (direct.content.length > 0) {
+              onDelta(direct.content, direct.content)
+            }
+            return direct
+          }
+        }
+      }
+      // 处理残留最后一帧
+      const tail = frameBuf.trim()
+      if (tail.startsWith('data:')) {
+        const payload = tail.substring(5).trim()
+        if (payload.length > 0 && payload !== '[DONE]') {
+          this.ingestSSEPayload(payload, st, onDelta)
+        }
+      }
+      // 200 但全程无有效 delta（帧格式不兼容等）：返回 null 让调用方降级非流式
+      if (!st.sawDelta) {
+        console.warn(`[${TAG}] stream got no usable delta, fallback (lastError=${this.lastError})`)
+        return null
+      }
+      const resp = this.assembleStreamResponse(st)
+      console.info(`[${TAG}] stream done: finish=${resp.finish_reason} contentLen=${resp.content.length} toolCalls=${resp.tool_calls.length}`)
+      return resp
+    } catch (e) {
+      const be = e as BusinessError
+      const detail = be.code !== undefined ? be.code + '/' + be.message : JSON.stringify(e)
+      console.error(`[${TAG}] stream exception: ${detail}`)
+      this.lastError = `流式请求异常: ${detail.substring(0, 120)}`
+      // 已收到部分增量则返回部分结果，否则 null 让调用方降级
+      return st.sawDelta ? this.assembleStreamResponse(st) : null
+    } finally {
+      httpRequest.off('dataReceive')
+      httpRequest.off('headersReceive')
+      httpRequest.destroy()
+    }
+  }
+
+  /** 解析单帧 SSE data 负载（choices[0].delta）并合入流式状态 */
+  private ingestSSEPayload(payload: string, st: LLMStreamState, onDelta: (partial: string, total: string) => void): void {
+    let root: Record<string, Object> | null = null
+    try {
+      root = JSON.parse(payload) as Record<string, Object>
+    } catch (e) {
+      console.warn(`[${TAG}] SSE frame parse failed, head=${payload.substring(0, 80)}`)
+      return
+    }
+    if (!root) {
+      return
+    }
+    const choices = root['choices']
+    if (!choices || !Array.isArray(choices) || choices.length === 0) {
+      return
+    }
+    const choice = choices[0] as Record<string, Object>
+    if (choice['finish_reason'] !== undefined && choice['finish_reason'] !== null) {
+      st.finishReason = `${choice['finish_reason']}`
+    }
+    const delta = choice['delta'] as Record<string, Object> | undefined
+    if (!delta) {
+      return
+    }
+    const content = delta['content']
+    if (typeof content === 'string' && content.length > 0) {
+      st.contentBuf += content
+      st.sawDelta = true
+      const now = Date.now()
+      if (now - st.lastDeltaLogMs > 2000) {
+        st.lastDeltaLogMs = now
+        console.info(`[${TAG}] SSE delta totalLen=${st.contentBuf.length}`)
+      }
+      onDelta(content, st.contentBuf)
+    }
+    const rawCalls = delta['tool_calls']
+    if (rawCalls && Array.isArray(rawCalls)) {
+      for (const raw of rawCalls as Object[]) {
+        const tc = raw as Record<string, Object>
+        const idxRaw = tc['index']
+        const idx = typeof idxRaw === 'number' ? idxRaw as number : 0
+        const fnObj = tc['function'] as Record<string, Object> | undefined
+        let exist = st.toolCalls.get(idx)
+        if (!exist) {
+          exist = new LLMToolCall('', '', '')
+          st.toolCalls.set(idx, exist)
+        }
+        if (tc['id'] !== undefined && tc['id'] !== null && exist.id.length === 0) {
+          exist.id = `${tc['id']}`
+        }
+        if (fnObj) {
+          if (fnObj['name'] !== undefined && fnObj['name'] !== null && exist.function_name.length === 0) {
+            exist.function_name = `${fnObj['name']}`
+          }
+          const args = fnObj['arguments']
+          if (typeof args === 'string' && args.length > 0) {
+            exist.function_args += args
+          }
+        }
+        st.sawDelta = true
+      }
+    }
+  }
+
+  /** 流式状态 → LLMResponse */
+  private assembleStreamResponse(st: LLMStreamState): LLMResponse {
+    const resp = new LLMResponse()
+    resp.content = st.contentBuf
+    resp.finish_reason = st.finishReason
+    const keys = Array.from(st.toolCalls.keys()).sort((a: number, b: number): number => a - b)
+    for (const k of keys) {
+      const tc = st.toolCalls.get(k)
+      if (tc && tc.function_name.length > 0) {
+        if (tc.id.length === 0) {
+          tc.id = `call_${Date.now()}_${k}`
+        }
+        resp.tool_calls.push(tc)
+      }
+    }
+    return resp
+  }
+
   /** 工具定义转 OpenAI function 格式（parameters 经 toJSON 序列化） */
   toolToJSON(spec: LLMToolSpec): Record<string, Object> {
     const fn = new LLMToolFunctionJSON()
@@ -345,3 +544,12 @@ class LLMClientImpl {
 }
 
 export const LLMClient = new LLMClientImpl()
+
+// P12a: SSE streaming state holder (single-flight, resets per chatStream call)
+class LLMStreamState {
+  contentBuf: string = ''
+  toolCalls: Map<number, LLMToolCall> = new Map()
+  finishReason: string = ''
+  lastDeltaLogMs: number = 0
+  sawDelta: boolean = false
+}

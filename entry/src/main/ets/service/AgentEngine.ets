@@ -321,7 +321,7 @@ class AgentEngineImpl {
     ]
     specs.push(this.makeSpec('type', 'Type text into an element', typeEntries, ['selector', 'text']))
     specs.push(this.makeSpec('getText', 'Get visible text of the current page', [], []))
-    specs.push(this.makeSpec('snapshot', 'Get DOM snapshot info of the current page', [], []))
+    specs.push(this.makeSpec('snapshot', 'Get compact markdown snapshot of the visible page (headings, links, lists, buttons)', [], []))
     const scrollEntries: LLMParamEntry[] = [
       this.entry('deltaX', this.numProp('Horizontal scroll pixels')),
       this.entry('deltaY', this.numProp('Vertical scroll pixels'))
@@ -417,14 +417,29 @@ class AgentEngineImpl {
         console.info(`[AgentEngine] step ${step}/${AgentEngineImpl.MAX_STEPS} agent=${agentId}`)
         this.updateAgentProgress(agentId, Math.round((step - 1) * 100 / AgentEngineImpl.MAX_STEPS))
 
-        const response = await LLMClient.chat({
+        // P12a: 优先 SSE 流式（onDelta 实时更新磁贴/侧栏活动文本），失败降级非流式重试一次
+        let response = await LLMClient.chatStream({
           baseUrl: cfg.llmBaseUrl,
           apiKey: cfg.llmApiKey,
           model: cfg.llmModel,
           messages: messages,
           tools: tools,
           timeoutMs: AgentEngineImpl.LLM_TIMEOUT_MS
+        }, (partial: string, total: string) => {
+          const tail = total.length > 48 ? total.substring(total.length - 48) : total
+          this.agentActivities.set(agentId, `思考中: ${tail}`)
         })
+        if (response === null) {
+          console.warn('[AgentEngine] stream failed (' + LLMClient.lastError + '), fallback to non-stream chat')
+          response = await LLMClient.chat({
+            baseUrl: cfg.llmBaseUrl,
+            apiKey: cfg.llmApiKey,
+            model: cfg.llmModel,
+            messages: messages,
+            tools: tools,
+            timeoutMs: AgentEngineImpl.LLM_TIMEOUT_MS
+          })
+        }
 
         if (!response) {
           failed = true
@@ -615,7 +630,7 @@ class AgentEngineImpl {
         return await BCPEngine.getText()
       }
       if (name === 'snapshot') {
-        return await BCPEngine.snapshot()
+        return await BCPEngine.snapshotMarkdown()
       }
       if (name === 'scroll') {
         const dx = this.argNum(args, 'deltaX', 0)
