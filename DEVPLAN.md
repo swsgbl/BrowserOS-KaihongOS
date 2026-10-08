@@ -414,3 +414,26 @@ SettingsPage 三处"有 UI 无接线"：①外观暗色开关只改本地 state�
 - **隐私开关联动**：root 推 sensitiveConfirm=false → MCP navigate example.com/pay **5ms 直接执行 200**（对照 P8 同操作挂起等弹窗）→ 验后已恢复 true 默认
 - UI 点 Toggle 的 uitest 命中在隐私节偶发不稳（设备级自动化残留；源码 onChange→ConfigManager 接线已确认，同款暗色 Toggle UI 交互已实测可用）
 - git 见本轮提交
+
+---
+
+## P11 全界面复刻补缺（2026-10-08，五棒接力收官）
+
+### Phase 交付（git 分笔）
+- **p11a (be794e6)** 图标体系：28 枚 Material SVG（ic_back/forward/reload/star/history/home/search/globe/folder/close/add/more_vert 等，24x24 无 fill 属性），全工具栏/菜单/标签条字形图标换 SVG 双态染色（fillColor + darkMode Palette），V1 index 同步（restool 5.0.1.011，media records 45）
+- **p11b (b98c140)** Chromium 标签条：TabStrip 组件（favicon 占位 + 标题 12px + × 关闭，当前标签上圆角 8px 白底，item layoutWeight(1) 等分——P5 挤压教训固化）+ TabSearchPanel（Ctrl-K 式标签搜索：标题/URL 过滤 + 行内 × 关闭 + 新建项）
+- **p11c (b997a53)** 右键菜单：ContextMenu 自绘覆盖层（拦截 Web.onContextMenuShow return true），页内菜单=后退/前进/重新加载/加入书签/复制网址/查看源码（ViewSourcePage 内建页），tab 菜单=向右新建/重开已关闭/复制网址/关闭/关闭其他/关闭右侧；仪表盘区=刷新/后退/书签管理。设备无物理右键 → 以长按触发（device-specific 决策）
+- **p11d (9a53886)** 书签条 + omnibox 分组下拉 + 书签气泡：BookmarkBar 组件（仅 dashboard/neo 显示，pill 项 ic_globe+标题，右端「全部书签 N」→ BookmarksPage，点击=当前标签跳转），OmniboxSuggestions 首行「搜索 kw」+ 历史/书签组头，onPick(kind,url) 搜索项走引擎 fallback，BookmarkBubble 加「文件夹:书签栏」只读行（模型无层级如实标注）；修复存量 bug：BookmarkManager.load() 冷启动无人调用→书签重启即丢（aboutToAppear 接线）；omnibox scheme/右键快捷文案字形去 glyph 化（Alt+← 改 Alt+左箭头）
+- **p11e** 收尾提交（本 DEVPLAN 节 + 证据归档）
+
+### 设备实测决策与限制（如实记录）
+- 右键=长按：KaihongOS 5.0 无物理鼠标右键事件，Web.onContextMenuShow 经长按菜单路径触发
+- ArkUI 约束再验证：ForEach itemGenerator 禁命令式赋值（日期/分组预计算）；@Builder 多根子节点掉进布局流（覆盖层挂 build 根 Stack）；tab item .layoutWeight(1) 红线保持
+- 设备 IME/TextInput 受控回灌缺陷（P2 已知）持续存在，omnibox 自动化输入偶发拼接，验收以 dumpLayout + hilog 铁证为准
+
+### 证据（evidence/p11/）
+p11a-icons*/p11b-*（标签条 shape + tab-search）/p11c-*（右键菜单三屏）/p11d-dashboard + p11d-bar-crop（书签条 3 pill）/p11e-bookmarkbar、p11e-omnibox-dropdown（分组下拉）、p11e-bookmark-bubble（文件夹行）、p11e-bookmark-open、p11e-threedot-menu、p11f-boot（终棒装机复验：书签条+驾驶舱全渲染）。
+
+### 遗留（转 P11-F 用户指令补缺）
+1. Web 引擎层：停止按钮（加载中刷新钮切 stop 态）——p11f 执行
+2. 键盘拦截（Ctrl+L/R/T/W 等 onInterceptKeyEvent）——p11f 执行，不支持组合键在 DEVPLAN 如实记录
