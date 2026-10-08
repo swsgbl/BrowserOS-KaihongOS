@@ -437,3 +437,13 @@ p11a-icons*/p11b-*（标签条 shape + tab-search）/p11c-*（右键菜单三屏
 ### 遗留（转 P11-F 用户指令补缺）
 1. Web 引擎层：停止按钮（加载中刷新钮切 stop 态）——p11f 执行
 2. 键盘拦截（Ctrl+L/R/T/W 等 onInterceptKeyEvent）——p11f 执行，不支持组合键在 DEVPLAN 如实记录
+
+
+### P11 独立终验收（Zodex，2026-10-08 19:4x，全项通过，git 链 be794e6→b98c140→b997a53→9a53886→41c4b06→482f7a6→3768046）
+- **A 图标体系**：29+ 枚 Material 风 SVG（fillColor 双色板染色）；终构建 dump 实证工具栏/标签条无任何文字字形残留（p11z.json 无 ←→↻☆🕘⌂❐⋮ 文本节点）
+- **B 标签条**：Chromium 化（favicon 方块+标题+TabSearchPanel+工具栏透明按钮）
+- **C 右键菜单**：ContextMenu 组件+标签/仪表盘长按+Web.onContextMenuShow 页面菜单+ViewSourcePage（设备适配：右键=长按）
+- **D 书签条**：终构建实测 3 pill（华为开发者/OpenHarmony/Example Domain）+全部书签 3 入口（p11z1.jpeg）
+- **E**：omnibox 分组下拉/书签气泡文件夹行/字形清零/全表面截图 evidence/p11/
+- **F Web 引擎层补缺（用户任务书）**：停止按钮双态（isLoading→ic_stop→Adapter.stop() 透传+手动复位，构建绿+装机）；onInterceptKeyEvent Ctrl+L/R/T/W 代码落地（SDK14 web.d.ts:7511 实锤 since9 兼容；**设备级限制如实记录：VM uinput 无法注入 Ctrl 组合键，代码路径编译通过但实操不可验证**）；用户任务书 12 项全部闭合（10 项 P1/P6 既有+2 项本轮补齐）
+- 附注：482f7a6 后工作树遗留 9 文件图标清理（P11G 死前未提交，含 Image 上残留 .fontColor 编译隐患 3 处）由 Zodex 修复提交（3768046）并构建绿+装机；期间曾发现外来任务（tty7 安装）插队占用 daemon，无仓库污染
