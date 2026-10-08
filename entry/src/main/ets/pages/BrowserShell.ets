@@ -21,6 +21,7 @@ import { TabStrip, TabSearchPanel } from '../components/TabStrip'
 import { BookmarkBar } from '../components/BookmarkBar'
 import { ContextMenu, CtxEntry, ctxDivider } from '../components/ContextMenu'
 import { common } from '@kit.AbilityKit'
+import { KeyCode } from '@kit.InputKit'
 import { pasteboard } from '@kit.BasicServicesKit'
 import { Palette } from '../common/Palette'
 
@@ -56,6 +57,7 @@ struct BrowserShell {
   @State tabs: TabInfo[] = []
   @State activeTabId: string = ''
   @State isLoading: boolean = false
+  @State ctrlHeld: boolean = false
   @State showDashboard: boolean = true
   @State loadProgress: number = 0
   @State isBookmarked: boolean = false
@@ -404,24 +406,29 @@ struct BrowserShell {
         }
       })
 
+      // P11f: 加载中刷新钮变停止钮(点它即 stop)
       Button({ type: ButtonType.Normal }) {
-        Image($r('app.media.ic_reload'))
+        Image(this.isLoading ? $r('app.media.ic_stop') : $r('app.media.ic_reload'))
           .width(20).height(20)
-          .fillColor(this.pal().text2)
+          .fillColor(this.isLoading ? '#1A73E8' : this.pal().text2)
           .draggable(false)
       }
       .width(36)
       .height(36)
       .backgroundColor(Color.Transparent)
       .onClick(() => {
-        console.info('BrowserShell refresh button clicked, tabId=' + this.activeTabId)
-        const controller = this.getActiveController()
-        if (controller) {
-          console.info('BrowserShell REFRESH -> controller.refresh() on tabId=' + this.activeTabId)
-          this.isLoading = true
-          controller.refresh()
+        if (this.isLoading) {
+          this.stopActiveLoad()
         } else {
-          console.info('BrowserShell REFRESH skipped: controller not attached, tabId=' + this.activeTabId)
+          console.info('BrowserShell refresh button clicked, tabId=' + this.activeTabId)
+          const controller = this.getActiveController()
+          if (controller) {
+            console.info('BrowserShell REFRESH -> controller.refresh() on tabId=' + this.activeTabId)
+            this.isLoading = true
+            controller.refresh()
+          } else {
+            console.info('BrowserShell REFRESH skipped: controller not attached, tabId=' + this.activeTabId)
+          }
         }
       })
 
@@ -431,7 +438,7 @@ struct BrowserShell {
           .width(16).height(16)
           .fillColor(this.currentUrl.startsWith('https://') ? '#137333' : '#5F6368')
           .draggable(false)
-        TextInput({ text: this.urlInput, placeholder: '输入URL或搜索关键词' }).fontColor(this.pal().text).placeholderColor(this.pal().text2)
+        TextInput({ text: this.urlInput, placeholder: '输入URL或搜索关键词' }).id('p11f_omnibox').fontColor(this.pal().text).placeholderColor(this.pal().text2)
           .layoutWeight(1)
           .height(32)
           .fontSize(13)
@@ -1048,6 +1055,13 @@ struct BrowserShell {
           .height('100%')
           .visibility(tab.tabId === this.activeTabId && !this.showDashboard ? Visibility.Visible : Visibility.Hidden)
           .zIndex(tab.tabId === this.activeTabId ? 10 : 1)
+          .onInterceptKeyEvent((event: KeyEvent): boolean => {
+            // P11f: 页面 keydown 前拦截(仅激活 tab + 非覆盖态),Ctrl 组合消费
+            if (tab.tabId !== this.activeTabId || this.showDashboard || this.showNeo) {
+              return false
+            }
+            return this.onWebInterceptKeyEvent(event)
+          })
           .onControllerAttached(() => {
             // 闭包捕获事件源 tabId（多 Web 下 activeTabId 不可靠）
             const tabId = tab.tabId
@@ -1164,6 +1178,65 @@ struct BrowserShell {
     .width('100%')
     .layoutWeight(1)
     .backgroundColor(this.pal().surface)
+  }
+
+  /** P11f: 停止加载 —— 切图标 + 手动复位 isLoading(onPageEnd 不会触发) */
+  private stopActiveLoad(): void {
+    console.info('BrowserShell STOP -> controller.stop() on tabId=' + this.activeTabId)
+    try {
+      this.getActiveController()?.stop()
+    } catch (e) {
+      console.error('BrowserShell stop error: ' + e)
+    }
+    this.isLoading = false
+    this.loadProgress = 0
+  }
+
+  /** P11f: 键盘快捷键拦截(WebView 页面 keydown 前,return true=消费)
+   *  映射: Ctrl+L 聚焦地址栏 / Ctrl+R 刷新 / Ctrl+T 新建标签 / Ctrl+W 关闭标签
+   *  注: Web.onInterceptKeyEvent 的回调参数是 ArkUI 通用 KeyEvent(common.d.ts:10147),
+   *  字段 keyCode:number / keyText / type:KeyType(Down/Up),无 modifiers 对象;
+   *  keyCode 为原生 Android 风格键码,与 @kit.InputKit KeyCode 枚举同值
+   *  (KEYCODE_L=2028 / KEYCODE_R=2034 / KEYCODE_T=2036 / KEYCODE_W=2039,
+   *   KEYCODE_CTRL_LEFT=2072 / KEYCODE_CTRL_RIGHT=2073,SDK14 keyCode.d.ts 实测)。
+   *  检测 Ctrl: 事件流里 Ctrl 键自身会先触发一个 keyCode=2072/2073 的 Down 事件,
+   *  缓存到 @State ctrlHeld,组合键到达时读取;Ctrl 的 Up 事件清除。 */
+  private onWebInterceptKeyEvent(event: KeyEvent): boolean {
+    // Ctrl 自身按下/抬起(原生键码 2072/2073)
+    if (event.keyCode === KeyCode.KEYCODE_CTRL_LEFT || event.keyCode === KeyCode.KEYCODE_CTRL_RIGHT) {
+      this.ctrlHeld = event.type === 0 // KeyType.Down = 0 (SDK14 enums.d.ts:2372)
+      return false // Ctrl 本身不消费,交给页面
+    }
+    if (!this.ctrlHeld || event.type !== 0) { // 0 = KeyType.Down, 1 = KeyType.Up
+      return false
+    }
+    switch (event.keyCode) {
+      case KeyCode.KEYCODE_L:
+        console.info('BrowserShell KB Ctrl+L -> focus omnibox')
+        this.focusOmnibox()
+        return true
+      case KeyCode.KEYCODE_R:
+        console.info('BrowserShell KB Ctrl+R -> refresh')
+        this.isLoading = true
+        this.getActiveController()?.refresh()
+        return true
+      case KeyCode.KEYCODE_T:
+        console.info('BrowserShell KB Ctrl+T -> new tab')
+        this.createNewTab()
+        return true
+      case KeyCode.KEYCODE_W:
+        console.info('BrowserShell KB Ctrl+W -> close tab')
+        this.closeTabById(this.activeTabId)
+        return true
+      default:
+        return false
+    }
+  }
+
+  /** P11f: omnibox 聚焦(Ctrl+L 后地址栏选中态,用户直接输入替换) */
+  private focusOmnibox(): void {
+    this.getUIContext().getFocusController().requestFocus('p11f_omnibox')
+    console.info('BrowserShell focusOmnibox requested')
   }
 
   private getOrCreateController(tabId: string): webview.WebviewController {

@@ -36,6 +36,10 @@ export class WebViewAdapter implements IWebviewController {
     this.controller.refresh()
   }
 
+  stop(): void {
+    this.controller.stop()
+  }
+
   getTitle(): string {
     return this.controller.getTitle()
   }
