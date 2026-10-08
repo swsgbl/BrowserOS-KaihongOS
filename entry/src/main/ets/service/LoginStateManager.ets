@@ -344,14 +344,14 @@ class LoginStateManagerImpl {
     // 旧载体一次性迁移: login_state/*.json -> Preferences 聚合键
     // 含 .migrated 档案回灌: prefs 为空且档案在盘时自愈（修复早期竞态期 putString 静默失败导致的数据未落）
     const MIGRATED_SUFFIX = '.migrated'
+    // 任意 .json 谱系文件均纳入（.json / .json.migrated / 重复改名产生的 .json.migrated.migrated 等）
     const files = await StorageManager.listDir('login_state')
-      .then((raw: string[]) => raw.filter((f: string) =>
-        (f.endsWith('.json') && !f.endsWith(MIGRATED_SUFFIX)) || f.endsWith('.json' + MIGRATED_SUFFIX)))
+      .then((raw: string[]) => raw.filter((f: string) => f.includes('.json')))
     let migrated = 0
     const aggDomains: Record<string, Object> = {}
     for (const file of files) {
-      const isArchive = file.endsWith(MIGRATED_SUFFIX)
-      const domain = (isArchive ? file.substring(0, file.length - MIGRATED_SUFFIX.length) : file).replace('.json', '')
+      const isArchive = file.indexOf('.json') !== file.length - '.json'.length
+      const domain = file.substring(0, file.indexOf('.json'))
       let json: Record<string, Object> | null = null
       if (SecureStorageAdapter.isSecureStorageAvailable()) {
         json = await SecureStorageAdapter.decryptLoadJSON(`login_state/${file}`)
