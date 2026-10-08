@@ -9,7 +9,7 @@
 import { Palette } from '../common/Palette'
 
 export interface SuggestItem {
-  kind: string // 'history' | 'bookmark'
+  kind: string // 'search' | 'history' | 'bookmark'
   title: string
   url: string
 }
@@ -127,7 +127,7 @@ export struct OmniboxSuggestions {
   }
 
   items: SuggestItem[] = []
-  onPick: (url: string) => void = (url: string) => {}
+  onPick: (kind: string, url: string) => void = (kind: string, url: string) => {}
   onClose: () => void = () => {}
 
   build(): void {
@@ -143,26 +143,49 @@ export struct OmniboxSuggestions {
       if (this.items.length > 0) {
         Column() {
           ForEach(this.items, (item: SuggestItem, index: number) => {
+            // P11d: kind 变化处插组头(历史记录/书签)
+            if (index > 0 && item.kind !== this.items[index - 1].kind) {
+              Text(item.kind === 'bookmark' ? '书签' : '历史记录')
+                .fontSize(11)
+                .fontColor(this.pal().text2)
+                .margin({ top: 4, bottom: 2, left: 8 })
+                .alignSelf(ItemAlign.Start)
+            }
             Row() {
-              Image(item.kind === 'bookmark' ? $r('app.media.ic_star_filled') : $r('app.media.ic_history'))
-                .width(16).height(16)
-                .fillColor(item.kind === 'bookmark' ? '#F9AB00' : '#5F6368')
-                .draggable(false)
-              Column() {
-                Text(item.title.length > 0 ? item.title : item.url)
+              if (item.kind === 'search') {
+                // P11d: 首行搜索项 —— ic_search + 「搜索 kw」粗体
+                Image($r('app.media.ic_search'))
+                  .width(16).height(16)
+                  .fillColor(this.pal().text2)
+                  .draggable(false)
+                Text(`搜索 ${item.title}`)
                   .fontSize(13)
+                  .fontWeight(FontWeight.Medium)
                   .fontColor(this.pal().text)
                   .maxLines(1)
                   .textOverflow({ overflow: TextOverflow.Ellipsis })
-                Text(item.url)
-                  .fontSize(10)
-                  .fontColor(this.pal().text2)
-                  .maxLines(1)
-                  .textOverflow({ overflow: TextOverflow.Ellipsis })
-                  .margin({ top: 1 })
+                  .margin({ left: 0 })
+              } else {
+                Image(item.kind === 'bookmark' ? $r('app.media.ic_star_filled') : $r('app.media.ic_history'))
+                  .width(16).height(16)
+                  .fillColor(item.kind === 'bookmark' ? '#F9AB00' : '#5F6368')
+                  .draggable(false)
+                Column() {
+                  Text(item.title.length > 0 ? item.title : item.url)
+                    .fontSize(13)
+                    .fontColor(this.pal().text)
+                    .maxLines(1)
+                    .textOverflow({ overflow: TextOverflow.Ellipsis })
+                  Text(item.url)
+                    .fontSize(10)
+                    .fontColor(this.pal().text2)
+                    .maxLines(1)
+                    .textOverflow({ overflow: TextOverflow.Ellipsis })
+                    .margin({ top: 1 })
+                }
+                .alignItems(HorizontalAlign.Start)
+                .layoutWeight(1)
               }
-              .alignItems(HorizontalAlign.Start)
-              .layoutWeight(1)
             }
             .width('100%')
             .height(44)
@@ -170,7 +193,7 @@ export struct OmniboxSuggestions {
             .borderRadius(6)
             .backgroundColor(index === 0 ? this.pal().selected : this.pal().surface)
             .onClick(() => {
-              this.onPick(item.url)
+              this.onPick(item.kind, item.url)
             })
           }, (item: SuggestItem, index: number) => item.kind + '_' + item.url + '_' + index)
         }
@@ -244,6 +267,34 @@ export struct BookmarkBubble {
           .onChange((value: string) => {
             this.onTitleChange(value)
           })
+
+        // P11d: 文件夹只读行(书签数据模型无层级,固定「书签栏」)
+        Text('文件夹')
+          .fontSize(11)
+          .fontColor(this.pal().text2)
+          .margin({ top: 10, bottom: 4 })
+          .alignSelf(ItemAlign.Start)
+        Row() {
+          Image($r('app.media.ic_folder'))
+            .width(16).height(16)
+            .fillColor(this.pal().text2)
+            .draggable(false)
+          Text('书签栏')
+            .fontSize(13)
+            .fontColor(this.pal().text)
+            .margin({ left: 6 })
+          Blank()
+          Image($r('app.media.ic_more_vert'))
+            .width(14).height(14)
+            .fillColor(this.pal().text2)
+            .opacity(0.4)
+            .draggable(false)
+        }
+        .width('100%')
+        .height(34)
+        .padding({ left: 10, right: 10 })
+        .backgroundColor(this.pal().surfaceAlt)
+        .borderRadius(8)
 
         Row() {
           if (this.editingExisting) {

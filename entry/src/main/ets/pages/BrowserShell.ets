@@ -18,6 +18,7 @@ import { LoginStateManager } from '../service/LoginStateManager'
 import { ThreeDotMenu, OmniboxSuggestions, BookmarkBubble, SuggestItem } from '../components/ChromeWidgets'
 import { AgentSidePanel } from '../components/AgentSidePanel'
 import { TabStrip, TabSearchPanel } from '../components/TabStrip'
+import { BookmarkBar } from '../components/BookmarkBar'
 import { ContextMenu, CtxEntry, ctxDivider } from '../components/ContextMenu'
 import { common } from '@kit.AbilityKit'
 import { pasteboard } from '@kit.BasicServicesKit'
@@ -31,6 +32,13 @@ interface PageLoadErrorData {
 interface PageLoadCompleteData {
   tabId: string
   url: string
+}
+
+/** P11d: 书签条条目(shell → BookmarkBar 传参) */
+interface BarItem {
+  id: string
+  url: string
+  title: string
 }
 
 @Entry
@@ -77,6 +85,13 @@ struct BrowserShell {
 
   aboutToAppear(): void {
     console.info('BrowserShell aboutToAppear start')
+    // P11d: 书签持久化加载(此前无人调用 load —— 存量 bug,重启即丢)
+    BookmarkManager.load().then(() => {
+      this.refreshBookmarkState()
+      console.info('BrowserShell bookmarks loaded: ' + BookmarkManager.getBookmarkCount())
+    }).catch((e: Object) => {
+      console.error('BrowserShell bookmark load fail: ' + e)
+    })
     try {
       this.tabs = TabManager.getAllTabs()
       console.info('BrowserShell tabs loaded: ' + this.tabs.length)
@@ -181,6 +196,10 @@ struct BrowserShell {
 
   private refreshBookmarkState(): void {
     this.isBookmarked = this.currentUrl.length > 0 && BookmarkManager.isBookmarked(this.currentUrl)
+    // P11d: 书签条数据同步(createdAt 降序由 getAllBookmarks 保证)
+    this.bookmarkBarItems = BookmarkManager.getAllBookmarks().map((b): BarItem => {
+      return { id: b.id, url: b.url, title: b.title }
+    })
   }
 
   build(): void {
@@ -188,6 +207,17 @@ struct BrowserShell {
       Column() {
         this.AddressBar()
         this.TabBar()
+        // P11d: 书签条 —— 仅新标签页(dashboard)/驾驶舱(neo)显示
+        if (this.showDashboard || this.showNeo) {
+          BookmarkBar({
+            bookmarks: this.bookmarkBarItems,
+            onOpenBookmark: (url: string) => {
+              console.info('BrowserShell bookmark-bar open: ' + url)
+              // P11d: 当前标签直接导航(Chromium 行为:书签条点击=当前标签跳转)
+              this.navigate(url)
+            }
+          })
+        }
       // P6 治本：Web 层常驻 —— 所有 tab 的 Web 组件始终挂载（非激活 Hidden 保活），
       // dashboard/NeoDashboard 作为覆盖层置顶。修复「dashboard 激活时全部 Web 销毁、
       // 覆盖态 ForEach 不新增」的时序缺口：agent tab 创建即有 WebView，BCP 立即可用。
@@ -235,10 +265,15 @@ struct BrowserShell {
       if (this.showSuggestions) {
         OmniboxSuggestions({
           items: this.suggestItems,
-          onPick: (url: string) => {
-            console.info('BrowserShell suggestion picked: ' + url)
+          onPick: (kind: string, url: string) => {
+            console.info('BrowserShell suggestion picked: kind=' + kind + ' url=' + url)
             this.showSuggestions = false
-            this.navigate(this.normalizeUrl(url))
+            if (kind === 'search') {
+              // P11d: 搜索项 —— 走 onAddressInput 的搜索引擎 fallback
+              this.onAddressInput(url)
+            } else {
+              this.navigate(this.normalizeUrl(url))
+            }
           },
           onClose: () => {
             this.showSuggestions = false
@@ -643,6 +678,8 @@ struct BrowserShell {
 
   // P11b: Chromium 标签条(内联 builder 换 TabStrip 组件);P11c: tab-search 面板
   @State showTabSearch: boolean = false
+  // P11d: 书签条数据(createdAt 降序,shell 侧维护)
+  @State bookmarkBarItems: BarItem[] = []
   // P11c: 网页右键菜单(Web.onContextMenuShow 拦截,手动覆盖层)
   @State ctxMenuX: number = -1
   @State ctxMenuY: number = -1
@@ -708,11 +745,11 @@ struct BrowserShell {
     const pageUrl = linkUrl && linkUrl.length > 0 ? linkUrl : this.currentUrl
     const entries: CtxEntry[] = [
       {
-        icon: $r('app.media.ic_back'), label: '后退', shortcut: 'Alt+←', enabled: canBack, divider: false,
+        icon: $r('app.media.ic_back'), label: '后退', shortcut: 'Alt+左箭头', enabled: canBack, divider: false,
         onTap: () => { this.getActiveController()?.backward() }
       },
       {
-        icon: $r('app.media.ic_forward'), label: '前进', shortcut: 'Alt+→', enabled: canFwd, divider: false,
+        icon: $r('app.media.ic_forward'), label: '前进', shortcut: 'Alt+右箭头', enabled: canFwd, divider: false,
         onTap: () => { this.getActiveController()?.forward() }
       },
       {
@@ -1249,19 +1286,21 @@ struct BrowserShell {
     const items: SuggestItem[] = []
     const seen = new Set<string>()
     if (kw.length > 0) {
-      const bms = BookmarkManager.searchBookmarks(kw)
-      for (const b of bms.slice(0, 3)) {
-        if (!seen.has(b.url)) {
-          seen.add(b.url)
-          items.push({ kind: 'bookmark', title: b.title, url: b.url })
-        }
-      }
+      // P11d: 首行「搜索 kw」——走搜索引擎 fallback(onPick kind=search)
+      items.push({ kind: 'search', title: kw, url: kw })
       const his = HistoryManager.getAllHistory(100).filter((e: HistoryEntry) =>
         e.url.toLowerCase().includes(kw) || (e.title || '').toLowerCase().includes(kw))
       for (const e of his.slice(0, 5)) {
         if (!seen.has(e.url)) {
           seen.add(e.url)
           items.push({ kind: 'history', title: e.title || '', url: e.url })
+        }
+      }
+      const bms = BookmarkManager.searchBookmarks(kw)
+      for (const b of bms.slice(0, 3)) {
+        if (!seen.has(b.url)) {
+          seen.add(b.url)
+          items.push({ kind: 'bookmark', title: b.title, url: b.url })
         }
       }
     }
