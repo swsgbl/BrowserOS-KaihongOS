@@ -141,6 +141,44 @@ class BCPEngineImpl {
     return result
   }
 
+  /** P12b: 紧凑 Markdown 快照（可见内容、剔除噪音、30000 字符上限；同步表达式求值，不依赖回调 proxy） */
+  async snapshotMarkdown(): Promise<BCPResult> {
+    const timer = PerformanceMonitor.startTimer('bcp_snapshot_md', 'BCP')
+    const bridgeReady = await this.ensureBridge()
+    if (!bridgeReady) {
+      timer()
+      return { success: false, data: null, error: ErrorCodes.getMessage(ErrorCodes.BCP_001) }
+    }
+    // 先尝试直接执行（bridge 若在当前文档存活）；undefined 则重注入一次再执行（换页后 window 函数会丢）
+    let result = await this.executeJS(`window.__bcp_snapshot_md ? window.__bcp_snapshot_md() : 'undefined'`)
+    if (!result.data || `${result.data}` === 'undefined' || `${result.data}`.startsWith('"undefined"')) {
+      try {
+        this.webviewController!.runJavaScript(JSBridgeInjector.getBridgeScript())
+        result = await this.executeJS(`window.__bcp_snapshot_md ? window.__bcp_snapshot_md() : 'undefined'`)
+      } catch (e) {
+        timer()
+        return { success: false, data: null, error: `re-inject failed: ${e}` }
+      }
+    }
+    timer()
+    let dataStr = `${result.data}`
+    // runJavaScript 对字符串结果会再包一层 JSON 引号，解包
+    if (dataStr.length >= 2 && dataStr.startsWith('"') && dataStr.endsWith('"')) {
+      try {
+        dataStr = JSON.parse(dataStr) as string
+      } catch (e) {
+        // 保持原样
+      }
+    }
+    if (dataStr.startsWith('__SNAP_ERR__')) {
+      return { success: false, data: null, error: dataStr.substring('__SNAP_ERR__'.length) }
+    }
+    if (!dataStr || dataStr === 'undefined') {
+      return { success: false, data: null, error: 'snapshot_md returned empty' }
+    }
+    return { success: true, data: dataStr, error: null }
+  }
+
   async getText(): Promise<BCPResult> {
     const timer = PerformanceMonitor.startTimer('bcp_get_text', 'BCP')
     const bridgeReady = await this.ensureBridge()

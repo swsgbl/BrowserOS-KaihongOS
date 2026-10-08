@@ -13,37 +13,16 @@ interface SnapshotNode {
 class SnapshotGeneratorImpl {
   async generate(): Promise<BCPResult> {
     const timer = PerformanceMonitor.startTimer('snapshot_generate', 'Snapshot')
-    const result = await BCPEngine.snapshot()
+    // P12b: 直接产出紧凑 Markdown（页面侧已剔除噪音+可见性过滤+30000 截断），
+    // 不再走 JSON 树 parse/compress（旧路径 data 为空时 compress(null.tag) 会崩）
+    const result = await BCPEngine.snapshotMarkdown()
     timer()
-
-    if (!result.success || !result.data) {
-      return result
+    if (result.success && result.data) {
+      PerformanceMonitor.record('snapshot_original_size', result.data.length, 'Snapshot')
+      PerformanceMonitor.record('snapshot_compressed_size', result.data.length, 'Snapshot')
+      PerformanceMonitor.record('snapshot_compression_ratio', 1.0, 'Snapshot')
     }
-
-    try {
-      const snapshot = JSON.parse(result.data) as SnapshotNode
-      const compressed = this.compress(snapshot)
-      const compressedJson = JSON.stringify(compressed)
-      const originalSize = result.data.length
-      const compressedSize = compressedJson.length
-      const ratio = compressedSize / originalSize
-
-      PerformanceMonitor.record('snapshot_compression_ratio', ratio, 'Snapshot')
-      PerformanceMonitor.record('snapshot_original_size', originalSize, 'Snapshot')
-      PerformanceMonitor.record('snapshot_compressed_size', compressedSize, 'Snapshot')
-
-      return {
-        success: true,
-        data: compressedJson,
-        error: null
-      }
-    } catch (e) {
-      return {
-        success: false,
-        data: null,
-        error: `Snapshot parse failed: ${e}`
-      }
-    }
+    return result
   }
 
   private compress(node: SnapshotNode): SnapshotNode {

@@ -75,6 +75,87 @@ const BCP_BRIDGE_SCRIPT = `
     }
   };
 
+  // P12b: 紧凑 Markdown 快照——clone 后剔除噪音元素，只取可见内容，结构降为 Markdown，省 token。
+  // 同步 return 结果（runJavaScript 表达式求值直取），不依赖 registerJavaScriptProxy 回调
+  // （该 proxy 在 navigate 换页后会失效——MCP 冷调场景曾致 "arkts_callback is not a function"）
+  window.__bcp_snapshot_md = function() {
+    try {
+      const NOISE = 'script,style,noscript,template,iframe,svg,canvas,form,link,meta';
+      const clone = document.body.cloneNode(true);
+      clone.querySelectorAll(NOISE).forEach(function(n) { n.remove(); });
+      const lines = [];
+      function visible(el) {
+        const cs = window.getComputedStyle(el);
+        if (cs.display === 'none' || cs.visibility === 'hidden') return false;
+        return true;
+      }
+      function walk(node, listPrefix) {
+        if (lines.join(String.fromCharCode(10)).length > 30000) return;
+        if (node.nodeType === 3) {
+          const t = node.textContent.replace(/\\s+/g, ' ').trim();
+          if (t) lines.push(listPrefix + t);
+          return;
+        }
+        if (node.nodeType !== 1) return;
+        const el = node;
+        const tag = el.tagName.toLowerCase();
+        if (!visible(el)) return;
+        if (tag === 'h1' || tag === 'h2' || tag === 'h3' || tag === 'h4' || tag === 'h5' || tag === 'h6') {
+          const t = el.textContent.replace(/\\s+/g, ' ').trim();
+          if (t) {
+            const level = parseInt(tag.charAt(1), 10);
+            let prefix = '';
+            for (let k = 0; k < level; k++) prefix += '#';
+            lines.push('');
+            lines.push(prefix + ' ' + t);
+          }
+          return;
+        }
+        if (tag === 'a') {
+          const t = el.textContent.replace(/\\s+/g, ' ').trim();
+          let href = el.getAttribute('href') || '';
+          if (href && !href.startsWith('http')) {
+            try { href = new URL(href, location.href).href; } catch(e) { }
+          }
+          if (t) lines.push(listPrefix + (href ? '[' + t + '](' + href + ')' : t));
+          return;
+        }
+        if (tag === 'button' || (tag === 'input' && (el.type === 'submit' || el.type === 'button'))) {
+          const t = (el.value || el.textContent || '').replace(/\\s+/g, ' ').trim();
+          if (t) lines.push(listPrefix + '[按钮 ' + t + ']');
+          return;
+        }
+        if (tag === 'img') {
+          const alt = el.getAttribute('alt') || '';
+          if (alt.trim()) lines.push(listPrefix + '[图: ' + alt.trim() + ']');
+          return;
+        }
+        if (tag === 'li') {
+          const t = el.textContent.replace(/\\s+/g, ' ').trim();
+          if (t) lines.push(listPrefix + '- ' + t);
+          return;
+        }
+        if (tag === 'table') {
+          el.querySelectorAll('tr').forEach(function(tr) {
+            const cells = [];
+            tr.querySelectorAll('th,td').forEach(function(c) {
+              cells.push(c.textContent.replace(/\\s+/g, ' ').trim());
+            });
+            if (cells.length) lines.push('| ' + cells.join(' | ') + ' |');
+          });
+          return;
+        }
+        for (const child of el.childNodes) walk(child, listPrefix);
+      }
+      walk(clone, '');
+      let md = lines.join(String.fromCharCode(10)).replace(/\\n{3,}/g, String.fromCharCode(10) + String.fromCharCode(10));
+      if (md.length > 30000) md = md.substring(0, 30000) + String.fromCharCode(10) + '...[截断]';
+      return md;
+    } catch(e) {
+      return '__SNAP_ERR__' + e.message;
+    }
+  };
+
   window.__bcp_wait_for = function(selector, timeout, callbackId) {
     try {
       const el = document.querySelector(selector);
