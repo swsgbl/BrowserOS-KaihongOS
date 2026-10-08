@@ -19,9 +19,17 @@ export const PREFS_VALUE_MAX_BYTES: number = 16 * 1024 * 1024
 class PrefsStoreImpl {
   private loginPrefs: preferences.Preferences | null = null
   private sessionsPrefs: preferences.Preferences | null = null
+  private initPromise: Promise<void> | null = null
 
-  /** EntryAbility 启动调用；幂等 */
-  async init(context: Context): Promise<void> {
+  /** EntryAbility 启动调用；幂等（并发/重复调用复用同一 Promise，读方 await 它保证 ready） */
+  init(context: Context): Promise<void> {
+    if (this.initPromise === null) {
+      this.initPromise = this.doInit(context)
+    }
+    return this.initPromise
+  }
+
+  private async doInit(context: Context): Promise<void> {
     if (this.loginPrefs === null) {
       try {
         this.loginPrefs = await preferences.getPreferences(context, 'login_state')

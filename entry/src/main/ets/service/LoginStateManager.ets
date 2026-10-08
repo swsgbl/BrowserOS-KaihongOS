@@ -316,6 +316,10 @@ class LoginStateManagerImpl {
   }
 
   async loadPersistedStates(): Promise<void> {
+    // P14b: ensure prefs ready（幂等 init —— 修复启动竞态: 此前不等 init 完成即读, 每次误走 legacy 分支）
+    if (this.context) {
+      await PrefsStore.init(this.context)
+    }
     // P14b: 首选 Preferences（login_token + session_info_<domain>）
     const token = await PrefsStore.getString('login_state', 'login_token', '')
     const sessionRaw = await PrefsStore.getString('login_state', 'session_info', '')
@@ -339,6 +343,7 @@ class LoginStateManagerImpl {
     }
     // 旧载体一次性迁移: login_state/*.json -> Preferences 聚合键
     const files = await StorageManager.listDir('login_state')
+      .then((raw: string[]) => raw.filter((f: string) => f.endsWith('.json') && !f.endsWith('.migrated')))
     let migrated = 0
     const aggDomains: Record<string, Object> = {}
     for (const file of files) {
