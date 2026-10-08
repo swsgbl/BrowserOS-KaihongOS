@@ -5,6 +5,7 @@ import { ErrorHandler, AppError } from '../infra/ErrorHandler'
 import { ErrorCodes } from '../common/ErrorCodes'
 import { Constants } from '../common/Constants'
 import { ConfigManager } from '../storage/ConfigManager'
+import { PrefsStore } from '../storage/PrefsStore'
 import { RecordingQuality } from '../common/Types'
 import { ScreenshotCapture } from '../protocol/ScreenshotCapture'
 import { TabManager } from './TabManager'
@@ -61,7 +62,49 @@ class SessionManagerImpl {
     return session
   }
 
-  /** P9r: 异步枚举 sessions/*.json 元数据（截图字段跳过） */
+  /**
+   * P14c: 元数据索引迁 Preferences（sessions_meta 实例，键 session_index=sessionId 数组 JSON）。
+   * 载体决策：会话详情（截图 base64/操作日志大对象）仍留 files/sessions/*.json 文件——
+   * 避免 Preferences 单 Value 16MB 上限风险；索引只存轻量 id 列表。
+   * 启动对账：文件在索引缺→补入；索引有文件无→剔除。
+   */
+  private async loadSessionIndex(): Promise<string[]> {
+    const raw = await PrefsStore.getString('sessions_meta', 'session_index', '')
+    if (raw.length === 0) {
+      return []
+    }
+    try {
+      const arr = JSON.parse(raw) as Object[]
+      return arr.map((x: Object) => x as string)
+    } catch (e) {
+      console.error('[SessionManager] session_index parse failed: ' + e)
+      return []
+    }
+  }
+
+  private async saveSessionIndex(ids: string[]): Promise<void> {
+    await PrefsStore.putString('sessions_meta', 'session_index', JSON.stringify(ids))
+  }
+
+  /** P14c: persistSession 后把 id 并入索引 */
+  private async addToIndex(sessionId: string): Promise<void> {
+    const ids = await this.loadSessionIndex()
+    if (!ids.includes(sessionId)) {
+      ids.push(sessionId)
+      await this.saveSessionIndex(ids)
+    }
+  }
+
+  private async removeFromIndex(sessionId: string): Promise<void> {
+    const ids = await this.loadSessionIndex()
+    const idx = ids.indexOf(sessionId)
+    if (idx >= 0) {
+      ids.splice(idx, 1)
+      await this.saveSessionIndex(ids)
+    }
+  }
+
+  /** P9r: 异步装载持久会话元数据（P14c: 索引驱动 + 磁盘对账重建，截图字段跳过） */
   async ensurePersistedSessions(): Promise<void> {
     if (this.persistedReady || this.persistedLoading) {
       return
@@ -69,10 +112,33 @@ class SessionManagerImpl {
     this.persistedLoading = true
     try {
       const files = await StorageManager.listDir('sessions')
-      const jsonFiles = files.filter((f: string) => f.endsWith('.json')).sort().reverse()
+      const diskIds = files
+        .filter((f: string) => f.endsWith('.json'))
+        .map((f: string) => f.replace('.json', ''))
+      const indexed = await this.loadSessionIndex()
+      // 对账：文件在索引缺→补；索引有文件无→剔
+      const diskSet = new Set<string>(diskIds)
+      const indexSet = new Set<string>(indexed)
+      const merged: string[] = []
+      for (const id of indexed) {
+        if (diskSet.has(id)) {
+          merged.push(id)
+        }
+      }
+      for (const id of diskIds) {
+        if (!indexSet.has(id)) {
+          merged.push(id)
+        }
+      }
+      // sessionId 含时间戳，字典倒序≈时间倒序
+      merged.sort().reverse()
+      if (merged.length !== indexed.length) {
+        console.info('[SessionManager] index reconciled: indexed=' + indexed.length + ' disk=' + diskIds.length + ' merged=' + merged.length)
+        await this.saveSessionIndex(merged)
+      }
       const loaded: SessionRecord[] = []
-      for (const f of jsonFiles) {
-        const content = await StorageManager.load('sessions/' + f)
+      for (const id of merged) {
+        const content = await StorageManager.load('sessions/' + id + '.json')
         if (!content) {
           continue
         }
@@ -82,7 +148,7 @@ class SessionManagerImpl {
           rec.screenshots = []
           loaded.push(rec)
         } catch (e) {
-          console.warn('[SessionManager] skip corrupted session file: ' + f)
+          console.warn('[SessionManager] skip corrupted session file: ' + id)
         }
       }
       this.persistedSessions = loaded
@@ -138,7 +204,9 @@ class SessionManagerImpl {
     this.stopRecordingTimer(sessionId)
     this.activeSessions.delete(sessionId)
     this.persistedSessions = this.persistedSessions.filter((s: SessionRecord) => s.sessionId !== sessionId)
-    return StorageManager.delete(`sessions/${sessionId}.json`)
+    const ok = await StorageManager.delete(`sessions/${sessionId}.json`)
+    await this.removeFromIndex(sessionId)
+    return ok
   }
 
   createReplayer(sessionId: string): SessionReplayer | null {
@@ -265,6 +333,7 @@ class SessionManagerImpl {
       const filePath = `sessions/${session.sessionId}.json`
       await StorageManager.saveJSON(filePath, session.toJSON())
       session.filePath = `${Constants.SESSIONS_PATH}${session.sessionId}.json`
+      await this.addToIndex(session.sessionId)
     } catch (e) {
       ErrorHandler.handle(new AppError(ErrorCodes.SES_001, `Session persist failed: ${e}`))
     }
