@@ -17,6 +17,7 @@ import { router } from '@kit.ArkUI'
 import { LoginStateManager } from '../service/LoginStateManager'
 import { ThreeDotMenu, OmniboxSuggestions, BookmarkBubble, SuggestItem } from '../components/ChromeWidgets'
 import { AgentSidePanel } from '../components/AgentSidePanel'
+import { TabStrip, TabSearchPanel } from '../components/TabStrip'
 import { common } from '@kit.AbilityKit'
 import { Palette } from '../common/Palette'
 
@@ -275,6 +276,29 @@ struct BrowserShell {
         .backgroundColor(this.pal().surface)
         .shadow({ radius: 12, color: '#33000000', offsetX: -4, offsetY: 0 })
       }
+      if (this.showTabSearch) {
+        TabSearchPanel({
+          tabs: this.tabs,
+          activeTabId: this.activeTabId,
+          onPick: (tabId: string) => {
+            this.showTabSearch = false
+            TabManager.switchTab(tabId)
+            this.activeTabId = tabId
+            const tab = TabManager.getTab(tabId)
+            this.showDashboard = tab ? tab.isDashboard : false
+          },
+          onCloseTab: (tabId: string) => {
+            this.closeTabById(tabId)
+          },
+          onCreate: () => {
+            this.showTabSearch = false
+            this.createNewTab()
+          },
+          onClose: () => {
+            this.showTabSearch = false
+          }
+        })
+      }
       if (this.showMenu) {
         ThreeDotMenu({
           onAction: (action: string) => {
@@ -301,6 +325,7 @@ struct BrowserShell {
       }
       .width(36)
       .height(36)
+      .backgroundColor(Color.Transparent)
       .onClick(() => {
         console.info('BrowserShell back button clicked, tabId=' + this.activeTabId)
         const controller = this.getActiveController()
@@ -320,6 +345,7 @@ struct BrowserShell {
       }
       .width(36)
       .height(36)
+      .backgroundColor(Color.Transparent)
       .onClick(() => {
         console.info('BrowserShell forward button clicked, tabId=' + this.activeTabId)
         const controller = this.getActiveController()
@@ -339,6 +365,7 @@ struct BrowserShell {
       }
       .width(36)
       .height(36)
+      .backgroundColor(Color.Transparent)
       .onClick(() => {
         console.info('BrowserShell refresh button clicked, tabId=' + this.activeTabId)
         const controller = this.getActiveController()
@@ -406,6 +433,7 @@ struct BrowserShell {
       }
       .width(36)
       .height(36)
+      .backgroundColor(Color.Transparent)
       .onClick(() => {
         this.openBookmarkBubble()
       })
@@ -418,6 +446,7 @@ struct BrowserShell {
       }
       .width(36)
       .height(36)
+      .backgroundColor(Color.Transparent)
       .onClick(() => {
         this.openHistory()
       })
@@ -430,6 +459,7 @@ struct BrowserShell {
       }
       .width(36)
       .height(36)
+      .backgroundColor(Color.Transparent)
       .onClick(() => {
         this.goHome()
       })
@@ -443,6 +473,7 @@ struct BrowserShell {
       }
       .width(36)
       .height(36)
+      .backgroundColor(Color.Transparent)
       .onClick(() => {
         console.info('BrowserShell agent panel toggled: ' + !this.showAgentPanel)
         this.showAgentPanel = !this.showAgentPanel
@@ -457,6 +488,7 @@ struct BrowserShell {
       }
       .width(36)
       .height(36)
+      .backgroundColor(Color.Transparent)
       .onClick(() => {
         console.info('BrowserShell three-dot menu toggled: ' + !this.showMenu)
         this.showMenu = !this.showMenu
@@ -597,88 +629,55 @@ struct BrowserShell {
     }
   }
 
+  // P11b: Chromium 标签条(内联 builder 换 TabStrip 组件);P11c: tab-search 面板
+  @State showTabSearch: boolean = false
+
   @Builder
   TabBar(): void {
-    Row() {
-      ForEach(this.tabs, (tab: TabInfo) => {
-        Row() {
-          // P11a: favicon SVG（agent tab 机器人蓝染，普通 tab 地球灰染）
-          Image(tab.agentId ? $r('app.media.ic_robot') : $r('app.media.ic_globe'))
-            .width(16).height(16)
-            .fillColor(tab.agentId ? '#1A73E8' : '#5F6368')
-            .margin({ right: 6 })
-            .draggable(false)
-
-          Text(tab.title || (tab.agentId ? '代理 ' + tab.agentId.substring(0, 12) : '新标签页'))
-            .fontSize(12)
-            .maxLines(1)
-            .textOverflow({ overflow: TextOverflow.Ellipsis })
-            .layoutWeight(1)
-            .fontColor(tab.tabId === this.activeTabId ? '#202124' : '#5F6368')
-
-          Button({ type: ButtonType.Normal }) {
-            Image($r('app.media.ic_close'))
-              .width(14).height(14)
-              .fillColor(this.pal().text2)
-              .draggable(false)
-          }
-          .width(20)
-          .height(20)
-          .onClick(() => {
-            this.controllers.delete(tab.tabId)
-            this.attachedTabs.delete(tab.tabId)
-            TabManager.closeTab(tab.tabId)
-            this.tabs = TabManager.getAllTabs()
-            if (this.tabs.length === 0) {
-              const newTab = TabManager.createTab(true)
-              this.tabs = [newTab]
-              this.activeTabId = newTab.tabId
-              this.showDashboard = true
-            } else {
-              this.activeTabId = TabManager.getActiveTabId()
-              const activeTab = TabManager.getTab(this.activeTabId)
-              this.showDashboard = activeTab?.isDashboard ?? true
-            }
-          })
-        }
-        .padding({ left: 8, right: 4 })
-        .height(32)
-        .layoutWeight(1)
-        .borderRadius({ topLeft: 8, topRight: 8 })
-        .backgroundColor('#292A2D')
-        .onClick(() => {
-          // P5: 点击 tab —— switchTab + emit 驱动 onTabStatusChange 全同步
-          TabManager.switchTab(tab.tabId)
-          this.activeTabId = tab.tabId
-          this.showDashboard = tab.isDashboard
-          this.currentUrl = tab.currentUrl
-          this.urlInput = tab.currentUrl
+    Column() {
+      TabStrip({
+        tabs: this.tabs,
+        activeTabId: this.activeTabId,
+        onTabSwitch: (tabId: string) => {
+          TabManager.switchTab(tabId)
+          this.activeTabId = tabId
+          const tab = TabManager.getTab(tabId)
+          this.showDashboard = tab ? tab.isDashboard : false
+          this.currentUrl = tab && tab.currentUrl ? tab.currentUrl : ''
+          this.urlInput = this.currentUrl
           this.refreshBookmarkState()
-          console.info('BrowserShell tab clicked: ' + tab.tabId + ' isDashboard=' + tab.isDashboard)
-        })
-      }, (tab: TabInfo) => tab.tabId)
-
-      Button({ type: ButtonType.Normal }) {
-        Image($r('app.media.ic_add'))
-          .width(18).height(18)
-          .fillColor(this.pal().text2)
-          .draggable(false)
-      }
-      .width(32)
-      .height(32)
-      .onClick(() => {
-        const newTab = TabManager.createTab(true)
-        this.tabs = TabManager.getAllTabs()
-        this.activeTabId = newTab.tabId
-        this.showDashboard = true
-        this.urlInput = ''
-        this.currentUrl = ''
+          console.info('BrowserShell tab switched: ' + tabId)
+        },
+        onTabClose: (tabId: string) => {
+          this.closeTabById(tabId)
+        },
+        onTabCreate: () => {
+          this.createNewTab()
+        },
+        onSearchToggle: () => {
+          this.showTabSearch = !this.showTabSearch
+        }
       })
     }
     .width('100%')
-    .height(36)
-    .padding({ left: 4, right: 4 })
-    .backgroundColor(this.pal().surfaceAlt)
+  }
+
+  /** P11c: 关闭 tab(带兜底:全关后自动建 dashboard tab) */
+  private closeTabById(tabId: string): void {
+    this.controllers.delete(tabId)
+    this.attachedTabs.delete(tabId)
+    TabManager.closeTab(tabId)
+    this.tabs = TabManager.getAllTabs()
+    if (this.tabs.length === 0) {
+      const newTab = TabManager.createTab(true)
+      this.tabs = [newTab]
+      this.activeTabId = newTab.tabId
+      this.showDashboard = true
+    } else {
+      this.activeTabId = TabManager.getActiveTabId()
+      const activeTab = TabManager.getTab(this.activeTabId)
+      this.showDashboard = activeTab?.isDashboard ?? true
+    }
   }
 
   @Builder
