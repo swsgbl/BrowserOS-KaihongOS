@@ -493,3 +493,13 @@ p11a-icons*/p11b-*（标签条 shape + tab-search）/p11c-*（右键菜单三屏
 - 设备日志另证 hmh 自测路径：text frame/ping→pong/close echo/client 清理全过
 - 架构：McpJsonRpcCore.ets 抽出 JSON-RPC 分发核心，HTTP/WS 双传输共享（敏感确认链沿用页面层 ConfirmDialog 语义，P8/P10 已验收，不重复实现）
 - 技术决策记录：@ohos.net.webSocket 仅客户端（API14 无服务端 API）→ WS 服务端自建于 TCPSocketServer；9222 HTTP 为 MCP 现行标准传输保留为主端点
+
+
+### P14 独立验收（Zodex，2026-10-09 02:3x-02:5x，全项通过，git 5fbf1e4）
+- **历史 RDB 持久**：冷启动历史页 **13 条**（z-history-13-persisted.jpeg）；history.db+idx_visit_time 落盘+WAL 活跃；hilog `HistoryDb init ok` + `loadHistory done`
+- **登录态 Preferences**：`PrefsStore login_state ready` + 冷启动 `domains=1` 装载；.migrated 档案存在（一次性迁移完成）
+- **会话元数据 Preferences**：启动对账 `session index reconciled: 16`（p14d 上移到 EntryAbility，此前惰性）
+- **书签订阅**：BrowserShell 订 BOOKMARKS_CHANGED（p14b fix 提交内已接，断点遗留清单过时）
+- **搜索 RDB 接线**：HistoryPage 关键词改走 HistoryManager.searchHistory（RDB LIKE，此前内存 filter 只覆盖前 200 条）——p14d 由验收方补
+- 已知小残留：新标签页"历史 N 条"计数在 loadHistory 异步完成前渲染首帧可能显示 0（历史页本体正确，时序性显示问题）
+- 期间插曲：外来 tty7 任务窗口抢前台，最小化+最大化恢复后照常验收（双项目抢前台既有对策）
