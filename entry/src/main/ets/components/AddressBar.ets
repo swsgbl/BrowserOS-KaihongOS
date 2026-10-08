@@ -14,9 +14,10 @@ export struct AddressBar {
   build(): void {
     Row() {
       Button({ type: ButtonType.Normal }) {
-        Text('←')
-          .fontSize(18)
-          .fontColor('#666666')
+        Image($r('app.media.ic_back'))
+          .width(18).height(18)
+          .fillColor('#5F6368')
+          .draggable(false)
       }
       .width(36)
       .height(36)
@@ -27,9 +28,10 @@ export struct AddressBar {
       })
 
       Button({ type: ButtonType.Normal }) {
-        Text('→')
-          .fontSize(18)
-          .fontColor('#666666')
+        Image($r('app.media.ic_forward'))
+          .width(18).height(18)
+          .fillColor('#5F6368')
+          .draggable(false)
       }
       .width(36)
       .height(36)
@@ -40,9 +42,10 @@ export struct AddressBar {
       })
 
       Button({ type: ButtonType.Normal }) {
-        Text('↻')
-          .fontSize(18)
-          .fontColor('#666666')
+        Image($r('app.media.ic_reload'))
+          .width(18).height(18)
+          .fillColor('#5F6368')
+          .draggable(false)
       }
       .width(36)
       .height(36)
@@ -83,7 +86,10 @@ export struct AddressBar {
       .layoutWeight(1)
 
       Button({ type: ButtonType.Normal }) {
-        Text('⌂')
+        Image($r('app.media.ic_home'))
+            .width(20).height(20)
+            .fillColor('#5F6368')
+            .draggable(false)
           .fontSize(18)
           .fontColor('#666666')
       }

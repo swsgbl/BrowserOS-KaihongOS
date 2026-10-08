@@ -17,11 +17,11 @@ struct DownloadsPage {
   build(): void {
     Column() {
       Row() {
-        Text('←')
-          .fontSize(18)
-          .fontColor(this.pal().text2)
+        Image($r('app.media.ic_back'))
+          .width(20).height(20)
+          .fillColor(this.pal().text2)
+          .draggable(false)
           .width(36)
-          .textAlign(TextAlign.Center)
           .onClick(() => {
             router.back()
           })

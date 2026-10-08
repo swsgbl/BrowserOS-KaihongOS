@@ -86,25 +86,11 @@ struct OnboardingPage {
           .fontColor('#333333')
           .margin({ bottom: 8 })
 
-        Text('• AI代理驱动浏览器，使用你的真实登录状态')
-          .fontSize(12)
-          .fontColor('#666666')
-          .margin({ bottom: 4 })
-        Text('• 并行运行多个代理，各自独立标签页')
-          .fontSize(12)
-          .fontColor('#666666')
-          .margin({ bottom: 4 })
-        Text('• 实时仪表盘监控，会话录制与回放')
-          .fontSize(12)
-          .fontColor('#666666')
-          .margin({ bottom: 4 })
-        Text('• MCP协议兼容，支持Claude Code/Codex/Cursor')
-          .fontSize(12)
-          .fontColor('#666666')
-          .margin({ bottom: 4 })
-        Text('• 本地运行，隐私优先，数据不离机')
-          .fontSize(12)
-          .fontColor('#666666')
+        this.FeatureRow('AI代理驱动浏览器，使用你的真实登录状态')
+        this.FeatureRow('并行运行多个代理，各自独立标签页')
+        this.FeatureRow('实时仪表盘监控，会话录制与回放')
+        this.FeatureRow('MCP协议兼容，支持Claude Code/Codex/Cursor')
+        this.FeatureRow('本地运行，隐私优先，数据不离机')
       }
       .margin({ top: 32 })
       .padding(16)
@@ -347,6 +333,24 @@ struct OnboardingPage {
     .layoutWeight(1)
     .justifyContent(FlexAlign.Start)
     .alignItems(HorizontalAlign.Center)
+  }
+
+  /** P11e: 功能列表行 —— SVG check 图标替代文字圆点 */
+  @Builder
+  FeatureRow(text: string): void {
+    Row() {
+      Image($r('app.media.ic_check'))
+        .width(14).height(14)
+        .fillColor('#4CAF50')
+        .draggable(false)
+        .margin({ right: 6 })
+      Text(text)
+        .fontSize(12)
+        .fontColor('#666666')
+    }
+    .alignItems(VerticalAlign.Center)
+    .margin({ bottom: 4 })
+    .alignSelf(ItemAlign.Start)
   }
 
   @Builder

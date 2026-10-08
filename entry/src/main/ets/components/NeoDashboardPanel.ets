@@ -190,17 +190,25 @@ export struct NeoDashboardPanel {
             this.showMcpBoard = true
           })
 
-        Button('关闭 ×')
-          .fontSize(12)
-          .height(30)
-          .backgroundColor(this.pal().surfaceInput)
-          .fontColor(this.pal().text)
-          .borderRadius(15)
-          .margin({ left: 8 })
-          .onClick(() => {
-            console.info('NeoDashboardPanel close panel')
-            this.shellBack()
-          })
+        Row() {
+          Image($r('app.media.ic_close'))
+            .width(14).height(14)
+            .fillColor(this.pal().text)
+            .draggable(false)
+          Text('关闭')
+            .fontSize(12)
+            .fontColor(this.pal().text)
+            .margin({ left: 4 })
+        }
+        .height(30)
+        .padding({ left: 12, right: 12 })
+        .backgroundColor(this.pal().surfaceInput)
+        .borderRadius(15)
+        .margin({ left: 8 })
+        .onClick(() => {
+          console.info('NeoDashboardPanel close panel')
+          this.shellBack()
+        })
       }
       .width('100%')
       .padding({ left: 16, right: 16, top: 10, bottom: 6 })
@@ -639,15 +647,23 @@ export struct NeoDashboardPanel {
     Stack() {
       Column() {
         Row() {
-          Button('← 返回驾驶舱')
-            .fontSize(12)
-            .height(30)
-            .backgroundColor(this.pal().surfaceInput)
-            .fontColor(this.pal().text)
-            .borderRadius(15)
-            .onClick(() => {
-              this.showMcpBoard = false
-            })
+          Row() {
+            Image($r('app.media.ic_back'))
+              .width(14).height(14)
+              .fillColor(this.pal().text)
+              .draggable(false)
+            Text('返回驾驶舱')
+              .fontSize(12)
+              .fontColor(this.pal().text)
+              .margin({ left: 4 })
+          }
+          .height(30)
+          .padding({ left: 12, right: 12 })
+          .backgroundColor(this.pal().surfaceInput)
+          .borderRadius(15)
+          .onClick(() => {
+            this.showMcpBoard = false
+          })
         }
         .width('100%')
         .justifyContent(FlexAlign.Start)

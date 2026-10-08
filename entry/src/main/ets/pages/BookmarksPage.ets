@@ -41,11 +41,11 @@ struct BookmarksPage {
   build(): void {
     Column() {
       Row() {
-        Text('←')
-          .fontSize(18)
-          .fontColor(this.pal().text2)
+        Image($r('app.media.ic_back'))
+          .width(20).height(20)
+          .fillColor(this.pal().text2)
+          .draggable(false)
           .width(36)
-          .textAlign(TextAlign.Center)
           .onClick(() => {
             router.back()
           })
@@ -65,9 +65,10 @@ struct BookmarksPage {
 
       if (this.items.length === 0) {
         Column() {
-          Text('☆')
-            .fontSize(36)
-            .fontColor('#DADCE0')
+          Image($r('app.media.ic_star_outline'))
+            .width(36).height(36)
+            .fillColor('#DADCE0')
+            .draggable(false)
           Text('暂无书签 —— 在页面点击地址栏旁星标添加')
             .fontSize(13)
             .fontColor(this.pal().text2)
@@ -81,11 +82,11 @@ struct BookmarksPage {
             ForEach(this.items, (b: BookmarkRow) => {
               Column() {
                 Row() {
-                  Text('★')
-                    .fontSize(13)
-                    .fontColor('#F9AB00')
-                    .width(26)
-                    .textAlign(TextAlign.Center)
+                  Image($r('app.media.ic_star_filled'))
+                    .width(14).height(14)
+                    .fillColor('#F9AB00')
+                    .draggable(false)
+                    .margin({ left: 6 })
                   if (this.editingId === b.id) {
                     TextInput({ text: this.editTitle }).fontColor(this.pal().text).placeholderColor(this.pal().text2)
                       .layoutWeight(1)

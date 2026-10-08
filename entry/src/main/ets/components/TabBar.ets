@@ -28,7 +28,10 @@ export struct TabBar {
           }
 
           Button({ type: ButtonType.Normal }) {
-            Text('×')
+            Image($r('app.media.ic_close'))
+              .width(12).height(12)
+              .fillColor('#666666')
+              .draggable(false)
               .fontSize(14)
               .fontColor('#999999')
           }

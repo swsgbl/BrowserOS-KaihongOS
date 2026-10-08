@@ -13,7 +13,7 @@ import { Palette } from '../common/Palette'
 
 interface NavItem {
   key: string
-  icon: string
+  icon: Resource
   label: string
 }
 
@@ -43,11 +43,11 @@ struct SettingsPage {
   private readonly appVersion: string = '1.0.1 (P10)'
 
   private readonly navItems: NavItem[] = [
-    { key: 'ai', icon: '🤖', label: 'AI 与 Agent' },
-    { key: 'appearance', icon: '🎨', label: '外观' },
-    { key: 'privacy', icon: '🔒', label: '隐私与安全' },
-    { key: 'mcp', icon: '🔌', label: 'MCP' },
-    { key: 'about', icon: 'ℹ️', label: '关于' }
+    { key: 'ai', icon: $r('app.media.ic_robot'), label: 'AI 与 Agent' },
+    { key: 'appearance', icon: $r('app.media.ic_public'), label: '外观' },
+    { key: 'privacy', icon: $r('app.media.ic_lock'), label: '隐私与安全' },
+    { key: 'mcp', icon: $r('app.media.ic_info'), label: 'MCP' },
+    { key: 'about', icon: $r('app.media.ic_help'), label: '关于' }
   ]
 
   aboutToAppear(): void {
@@ -80,12 +80,12 @@ struct SettingsPage {
     Row() {
       // 左导航 240
       Column() {
-        Text('←')
-          .fontSize(18)
-          .fontColor(this.pal().text2)
+        Image($r('app.media.ic_back'))
+          .width(20).height(20)
+          .fillColor(this.pal().text2)
+          .draggable(false)
           .width(36)
           .height(40)
-          .textAlign(TextAlign.Center)
           .margin({ top: 8 })
           .onClick(() => {
             router.back()
@@ -99,9 +99,11 @@ struct SettingsPage {
 
         ForEach(this.navItems, (item: NavItem, index: number) => {
           Row() {
-            Text(item.icon)
-              .fontSize(14)
-              .width(26)
+            Image(item.icon)
+              .width(16).height(16)
+              .fillColor(index === this.navSelection ? '#1A73E8' : this.pal().text2)
+              .draggable(false)
+              .margin({ right: 6 })
             Text(item.label)
               .fontSize(13)
               .fontColor(index === this.navSelection ? '#1A73E8' : '#3C4043')
@@ -238,7 +240,7 @@ struct SettingsPage {
           .onClick(async () => {
             const base = this.llmBaseUrlInput.trim()
             if (base.length === 0) {
-              this.llmSaveHint = '✗ 请先填写 API 端点'
+              this.llmSaveHint = '请先填写 API 端点'
               return
             }
             this.llmTesting = true
@@ -256,17 +258,17 @@ struct SettingsPage {
             this.llmTesting = false
             if (resp) {
               const m = this.llmModelInput.trim().length > 0 ? this.llmModelInput.trim() : 'default'
-              this.llmSaveHint = `✓ ${m} 连接成功 (${ms}ms)`
+              this.llmSaveHint = `${m} 连接成功 (${ms}ms)`
               console.info('SettingsPage llm test OK: ' + m + ' ' + ms + 'ms')
             } else {
-              this.llmSaveHint = '✗ ' + (LLMClient.lastError.length > 0 ? LLMClient.lastError : '未知错误')
+              this.llmSaveHint = (LLMClient.lastError.length > 0 ? LLMClient.lastError : '未知错误')
               console.warn('SettingsPage llm test FAIL: ' + LLMClient.lastError)
             }
           })
         if (this.llmSaveHint.length > 0) {
           Text(this.llmSaveHint)
             .fontSize(12)
-            .fontColor(this.llmSaveHint.startsWith('✗') ? (this.darkMode ? '#F28B82' : '#C5221F') : (this.llmSaveHint === '已保存' || this.llmSaveHint.startsWith('✓') ? (this.darkMode ? '#81C995' : '#137333') : this.pal().text2))
+            .fontColor((this.llmSaveHint === '已保存' || this.llmSaveHint.includes('连接成功')) ? (this.darkMode ? '#81C995' : '#137333') : (this.llmSaveHint.length === 0 ? this.pal().text2 : (this.darkMode ? '#F28B82' : '#C5221F')))
             .margin({ left: 10 })
         }
       }

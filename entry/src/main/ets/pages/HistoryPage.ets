@@ -86,11 +86,11 @@ struct HistoryPage {
     Column() {
       // 顶栏
       Row() {
-        Text('←')
-          .fontSize(18)
-          .fontColor(this.pal().text2)
+        Image($r('app.media.ic_back'))
+          .width(20).height(20)
+          .fillColor(this.pal().text2)
+          .draggable(false)
           .width(36)
-          .textAlign(TextAlign.Center)
           .onClick(() => {
             router.back()
           })
@@ -214,11 +214,11 @@ struct HistoryPage {
                     .margin({ top: 14, bottom: 6 })
                 }
                 Row() {
-                  Text('◇')
-                    .fontSize(12)
-                    .fontColor('#9AA0A6')
-                    .width(24)
-                    .textAlign(TextAlign.Center)
+                  Image($r('app.media.ic_public'))
+                    .width(14).height(14)
+                    .fillColor('#9AA0A6')
+                    .draggable(false)
+                    .margin({ left: 5 })
                   Column() {
                     Text(g.entry.title && g.entry.title.length > 0 ? g.entry.title : g.entry.url)
                       .fontSize(13)
