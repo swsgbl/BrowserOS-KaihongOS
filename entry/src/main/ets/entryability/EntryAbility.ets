@@ -6,6 +6,7 @@ import { ConfigManager } from '../storage/ConfigManager'
 import { MCPServer } from '../service/MCPServer'
 import { HistoryManager } from '../service/HistoryManager'
 import { LoginStateManager } from '../service/LoginStateManager'
+import { SessionManager } from '../service/SessionManager'
 
 export default class EntryAbility extends UIAbility {
   onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
@@ -30,6 +31,12 @@ export default class EntryAbility extends UIAbility {
       console.info('EntryAbility LoginStateManager loadPersistedStates done, domains=' + LoginStateManager.getImportedDomains().length)
     }).catch((e: BusinessError) => {
       console.error('EntryAbility LoginStateManager loadPersistedStates error: ' + e.message)
+    })
+    // P14c 收尾: 会话元数据索引对账上移到启动（此前惰性——打开历史页才触发）
+    SessionManager.ensurePersistedSessions().then(() => {
+      console.info('EntryAbility session index reconciled: ' + SessionManager.getSessionList().length)
+    }).catch((e: BusinessError) => {
+      console.error('EntryAbility session reconcile error: ' + e.message)
     })
     ConfigManager.load().then((config) => {
       console.info('EntryAbility ConfigManager loaded, mcpPort=' + config.mcpPort)

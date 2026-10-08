@@ -34,7 +34,6 @@ struct HistoryPage {
   }
 
   private reload(): void {
-    this.entries = HistoryManager.getAllHistory(200)
     this.sessions = SessionManager.getSessionList()
     // P9r: 磁盘会话异步就绪后再刷新一次（冷启动首次渲染可能先拿到空列表）
     SessionManager.getSessionListAsync().then((list: SessionRecord[]) => {
@@ -42,10 +41,21 @@ struct HistoryPage {
       console.info('HistoryPage sessions refreshed: ' + list.length)
     })
     if (this.keyword.trim().length > 0) {
-      const kw = this.keyword.trim().toLowerCase()
-      this.entries = this.entries.filter((e: HistoryEntry) =>
-        e.url.toLowerCase().includes(kw) || (e.title || '').toLowerCase().includes(kw))
+      // P14: 关键词搜索走 RDB LIKE（此前内存 filter 只覆盖已取的前 200 条）
+      const kw = this.keyword.trim()
+      HistoryManager.searchHistory(kw, 200).then((rows: HistoryEntry[]) => {
+        this.entries = rows
+        this.regroup()
+        console.info('HistoryPage rdb search: ' + rows.length)
+      })
+      this.entries = []
+    } else {
+      this.entries = HistoryManager.getAllHistory(200)
     }
+    this.regroup()
+  }
+
+  private regroup(): void {
     // 预计算日期分组（ForEach 内不能写命令式赋值）
     const grouped: GroupedEntry[] = []
     let lastGroup = ''
@@ -59,7 +69,6 @@ struct HistoryPage {
       }
     }
     this.grouped = grouped
-    console.info('HistoryPage loaded: entries=' + this.entries.length + ' sessions=' + this.sessions.length)
   }
 
   private dateGroup(ts: number): string {
