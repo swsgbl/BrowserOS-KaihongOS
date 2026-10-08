@@ -447,3 +447,17 @@ p11a-icons*/p11b-*（标签条 shape + tab-search）/p11c-*（右键菜单三屏
 - **E**：omnibox 分组下拉/书签气泡文件夹行/字形清零/全表面截图 evidence/p11/
 - **F Web 引擎层补缺（用户任务书）**：停止按钮双态（isLoading→ic_stop→Adapter.stop() 透传+手动复位，构建绿+装机）；onInterceptKeyEvent Ctrl+L/R/T/W 代码落地（SDK14 web.d.ts:7511 实锤 since9 兼容；**设备级限制如实记录：VM uinput 无法注入 Ctrl 组合键，代码路径编译通过但实操不可验证**）；用户任务书 12 项全部闭合（10 项 P1/P6 既有+2 项本轮补齐）
 - 附注：482f7a6 后工作树遗留 9 文件图标清理（P11G 死前未提交，含 Image 上残留 .fontColor 编译隐患 3 处）由 Zodex 修复提交（3768046）并构建绿+装机；期间曾发现外来任务（tty7 安装）插队占用 daemon，无仓库污染
+
+
+---
+
+## P12：Agent 引擎规格收尾——SSE 流式 + 紧凑 Markdown 快照（2026-10-08/09，用户 Agent 引擎任务书比对后真缺口）
+
+### 规格比对结论
+用户任务书 17 项中 15 项 P2/P6 已交付（任务循环/15 步上限/tool_calls 解析/六工具 navigate+click+type+scroll+snapshot+waitFor/http.createHttp/OpenAI/Bearer/结果回灌循环）。真缺口=SSE 流式与快照紧凑化，本轮补齐（hmh 两棒上下文耗尽无产出，Zodex 接手实现——收敛优先）。
+
+### 交付（git 52cc10b + c7d38c8）
+- **p12a SSE 流式**：LLMClient.chatStream（http.createHttp + on('dataReceive') 增量收帧、util.TextDecoder 跨块解码、跨帧残留缓冲、data: 行解析、[DONE]、delta.content 拼接、delta.tool_calls 按 index 增量合并、Accept: text/event-stream）；AgentEngine 主循环流式优先，onDelta 实时更新磁贴"思考中"活动文本；**健壮降级**：无有效 delta/HTTP!=200/异常 → 自动回退非流式 chat 重试（hilog 记录）
+- **p12b 紧凑 Markdown 快照**：JSBridgeInjector `__bcp_snapshot_md`（页面侧 clone body→过滤 script/style/noscript/template/iframe/svg/canvas/form/link/meta→可见性过滤（display:none/visibility:hidden）→h1-h6 转 # 标题、a 转 [text](绝对href)、li 转 - 列表、button 转 [按钮 x]、img alt 转 [图: x]、table 转竖线行→30000 字符截断）；**同步 return + runJavaScript 表达式求值直取**（不依赖 registerJavaScriptProxy 回调——该 proxy 换页后失效是 MCP 冷调 snapshot 旧 bug 根因）；BCPEngine.snapshotMarkdown 带"函数丢失自动重注入+双引号解包+__SNAP_ERR__ 错误透传"；SnapshotGenerator 统一透传（根治旧 compress(null.tag) 崩溃）；AgentEngine snapshot 工具与 MCP snapshot 工具双双切换
+- **e2e 实证**：①流式→降级链：POST(stream)→SSE headers→（agnes 免费端点帧不标准/429 限流）→自动非流式 200→tool_calls 派发→循环续跑至 step 6+ ②快照格式：MCP 直调 navigate iana.org/help/example-domains → snapshot 返回 `# Example Domains` 标题行 + `- Domains/- Protocols` 列表行 + 段落文本——紧凑 Markdown 结构成型（example.com 2026 改版已无 h1，故换 iana 验证标题分支）
+- 设备级注记：agnes 免费端点 SSE 帧格式与其限流策略导致流式常走降级路径——降级保障了功能不回归；端点升级后流式自然生效
