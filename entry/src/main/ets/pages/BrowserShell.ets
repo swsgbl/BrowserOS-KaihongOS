@@ -294,9 +294,10 @@ struct BrowserShell {
   AddressBar(): void {
     Row() {
       Button({ type: ButtonType.Normal }) {
-        Text('←')
-          .fontSize(18)
-          .fontColor(this.pal().text2)
+        Image($r('app.media.ic_back'))
+          .width(20).height(20)
+          .fillColor(this.pal().text2)
+          .draggable(false)
       }
       .width(36)
       .height(36)
@@ -312,9 +313,10 @@ struct BrowserShell {
       })
 
       Button({ type: ButtonType.Normal }) {
-        Text('→')
-          .fontSize(18)
-          .fontColor(this.pal().text2)
+        Image($r('app.media.ic_forward'))
+          .width(20).height(20)
+          .fillColor(this.pal().text2)
+          .draggable(false)
       }
       .width(36)
       .height(36)
@@ -330,9 +332,10 @@ struct BrowserShell {
       })
 
       Button({ type: ButtonType.Normal }) {
-        Text('↻')
-          .fontSize(18)
-          .fontColor(this.pal().text2)
+        Image($r('app.media.ic_reload'))
+          .width(20).height(20)
+          .fillColor(this.pal().text2)
+          .draggable(false)
       }
       .width(36)
       .height(36)
@@ -350,11 +353,10 @@ struct BrowserShell {
 
       // P9-A: omnibox —— 安全锁图标（https 绿锁 / 普通灰）+ 输入框胶囊
       Row() {
-        Text(this.currentUrl.startsWith('https://') ? '🔒' : 'ⓘ')
-          .fontSize(13)
-          .fontColor(this.currentUrl.startsWith('https://') ? '#137333' : '#5F6368')
-          .width(22)
-          .textAlign(TextAlign.Center)
+        Image(this.currentUrl.startsWith('https://') ? $r('app.media.ic_lock') : $r('app.media.ic_info'))
+          .width(16).height(16)
+          .fillColor(this.currentUrl.startsWith('https://') ? '#137333' : '#5F6368')
+          .draggable(false)
         TextInput({ text: this.urlInput, placeholder: '输入URL或搜索关键词' }).fontColor(this.pal().text).placeholderColor(this.pal().text2)
           .layoutWeight(1)
           .height(32)
@@ -395,11 +397,12 @@ struct BrowserShell {
           .margin({ left: 4 })
       }
 
-      // P9-A: 星标 —— 点击弹 Bookmark 气泡（名称编辑+完成/删除）
+      // P11a: 星标（SVG 双态染色）—— 点击弹 Bookmark 气泡（名称编辑+完成/删除）
       Button({ type: ButtonType.Normal }) {
-        Text(this.isBookmarked ? '★' : '☆')
-          .fontSize(18)
-          .fontColor(this.isBookmarked ? '#F9AB00' : '#5F6368')
+        Image(this.isBookmarked ? $r('app.media.ic_star_filled') : $r('app.media.ic_star_outline'))
+          .width(20).height(20)
+          .fillColor(this.isBookmarked ? '#F9AB00' : '#5F6368')
+          .draggable(false)
       }
       .width(36)
       .height(36)
@@ -408,9 +411,10 @@ struct BrowserShell {
       })
 
       Button({ type: ButtonType.Normal }) {
-        Text('🕘')
-          .fontSize(16)
-          .fontColor(this.pal().text2)
+        Image($r('app.media.ic_history'))
+          .width(20).height(20)
+          .fillColor(this.pal().text2)
+          .draggable(false)
       }
       .width(36)
       .height(36)
@@ -419,9 +423,10 @@ struct BrowserShell {
       })
 
       Button({ type: ButtonType.Normal }) {
-        Text('⌂')
-          .fontSize(18)
-          .fontColor(this.pal().text2)
+        Image($r('app.media.ic_home'))
+          .width(20).height(20)
+          .fillColor(this.pal().text2)
+          .draggable(false)
       }
       .width(36)
       .height(36)
@@ -431,9 +436,10 @@ struct BrowserShell {
 
       // P9-B: Agent 侧栏切换按钮
       Button({ type: ButtonType.Normal }) {
-        Text('❐')
-          .fontSize(16)
-          .fontColor(this.showAgentPanel ? '#1A73E8' : '#5F6368')
+        Image($r('app.media.ic_agent'))
+          .width(20).height(20)
+          .fillColor(this.showAgentPanel ? '#1A73E8' : '#5F6368')
+          .draggable(false)
       }
       .width(36)
       .height(36)
@@ -444,10 +450,10 @@ struct BrowserShell {
 
       // P9-A: ⋮ 三点主菜单
       Button({ type: ButtonType.Normal }) {
-        Text('⋮')
-          .fontSize(20)
-          .fontWeight(FontWeight.Bold)
-          .fontColor(this.pal().text2)
+        Image($r('app.media.ic_more_vert'))
+          .width(20).height(20)
+          .fillColor(this.pal().text2)
+          .draggable(false)
       }
       .width(36)
       .height(36)
@@ -596,19 +602,12 @@ struct BrowserShell {
     Row() {
       ForEach(this.tabs, (tab: TabInfo) => {
         Row() {
-          // P9-A: favicon 占位方块（agent tab 蓝，普通 tab 灰）
-          Column() {
-            Text(tab.agentId ? 'A' : '◇')
-              .fontSize(10)
-              .fontColor('#FFFFFF')
-          }
-          .width(16)
-          .height(16)
-          .borderRadius(4)
-          .backgroundColor(tab.agentId ? '#1A73E8' : '#9AA0A6')
-          .margin({ right: 6 })
-          .justifyContent(FlexAlign.Center)
-          .alignItems(HorizontalAlign.Center)
+          // P11a: favicon SVG（agent tab 机器人蓝染，普通 tab 地球灰染）
+          Image(tab.agentId ? $r('app.media.ic_robot') : $r('app.media.ic_globe'))
+            .width(16).height(16)
+            .fillColor(tab.agentId ? '#1A73E8' : '#5F6368')
+            .margin({ right: 6 })
+            .draggable(false)
 
           Text(tab.title || (tab.agentId ? '代理 ' + tab.agentId.substring(0, 12) : '新标签页'))
             .fontSize(12)
@@ -617,16 +616,11 @@ struct BrowserShell {
             .layoutWeight(1)
             .fontColor(tab.tabId === this.activeTabId ? '#202124' : '#5F6368')
 
-          if (tab.tabId === this.activeTabId) {
-            Text(' ●')
-              .fontSize(10)
-              .fontColor('#007DFF')
-          }
-
           Button({ type: ButtonType.Normal }) {
-            Text('×')
-              .fontSize(14)
-              .fontColor(this.pal().text2)
+            Image($r('app.media.ic_close'))
+              .width(14).height(14)
+              .fillColor(this.pal().text2)
+              .draggable(false)
           }
           .width(20)
           .height(20)
@@ -665,9 +659,10 @@ struct BrowserShell {
       }, (tab: TabInfo) => tab.tabId)
 
       Button({ type: ButtonType.Normal }) {
-        Text('+')
-          .fontSize(16)
-          .fontColor(this.pal().text2)
+        Image($r('app.media.ic_add'))
+          .width(18).height(18)
+          .fillColor(this.pal().text2)
+          .draggable(false)
       }
       .width(32)
       .height(32)

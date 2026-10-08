@@ -15,7 +15,7 @@ export interface SuggestItem {
 }
 
 interface MenuEntry {
-  icon: string
+  icon: Resource
   label: string
   action: string
 }
@@ -32,17 +32,17 @@ export struct ThreeDotMenu {
   }
 
   private readonly group1: MenuEntry[] = [
-    { icon: '＋', label: '新建标签页', action: 'new_tab' },
-    { icon: '⧉', label: '新窗口', action: 'new_window' }
+    { icon: $r('app.media.ic_add'), label: '新建标签页', action: 'new_tab' },
+    { icon: $r('app.media.ic_content_copy'), label: '新窗口', action: 'new_window' }
   ]
   private readonly group2: MenuEntry[] = [
-    { icon: '🕘', label: '历史', action: 'history' },
-    { icon: '★', label: '书签', action: 'bookmarks' },
-    { icon: '⭳', label: '下载', action: 'downloads' }
+    { icon: $r('app.media.ic_history'), label: '历史', action: 'history' },
+    { icon: $r('app.media.ic_star_outline'), label: '书签', action: 'bookmarks' },
+    { icon: $r('app.media.ic_download'), label: '下载', action: 'downloads' }
   ]
   private readonly group3: MenuEntry[] = [
-    { icon: '⚙', label: '设置', action: 'settings' },
-    { icon: '?', label: '帮助', action: 'help' }
+    { icon: $r('app.media.ic_settings'), label: '设置', action: 'settings' },
+    { icon: $r('app.media.ic_help'), label: '帮助', action: 'help' }
   ]
 
   build(): void {
@@ -65,11 +65,10 @@ export struct ThreeDotMenu {
         this.MenuGroup(this.group3)
         Divider().color(this.pal().border).margin({ top: 4, bottom: 4 })
         Row() {
-          Text('⏻')
-            .fontSize(16)
-            .fontColor('#C5221F')
-            .width(28)
-            .textAlign(TextAlign.Center)
+          Image($r('app.media.ic_exit'))
+            .width(18).height(18)
+            .fillColor('#C5221F')
+            .draggable(false)
           Text('退出')
             .fontSize(14)
             .fontColor('#C5221F')
@@ -98,11 +97,10 @@ export struct ThreeDotMenu {
   MenuGroup(entries: MenuEntry[]): void {
     ForEach(entries, (entry: MenuEntry) => {
       Row() {
-        Text(entry.icon)
-          .fontSize(16)
-          .fontColor(this.pal().text2)
-          .width(28)
-          .textAlign(TextAlign.Center)
+        Image(entry.icon)
+          .width(18).height(18)
+          .fillColor(this.pal().text2)
+          .draggable(false)
         Text(entry.label)
           .fontSize(14)
           .fontColor(this.pal().text)
@@ -146,11 +144,10 @@ export struct OmniboxSuggestions {
         Column() {
           ForEach(this.items, (item: SuggestItem, index: number) => {
             Row() {
-              Text(item.kind === 'bookmark' ? '★' : '🕘')
-                .fontSize(14)
-                .fontColor(item.kind === 'bookmark' ? '#F9AB00' : '#5F6368')
-                .width(24)
-                .textAlign(TextAlign.Center)
+              Image(item.kind === 'bookmark' ? $r('app.media.ic_star_filled') : $r('app.media.ic_history'))
+                .width(16).height(16)
+                .fillColor(item.kind === 'bookmark' ? '#F9AB00' : '#5F6368')
+                .draggable(false)
               Column() {
                 Text(item.title.length > 0 ? item.title : item.url)
                   .fontSize(13)
