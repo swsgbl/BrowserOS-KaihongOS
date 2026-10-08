@@ -484,3 +484,12 @@ p11a-icons*/p11b-*（标签条 shape + tab-search）/p11c-*（右键菜单三屏
 - 负向：错 token 握手 → HTTP/1.1 401 Unauthorized（发完即断）
 - 回归：HTTP 9222 initialize 200 正常（MCP-RPC via=mcp_http 铁证）
 - 注记：navigate 后屏幕截图显示 Dashboard——激活 tab 是仪表盘，导航发生在绑定 WebView（P6 多 Web 常驻架构），RPC 响应即执行证据
+
+
+### P13 独立验收（Zodex，2026-10-09 01:1x，全项通过，git ada6c02）
+- 宿主手写最小 WS 客户端（.zcode/p13_wsclient.cjs：net 原生握手/掩码帧/服务器帧解析）连 8765：
+  **PASS 101 握手且 Sec-WebSocket-Accept 密钥校验 VALID**（SHA1+magic GUID+Base64 公式正确）→ initialize `browseros-kaihong/1.0.0` → tools/list **10 工具** → **Ping→PONG** → Close 回显 → ALL-PASS
+- 双端点并存回归：9222 Streamable HTTP initialize 200+serverInfo 无回归（同进程同时服务）
+- 设备日志另证 hmh 自测路径：text frame/ping→pong/close echo/client 清理全过
+- 架构：McpJsonRpcCore.ets 抽出 JSON-RPC 分发核心，HTTP/WS 双传输共享（敏感确认链沿用页面层 ConfirmDialog 语义，P8/P10 已验收，不重复实现）
+- 技术决策记录：@ohos.net.webSocket 仅客户端（API14 无服务端 API）→ WS 服务端自建于 TCPSocketServer；9222 HTTP 为 MCP 现行标准传输保留为主端点
