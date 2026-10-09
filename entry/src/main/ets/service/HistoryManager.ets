@@ -1,6 +1,7 @@
 import { StorageManager } from '../storage/StorageManager'
 import { HistoryDb, HistoryRow } from '../storage/HistoryDb'
 import { Context } from '@kit.AbilityKit'
+import { EventBus, EventBusEvents } from '../infra/EventBus'
 
 export interface HistoryEntry {
   url: string
@@ -44,6 +45,8 @@ class HistoryManagerImpl {
       }
     })
     this.mirrorUpsert(url, entry.timestamp, title)
+    // R5: 历史变更通知（新标签页计数等订阅方即时刷新）
+    EventBus.emit(EventBusEvents.HISTORY_CHANGED, entry)
   }
 
   canGoBack(tabId: string): boolean {
@@ -160,6 +163,8 @@ class HistoryManagerImpl {
     await this.migrateLegacyJson()
     await this.refreshMirror()
     HistoryDb.runRetentionPolicy()
+    // R5: 镜像装载完成通知（新标签页首帧计数时序修复）
+    EventBus.emit(EventBusEvents.HISTORY_CHANGED, '')
   }
 
   private lastContext: Context | null = null

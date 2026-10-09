@@ -89,9 +89,12 @@ struct BrowserShell {
     console.info('BrowserShell aboutToAppear start')
     // P14b: 书签变更订阅驱动刷新
     EventBus.on(EventBusEvents.BOOKMARKS_CHANGED, this.onBookmarksChanged)
+    EventBus.on(EventBusEvents.HISTORY_CHANGED, this.onHistoryChanged)
+    this.refreshCounts()
     // P11d: 书签持久化加载(此前无人调用 load —— 存量 bug,重启即丢)
     BookmarkManager.load().then(() => {
       this.refreshBookmarkState()
+      this.refreshCounts()
       console.info('BrowserShell bookmarks loaded: ' + BookmarkManager.getBookmarkCount())
     }).catch((e: Object) => {
       console.error('BrowserShell bookmark load fail: ' + e)
@@ -121,6 +124,7 @@ struct BrowserShell {
   aboutToDisappear(): void {
     EventBus.off(EventBusEvents.TAB_STATUS_CHANGE, this.onTabStatusChange)
     EventBus.off(EventBusEvents.BOOKMARKS_CHANGED, this.onBookmarksChanged)
+    EventBus.off(EventBusEvents.HISTORY_CHANGED, this.onHistoryChanged)
   }
 
   /** P5: 页面回到前台（router.back 从 NeoDashboard 返回）时强制重同步标签栏
@@ -203,6 +207,12 @@ struct BrowserShell {
   private onBookmarksChanged = (data: Object): void => {
     this.refreshBookmarkState()
     console.info('BrowserShell bookmarks-changed -> bar refreshed')
+  }
+
+  /** R5: 计数刷新（书签直读 + 历史镜像长度） */
+  private refreshCounts(): void {
+    this.bookmarkCount = BookmarkManager.getBookmarkCount()
+    this.historyCount = HistoryManager.getAllHistory(500).length
   }
 
   private refreshBookmarkState(): void {
@@ -586,6 +596,12 @@ struct BrowserShell {
 
   /** P7: 导入登录态 —— 输入应用沙盒内 cookies.json 相对路径 → parse → WebCookieManager 注入 */
   @State showImportPanel: boolean = false
+  // R5: 计数事件驱动（首帧时序修复：loadHistory/BOOKMARKS_CHANGED 完成后刷新）
+  @State bookmarkCount: number = 0
+  @State historyCount: number = 0
+  private onHistoryChanged = (data: Object): void => {
+    this.refreshCounts()
+  }
   @State importPath: string = ''
   @State importResult: string = ''
 
@@ -947,7 +963,7 @@ struct BrowserShell {
       }
       .margin({ top: 24 })
 
-      Text('书签 ' + BookmarkManager.getBookmarkCount() + ' 条 · 历史 ' + HistoryManager.getAllHistory(500).length + ' 条')
+      Text('书签 ' + this.bookmarkCount + ' 条 · 历史 ' + this.historyCount + ' 条')
         .fontSize(12)
         .fontColor('#8B949E')
         .margin({ top: 16 })
