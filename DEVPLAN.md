@@ -522,3 +522,22 @@ p11a-icons*/p11b-*（标签条 shape + tab-search）/p11c-*（右键菜单三屏
 - hilog：`loaded session shots=21 logs=6` + `marks built: 6`
 - 视觉分析实证（z-replay-marks-icons.jpeg）：进度条 6 个蓝点位置分布正确；时间线六行图标形状与语义一一对应（箭头/指针/键盘/滚动箭头/相机/时钟）；播放控制齐全
 - 构建插曲：hvigor daemon 卡死一次（java 0.9% CPU）→ 杀进程 --no-daemon 重跑 4s 绿
+
+
+---
+
+## R5：第五轮审计——死代码清理 + 计数时序修复 + 终回归（2026-10-09，git 7b7eb93）
+
+### 审计与修复
+- **死代码 5 组件删除**（-588 行）：AddressBar/AgentCard/ConnectionPanel/SessionList/TabBar——均被后继取代（TabStrip/ChromeWidgets/历史页等），字符串级二次确认零引用（BrowserShell 命中为同名 @Builder 非组件）
+- **新标签页历史计数首帧显 0 修复**（P14 已知残留）：EventBus 新增 HISTORY_CHANGED；HistoryManager 在 loadHistory 完成+recordNavigation 后 emit；BrowserShell 计数改 @State 订阅驱动（书签计数同链复用 BOOKMARKS_CHANGED）
+
+### 终回归（R5 构建全绿）
+- **MCP WS 8765**：宿主 WS 客户端 ALL-PASS（101+密钥 VALID+initialize+tools/list 10+Pong）
+- **MCP HTTP 9222**：initialize 200+serverInfo
+- **桌面快捷**：force-stop 后双击图标 → pid 1587 拉起
+- **工具链+事件链联验**：MCP navigate iana → 200 → 历史计数 **17→19 实时+2**（时序修复与 HISTORY_CHANGED 事件链一并实证）
+- 冷启动新标签页 `书签 3 条 · 历史 17 条`（修复前显示 0）
+
+### 项目终态
+P1-P15+R1-R5 全部收官。五份规格任务书 60 项全闭合。剩余已知项均为设备/端点级（VM 键盘注入、agnes 免费限流、IME 回灌），代码侧无未修缺陷。
