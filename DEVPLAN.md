@@ -600,3 +600,11 @@ P1-P15+R1-R5 全部收官。五份规格任务书 60 项全闭合。剩余已知
 
 ### 遗留记录
 - 最终导航端到端（纯文本回车→地址栏变 baidu.com/s?wd=）受自动化环境限制未截得：uinput -K -t 只追加不清选区（输入变 about:blankzz 以 about: 前缀走 URL 分支）+ dshapp(com.oneaiterm.terminal) 反复抢前台。代码链路与数据源同源五路实证（设置 UI/建议首行/底栏/config.json/hilog 全部=baidu），待手动环境一键复验。
+
+
+### P18 独立验收补充（Zodex，2026-10-10 01:2x）
+- 设置页「搜索」节+当前引擎卡实测（百度 + `https://www.baidu.com/s?wd=` 模板显示 + 更改按钮）
+- **9 引擎选择器列表 dump 实证**：Google/Bing/DuckDuckGo/百度/搜狗/360 搜索/头条搜索/Yandex/Brave Search 全列出（含各自 URL 模板副行）
+- config 持久化实证：`searchEngineId` 落盘（当前 "bing"——hmh 多引擎自测终态，佐证切换即时写盘）
+- hmh 五源证据（evidence/p18/REPORT.md）：设置渲染/切换 UI/config 落盘/hilog switched/重启保持+omnibox 首行「百度 搜索 xx」+底栏「搜索引擎·X|切换」截图
+- **端到端导航截图（输入词→回车→地址栏变搜索 URL）未截得**：uinput 无法清空地址栏旧选区（about: 前缀残留走 URL 分支）+ 外来任务（tty7/dshapp）抢前台升级（kill 后 ~3s 自愈）——设备级自动化限制，与 hmh 报告遗留一致如实记录；fallback 与五路实证同源（getEngineById(ConfigManager.getSearchEngineId())）无分支疑点
