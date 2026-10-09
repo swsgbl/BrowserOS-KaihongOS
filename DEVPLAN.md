@@ -503,3 +503,22 @@ p11a-icons*/p11b-*（标签条 shape + tab-search）/p11c-*（右键菜单三屏
 - **搜索 RDB 接线**：HistoryPage 关键词改走 HistoryManager.searchHistory（RDB LIKE，此前内存 filter 只覆盖前 200 条）——p14d 由验收方补
 - 已知小残留：新标签页"历史 N 条"计数在 loadHistory 异步完成前渲染首帧可能显示 0（历史页本体正确，时序性显示问题）
 - 期间插曲：外来 tty7 任务窗口抢前台，最小化+最大化恢复后照常验收（双项目抢前台既有对策）
+
+
+---
+
+## P15：会话回放规格收尾——操作类型图标 + 进度条节点标记（2026-10-09，用户回放任务书比对后真缺口，git e413fc4）
+
+### 规格比对结论
+用户回放任务书 3 域：①录制链（addOperationLog 每操作 {timestamp,operationType,targetElement,result}+html2canvas 定期截屏+沙箱 sessions/*.json）P2-P6 已交付并多轮实证（shots=21/logs=6 复现）②图片序列+时间轴滑块+倍速（任务书第二路线）P4 起交付 ③垂直时间线列表——已有，**真缺口=操作类型分图标+点击步骤跳转+进度条操作节点标记**。
+
+### 交付（Zodex 直接实现）
+- 6 枚操作 SVG（ic_op_navigate/click/type/scroll/snapshot/wait，Material 风 24px fillColor 染色）+ opIcon() 映射（back/forward 归导航、wait_for 归等待、缺省 ic_check）
+- **进度条操作节点标记**：Stack 叠层，标记按 (log.timestamp-session.startTime)/duration 百分比 position 定位（clamp 97% 防右溢出），16vp 热区+5vp 蓝点，点击 seekTo 对应时刻
+- 时间线列表项加图标列+整行 onClick 跳转对应回放位置
+- V1 repack 三步同步（p11_add_svgs_v1.py：39 svg/52 records）
+
+### 验收
+- hilog：`loaded session shots=21 logs=6` + `marks built: 6`
+- 视觉分析实证（z-replay-marks-icons.jpeg）：进度条 6 个蓝点位置分布正确；时间线六行图标形状与语义一一对应（箭头/指针/键盘/滚动箭头/相机/时钟）；播放控制齐全
+- 构建插曲：hvigor daemon 卡死一次（java 0.9% CPU）→ 杀进程 --no-daemon 重跑 4s 绿
