@@ -8,6 +8,7 @@ import { AppConfigUpdate } from '../model/AppConfig'
 import { MCPServer } from '../service/MCPServer'
 import { LLMClient, LLMChatMessage } from '../service/LLMClient'
 import { pasteboard } from '@kit.BasicServicesKit'
+import { bundleManager } from '@kit.AbilityKit'
 import { router } from '@kit.ArkUI'
 import { Palette } from '../common/Palette'
 
@@ -39,8 +40,8 @@ struct SettingsPage {
   @State sensitiveConfirmOn: boolean = true
   // MCP
   @State mcpCopiedHint: string = ''
-  // 版本
-  private readonly appVersion: string = '1.0.1 (P10)'
+  // 版本（P17b: 动态读取 app.json5 versionName，避免硬编码漂移）
+  @State appVersion: string = ''
 
   private readonly navItems: NavItem[] = [
     { key: 'ai', icon: $r('app.media.ic_robot'), label: 'AI 与 Agent' },
@@ -56,7 +57,15 @@ struct SettingsPage {
     this.llmApiKeyInput = cfg.llmApiKey
     this.llmModelInput = cfg.llmModel
     this.sensitiveConfirmOn = ConfigManager.isSensitiveConfirm()
-    console.info('SettingsPage mounted')
+    // P17b: About 版本动态化 —— GET_BUNDLE_INFO_DEFAULT(0) 即含 versionName
+    try {
+      const info = bundleManager.getBundleInfoForSelfSync(bundleManager.BundleFlag.GET_BUNDLE_INFO_DEFAULT)
+      this.appVersion = info.versionName
+    } catch (e) {
+      this.appVersion = 'dev'
+      console.error('SettingsPage getBundleInfo fail: ' + e)
+    }
+    console.info('SettingsPage mounted version=' + this.appVersion)
   }
 
   private getMcpEndpoint(): string {
@@ -423,7 +432,7 @@ struct SettingsPage {
           .fontSize(13)
           .fontColor(this.pal().text)
           .layoutWeight(1)
-        Text('P10 · ' + '2026-10-08')
+        Text('KaihongOS · API 14')
           .fontSize(13)
           .fontColor(this.pal().text2)
       }

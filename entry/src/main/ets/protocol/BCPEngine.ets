@@ -192,6 +192,33 @@ class BCPEngineImpl {
     return result
   }
 
+  /** P17c: 页内查找 —— window.find(前向/后向+大小写不敏感)，
+   *  无匹配数 API（ArkWeb 无 findAllMatcher 之类的计数），
+   *  返回 'found' | 'none' | 'unsupported' | runtime error */
+  async findText(query: string, forward: boolean): Promise<string> {
+    if (!query || query.length === 0) {
+      return 'none'
+    }
+    if (!this.webviewController) {
+      ErrorHandler.handle(new AppError(ErrorCodes.BCP_001, 'WebView not bound'))
+      return 'unsupported'
+    }
+    const esc = query.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
+    const js = `(function(){ try { if (typeof window.find !== 'function') { return 'unsupported' } return window.find('${esc}', false, !${forward}, true) ? 'found' : 'none' } catch (e) { return 'err:' + e } })()`
+    try {
+      const r = await this.webviewController.runJavaScript(js)
+      let v = `${r}`
+      if (v.length >= 2 && v.startsWith('"') && v.endsWith('"')) {
+        try { v = JSON.parse(v) as string } catch (e) { }
+      }
+      console.info('BCPEngine findText: ' + query + ' -> ' + v)
+      return v
+    } catch (e) {
+      console.error('BCPEngine findText error: ' + e)
+      return 'unsupported'
+    }
+  }
+
   async wait(ms: number): Promise<BCPResult> {
     return new Promise(resolve => {
       setTimeout(() => {

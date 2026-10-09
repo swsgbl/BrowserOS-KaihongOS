@@ -42,6 +42,7 @@ export struct ThreeDotMenu {
   ]
   private readonly group3: MenuEntry[] = [
     { icon: $r('app.media.ic_settings'), label: '设置', action: 'settings' },
+    { icon: $r('app.media.ic_find'), label: '查找', action: 'find' },
     { icon: $r('app.media.ic_help'), label: '帮助', action: 'help' }
   ]
 

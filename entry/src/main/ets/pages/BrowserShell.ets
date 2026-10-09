@@ -61,6 +61,15 @@ struct BrowserShell {
   @State ctrlHeld: boolean = false
   @State showDashboard: boolean = true
   @State loadProgress: number = 0
+  // P17a: 导航错误横幅（主文档失败才置值；空=隐藏）
+  @State navError: string = ''
+  // P17a: onPageBegin 记录的主文档 URL（onErrorReceive 判定用，MCP/agent 导航不设 pendingUrl）
+  private lastNavUrl: string = ''
+  @State navErrorUrl: string = ''
+  // P17c: 页内查找条
+  @State showFindBar: boolean = false
+  @State findQuery: string = ''
+  @State findStatus: string = ''
   @State isBookmarked: boolean = false
   @State showHistory: boolean = false
   // P9-A: chrome 补全 —— ⋮ 菜单 / omnibox 建议 / 书签气泡
@@ -253,8 +262,10 @@ struct BrowserShell {
       // P6 治本：Web 层常驻 —— 所有 tab 的 Web 组件始终挂载（非激活 Hidden 保活），
       // dashboard/NeoDashboard 作为覆盖层置顶。修复「dashboard 激活时全部 Web 销毁、
       // 覆盖态 ForEach 不新增」的时序缺口：agent tab 创建即有 WebView，BCP 立即可用。
-      Stack() {
+      Stack({ alignContent: Alignment.Top }) {
         this.WebViewContent()
+        this.ErrorBanner()
+        this.FindBar()
         if (this.showDashboard) {
           this.DashboardContent()
         }
@@ -1140,10 +1151,22 @@ struct BrowserShell {
             DownloadManager.start(e.url, fn, e.mimetype)
           })
           .onPageBegin((event) => {
+            this.lastNavUrl = event.url
+            // P17: dashboard 标签被导航到真实页面时自动切 web 模式（P16 会话恢复后 dashboard-tab
+            // 双重身份会导致地址栏=iana 而视觉仍是 dashboard 覆盖，横幅/查找条也被 !showDashboard 挡住）
+            if (tab.isDashboard && event.url && !event.url.startsWith('about:')) {
+              tab.isDashboard = false
+              TabManager.updateTabUrl(tab.tabId, event.url)
+              if (tab.tabId === this.activeTabId) {
+                this.showDashboard = false
+              }
+              console.info('BrowserShell dashboard tab -> web mode on nav: ' + event.url)
+            }
             console.info('BrowserShell onPageBegin tabId=' + tab.tabId + ' url=' + event.url)
             if (tab.tabId === this.activeTabId) {
               this.isLoading = true
               this.loadProgress = 0
+              this.navError = ''
             }
           })
           .onPageEnd((event) => {
@@ -1210,8 +1233,20 @@ struct BrowserShell {
             console.error('BrowserShell onErrorReceive tabId=' + tab.tabId + ' url=' +
               (event.request ? event.request.getRequestUrl() : '') +
               ' error=' + (event.error ? event.error.getErrorInfo() : ''))
-            if (tab.tabId === this.activeTabId) {
+            {
               this.isLoading = false
+              // P17a: 主文档失败 -> 错误横幅（子资源失败不打扰）
+              const navTarget = this.lastNavUrl || this.pendingUrl || TabManager.getTab(tab.tabId)?.currentUrl || this.currentUrl
+              const reqUrl = event.request ? event.request.getRequestUrl() : ''
+              const norm = (u: string): string => u.length > 1 && u.endsWith('/') ? u.substring(0, u.length - 1) : u
+              console.info('BrowserShell navErrDiag tab=' + tab.tabId + ' active=' + this.activeTabId
+                + ' reqUrl=' + reqUrl + ' navTarget=' + navTarget + ' lastNavUrl=' + this.lastNavUrl
+                + ' eq=' + (norm(reqUrl) === norm(navTarget)))
+              if (reqUrl.length > 0 && navTarget.length > 0 && norm(reqUrl) === norm(navTarget)) {
+                this.navError = event.error ? event.error.getErrorInfo() : '无法打开页面'
+                this.navErrorUrl = reqUrl
+                console.warn('BrowserShell navError banner: ' + reqUrl + ' ' + this.navError)
+              }
             }
             const errData: PageLoadErrorData = {
               tabId: tab.tabId,
@@ -1237,6 +1272,170 @@ struct BrowserShell {
     .width('100%')
     .layoutWeight(1)
     .backgroundColor(this.pal().surface)
+  }
+
+  /** P17c: 页内查找条 —— 输入即查(window.find) / Enter 下一个 / 上一个 / 关闭 */
+  @Builder
+  FindBar(): void {
+    if (this.showFindBar && !this.showDashboard) {
+      Row() {
+        Image($r('app.media.ic_find'))
+          .width(16).height(16)
+          .fillColor(this.pal().text2)
+          .draggable(false)
+        TextInput({ text: this.findQuery, placeholder: '查找页面内容' }).id('p17c_findinput')
+          .fontColor(this.pal().text)
+          .placeholderColor(this.pal().text2)
+          .layoutWeight(1)
+          .height(32)
+          .fontSize(13)
+          .backgroundColor(Color.Transparent)
+          .padding({ left: 4, right: 4 })
+          .onChange((v: string) => {
+            this.findQuery = v
+            this.doFind('find')
+          })
+          .onSubmit(() => {
+            this.doFind('next')
+          })
+        if (this.findStatus.length > 0) {
+          Text(this.findStatus)
+            .fontSize(12)
+            .fontColor(this.pal().text2)
+            .margin({ left: 6 })
+        }
+        Button({ type: ButtonType.Normal }) {
+          Image($r('app.media.ic_arrow_up'))
+            .width(16).height(16)
+            .fillColor(this.pal().text2)
+            .draggable(false)
+        }
+        .width(28)
+        .height(28)
+        .backgroundColor(Color.Transparent)
+        .margin({ left: 4 })
+        .onClick(() => { this.doFind('prev') })
+        Button({ type: ButtonType.Normal }) {
+          Image($r('app.media.ic_arrow_down'))
+            .width(16).height(16)
+            .fillColor(this.pal().text2)
+            .draggable(false)
+        }
+        .width(28)
+        .height(28)
+        .backgroundColor(Color.Transparent)
+        .onClick(() => { this.doFind('next') })
+        Button({ type: ButtonType.Normal }) {
+          Image($r('app.media.ic_close'))
+            .width(16).height(16)
+            .fillColor(this.pal().text2)
+            .draggable(false)
+        }
+        .width(28)
+        .height(28)
+        .backgroundColor(Color.Transparent)
+        .margin({ left: 4 })
+        .onClick(() => { this.closeFindBar() })
+      }
+      .width('80%')
+      .constraintSize({ minWidth: 280 })
+      .height(44)
+      .padding({ left: 10, right: 10 })
+      .borderRadius(8)
+      .backgroundColor(this.pal().surface)
+      .border({ width: 1, color: this.pal().border })
+      .shadow({ radius: 8, color: '#33000000', offsetY: 2 })
+      .margin({ top: 56 })
+      .zIndex(60)
+    }
+  }
+
+  /** P17c: 执行查找 —— mode: 'find'(重新查) | 'next' | 'prev' */
+  private doFind(mode: string): void {
+    const q = this.findQuery.trim()
+    if (q.length === 0) {
+      this.findStatus = ''
+      return
+    }
+    const forward = mode !== 'prev'
+    console.info('BrowserShell doFind: mode=' + mode + ' q=' + q)
+    BCPEngine.findText(q, forward).then((v: string) => {
+      if (v === 'found') {
+        this.findStatus = '有匹配'
+      } else if (v === 'none') {
+        this.findStatus = '无匹配'
+      } else {
+        this.findStatus = '此页面不支持查找'
+      }
+    })
+  }
+
+  /** P17c: 打开页内查找条 */
+  private openFindBar(): void {
+    if (this.showDashboard) {
+      console.info('BrowserShell find skipped: dashboard tab')
+      return
+    }
+    this.showFindBar = true
+    this.findStatus = ''
+    console.info('BrowserShell find bar opened')
+  }
+
+  /** P17c: 关闭查找条（不动页面高亮） */
+  private closeFindBar(): void {
+    this.showFindBar = false
+    this.findStatus = ''
+    console.info('BrowserShell find bar closed')
+  }
+
+  /** P17a: 导航错误横幅 —— 错误信息 + 重试(refresh) + 关闭 */
+  @Builder
+  ErrorBanner(): void {
+    if (this.navError.length > 0) {
+      Row() {
+        Text(this.navErrorUrl + '\n加载失败：' + this.navError)
+          .fontSize(12)
+          .fontColor('#FFFFFF')
+          .layoutWeight(1)
+          .maxLines(2)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
+        Button('重试')
+          .fontSize(12)
+          .height(28)
+          .backgroundColor('#FFFFFF')
+          .fontColor('#C5221F')
+          .borderRadius(14)
+          .margin({ left: 8 })
+          .onClick(() => {
+            console.info('BrowserShell navError retry: ' + this.navErrorUrl)
+            this.navError = ''
+            this.isLoading = true
+            const controller = this.getActiveController()
+            if (controller) {
+              controller.refresh()
+            } else {
+              this.navigate(this.navErrorUrl)
+            }
+          })
+        Button({ type: ButtonType.Normal }) {
+          Image($r('app.media.ic_close'))
+            .width(16).height(16)
+            .fillColor('#FFFFFF')
+            .draggable(false)
+        }
+        .width(28)
+        .height(28)
+        .backgroundColor(Color.Transparent)
+        .margin({ left: 4 })
+        .onClick(() => {
+          this.navError = ''
+        })
+      }
+      .width('100%')
+      .padding({ left: 12, right: 12, top: 8, bottom: 8 })
+      .backgroundColor('#C5221F')
+      .zIndex(50)
+    }
   }
 
   /** P11f: 停止加载 —— 切图标 + 手动复位 isLoading(onPageEnd 不会触发) */
@@ -1377,6 +1576,7 @@ struct BrowserShell {
 
   private navigate(url: string): void {
     console.info('BrowserShell navigate to: ' + url)
+    this.navError = ''
     this.currentUrl = url
     this.urlInput = url
     this.showDashboard = false
@@ -1514,6 +1714,9 @@ struct BrowserShell {
         break
       case 'settings':
         router.pushUrl({ url: 'pages/SettingsPage' })
+        break
+      case 'find':
+        this.openFindBar()
         break
       case 'help':
         // P9r: 帮助 = 新标签页导航官网（真实 Web 标签）
