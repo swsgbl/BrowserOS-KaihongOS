@@ -128,7 +128,9 @@ export struct OmniboxSuggestions {
   }
 
   items: SuggestItem[] = []
+  engineName: string = ''
   onPick: (kind: string, url: string) => void = (kind: string, url: string) => {}
+  onSwitchEngine: () => void = () => {}
   onClose: () => void = () => {}
 
   build(): void {
@@ -159,7 +161,8 @@ export struct OmniboxSuggestions {
                   .width(16).height(16)
                   .fillColor(this.pal().text2)
                   .draggable(false)
-                Text(`搜索 ${item.title}`)
+                // P18: title 由 shell 侧拼好引擎名（如「百度 搜索 xx」）
+                Text(item.title)
                   .fontSize(13)
                   .fontWeight(FontWeight.Medium)
                   .fontColor(this.pal().text)
@@ -197,6 +200,29 @@ export struct OmniboxSuggestions {
               this.onPick(item.kind, item.url)
             })
           }, (item: SuggestItem, index: number) => item.kind + '_' + item.url + '_' + index)
+          // P18: 底部当前引擎标识 + 「切换」入口（跳设置页搜索节）
+          Divider().color(this.pal().border).margin({ top: 4 })
+          Row() {
+            Image($r('app.media.ic_search'))
+              .width(12).height(12)
+              .fillColor(this.pal().text2)
+              .draggable(false)
+            Text('搜索引擎 · ' + this.engineName)
+              .fontSize(11)
+              .fontColor(this.pal().text2)
+              .layoutWeight(1)
+              .margin({ left: 6 })
+            Text('切换')
+              .fontSize(11)
+              .fontColor('#1A73E8')
+          }
+          .width('100%')
+          .height(34)
+          .padding({ left: 12, right: 12 })
+          .borderRadius(6)
+          .onClick(() => {
+            this.onSwitchEngine()
+          })
         }
         .width(520)
         .constraintSize({ maxHeight: 360 })

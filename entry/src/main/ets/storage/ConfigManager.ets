@@ -85,6 +85,9 @@ class ConfigManagerImpl {
     if (config.llmModel !== undefined) {
       this.config.llmModel = config.llmModel.trim()
     }
+    if (config.searchEngineId !== undefined) {
+      this.config.searchEngineId = config.searchEngineId
+    }
   }
 
   async update(config: AppConfigUpdate): Promise<boolean> {
@@ -126,6 +129,10 @@ class ConfigManagerImpl {
 
   isDarkMode(): boolean {
     return this.config.darkMode
+  }
+
+  getSearchEngineId(): string {
+    return this.config.searchEngineId
   }
 
   isSensitiveConfirm(): boolean {

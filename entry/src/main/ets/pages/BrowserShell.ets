@@ -7,6 +7,8 @@ import { SensitiveOperationDetector } from '../service/SensitiveOperationDetecto
 import { BCPEngine } from '../protocol/BCPEngine'
 import { JSBridgeInjector } from '../protocol/JSBridgeInjector'
 import { Constants } from '../common/Constants'
+import { getEngineById } from '../common/SearchEngines'
+import { ConfigManager } from '../storage/ConfigManager'
 import { EventBus, EventBusEvents } from '../infra/EventBus'
 import { TabStatus, SensitiveOperationType } from '../common/Types'
 import { TabInfo } from '../model/TabInfo'
@@ -308,6 +310,13 @@ struct BrowserShell {
       if (this.showSuggestions) {
         OmniboxSuggestions({
           items: this.suggestItems,
+          engineName: getEngineById(ConfigManager.getSearchEngineId()).name,
+          onSwitchEngine: () => {
+            console.info('BrowserShell switch engine entry')
+            this.showSuggestions = false
+            const navParams: Record<string, Object> = { 'section': 'search' }
+            router.pushUrl({ url: 'pages/SettingsPage', params: navParams })
+          },
           onPick: (kind: string, url: string) => {
             console.info('BrowserShell suggestion picked: kind=' + kind + ' url=' + url)
             this.showSuggestions = false
@@ -1537,7 +1546,9 @@ struct BrowserShell {
     if (this.isUrl(input)) {
       this.navigate(this.normalizeUrl(input))
     } else {
-      this.navigate(Constants.DEFAULT_SEARCH_ENGINE + encodeURIComponent(input))
+      // P18: 默认搜索引擎可配置（注册表 + ConfigManager 持久化），Constants 常量保留兜底
+      const eng = getEngineById(ConfigManager.getSearchEngineId())
+      this.navigate(eng.queryUrl + encodeURIComponent(input))
     }
   }
 
@@ -1619,7 +1630,8 @@ struct BrowserShell {
     const seen = new Set<string>()
     if (kw.length > 0) {
       // P11d: 首行「搜索 kw」——走搜索引擎 fallback(onPick kind=search)
-      items.push({ kind: 'search', title: kw, url: kw })
+      // P18: 首行带引擎名（如「百度 搜索 xx」），ChromeWidgets 直接渲染 title
+      items.push({ kind: 'search', title: getEngineById(ConfigManager.getSearchEngineId()).name + ' 搜索 ' + kw, url: kw })
       const his = HistoryManager.getAllHistory(100).filter((e: HistoryEntry) =>
         e.url.toLowerCase().includes(kw) || (e.title || '').toLowerCase().includes(kw))
       for (const e of his.slice(0, 5)) {

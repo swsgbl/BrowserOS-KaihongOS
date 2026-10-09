@@ -23,6 +23,7 @@ interface AppConfigJSON {
   llmBaseUrl: string
   llmApiKey: string
   llmModel: string
+  searchEngineId: string
 }
 
 export interface AppConfigUpdate {
@@ -40,6 +41,7 @@ export interface AppConfigUpdate {
   llmBaseUrl?: string
   llmApiKey?: string
   llmModel?: string
+  searchEngineId?: string
 }
 
 export class AppConfig {
@@ -65,6 +67,7 @@ export class AppConfig {
   llmBaseUrl: string = ''
   llmApiKey: string = ''
   llmModel: string = ''
+  searchEngineId: string = 'google'
 
   toJSON(): AppConfigJSON {
     const result: AppConfigJSON = {
@@ -89,7 +92,8 @@ export class AppConfig {
       sensitiveConfirm: this.sensitiveConfirm,
       llmBaseUrl: this.llmBaseUrl,
       llmApiKey: this.llmApiKey,
-      llmModel: this.llmModel
+      llmModel: this.llmModel,
+      searchEngineId: this.searchEngineId
     }
     return result
   }
@@ -120,6 +124,8 @@ export class AppConfig {
     config.llmBaseUrl = AppConfig.sanitizeLlmBaseUrl((json['llmBaseUrl'] as string) || '')
     config.llmApiKey = (json['llmApiKey'] as string) || ''
     config.llmModel = (json['llmModel'] as string) || ''
+    // p18: tolerant read — old config.json without searchEngineId keeps default 'google'
+    config.searchEngineId = json['searchEngineId'] !== undefined && json['searchEngineId'] !== null ? json['searchEngineId'] as string : 'google'
     return config
   }
 

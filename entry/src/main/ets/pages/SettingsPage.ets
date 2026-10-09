@@ -11,6 +11,7 @@ import { pasteboard } from '@kit.BasicServicesKit'
 import { bundleManager } from '@kit.AbilityKit'
 import { router } from '@kit.ArkUI'
 import { Palette } from '../common/Palette'
+import { SearchEngine, SEARCH_ENGINES, getEngineById } from '../common/SearchEngines'
 
 interface NavItem {
   key: string
@@ -38,12 +39,16 @@ struct SettingsPage {
   // 外观（darkMode 改由 @StorageProp 提供）
   // 隐私
   @State sensitiveConfirmOn: boolean = true
+  // P18: 搜索引擎
+  @State searchEngineId: string = 'google'
+  @State showEnginePicker: boolean = false
   // MCP
   @State mcpCopiedHint: string = ''
   // 版本（P17b: 动态读取 app.json5 versionName，避免硬编码漂移）
   @State appVersion: string = ''
 
   private readonly navItems: NavItem[] = [
+    { key: 'search', icon: $r('app.media.ic_search'), label: '搜索' },
     { key: 'ai', icon: $r('app.media.ic_robot'), label: 'AI 与 Agent' },
     { key: 'appearance', icon: $r('app.media.ic_public'), label: '外观' },
     { key: 'privacy', icon: $r('app.media.ic_lock'), label: '隐私与安全' },
@@ -57,6 +62,12 @@ struct SettingsPage {
     this.llmApiKeyInput = cfg.llmApiKey
     this.llmModelInput = cfg.llmModel
     this.sensitiveConfirmOn = ConfigManager.isSensitiveConfirm()
+    this.searchEngineId = ConfigManager.getSearchEngineId()
+    // P18: omnibox 「切换」入口深链 —— params.section === 'search' 直达搜索节
+    const sp = router.getParams() as Record<string, Object>
+    if (sp && sp['section'] === 'search') {
+      this.navSelection = 0
+    }
     // P17b: About 版本动态化 —— GET_BUNDLE_INFO_DEFAULT(0) 即含 versionName
     try {
       const info = bundleManager.getBundleInfoForSelfSync(bundleManager.BundleFlag.GET_BUNDLE_INFO_DEFAULT)
@@ -136,12 +147,14 @@ struct SettingsPage {
       Scroll() {
         Column() {
           if (this.navSelection === 0) {
-            this.AiSection()
+            this.SearchSection()
           } else if (this.navSelection === 1) {
-            this.AppearanceSection()
+            this.AiSection()
           } else if (this.navSelection === 2) {
-            this.PrivacySection()
+            this.AppearanceSection()
           } else if (this.navSelection === 3) {
+            this.PrivacySection()
+          } else if (this.navSelection === 4) {
             this.McpSection()
           } else {
             this.AboutSection()
@@ -175,6 +188,87 @@ struct SettingsPage {
       }
     }
     .width('100%')
+    .alignItems(HorizontalAlign.Start)
+  }
+
+  /** P18: 搜索引擎节 —— 当前引擎 + 单选切换列表（选中即保存生效） */
+  @Builder
+  SearchSection(): void {
+    Column() {
+      this.CardShell('搜索引擎', '地址栏输入非网址内容时，使用以下搜索引擎')
+
+      Row() {
+        Column() {
+          Text(getEngineById(this.searchEngineId).name)
+            .fontSize(13)
+            .fontColor(this.pal().text)
+          Text(getEngineById(this.searchEngineId).queryUrl)
+            .fontSize(11)
+            .fontColor(this.pal().text2)
+            .margin({ top: 2 })
+        }
+        .alignItems(HorizontalAlign.Start)
+        .layoutWeight(1)
+
+        Button(this.showEnginePicker ? '收起' : '更改')
+          .fontSize(13)
+          .height(32)
+          .backgroundColor(this.pal().surface)
+          .fontColor('#1A73E8')
+          .borderRadius(16)
+          .border({ width: 1, color: this.pal().border })
+          .onClick(() => {
+            this.showEnginePicker = !this.showEnginePicker
+          })
+      }
+      .width('100%')
+      .margin({ top: 16 })
+
+      if (this.showEnginePicker) {
+        Divider().color(this.pal().border).margin({ top: 14, bottom: 8 })
+        ForEach(SEARCH_ENGINES, (e: SearchEngine) => {
+          Row() {
+            Column() {
+              Text(e.name)
+                .fontSize(13)
+                .fontColor(this.pal().text)
+              Text(e.desc + ' · ' + e.queryUrl)
+                .fontSize(10)
+                .fontColor(this.pal().text2)
+                .maxLines(1)
+                .textOverflow({ overflow: TextOverflow.Ellipsis })
+                .margin({ top: 1 })
+            }
+            .alignItems(HorizontalAlign.Start)
+            .layoutWeight(1)
+
+            if (e.id === this.searchEngineId) {
+              Image($r('app.media.ic_check'))
+                .width(16).height(16)
+                .fillColor('#1A73E8')
+                .draggable(false)
+            }
+          }
+          .width('100%')
+          .height(44)
+          .padding({ left: 10, right: 10 })
+          .borderRadius(8)
+          .backgroundColor(e.id === this.searchEngineId ? this.pal().selected : this.pal().surfaceAlt)
+          .margin({ top: 4 })
+          .onClick(() => {
+            this.searchEngineId = e.id
+            ConfigManager.update({ searchEngineId: e.id } as AppConfigUpdate)
+            this.showEnginePicker = false
+            console.info('SettingsPage searchEngine switched: ' + e.id)
+          })
+        }, (e: SearchEngine) => e.id)
+      }
+    }
+    .width('100%')
+    .padding(20)
+    .borderRadius(12)
+    .backgroundColor(this.pal().surface)
+    .border({ width: 1, color: this.pal().border })
     .alignItems(HorizontalAlign.Start)
   }
 

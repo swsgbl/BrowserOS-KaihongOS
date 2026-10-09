@@ -583,3 +583,20 @@ P1-P15+R1-R5 全部收官。五份规格任务书 60 项全闭合。剩余已知
 ### 遗留记录
 - FindBar 端到端视觉验证待真机/手动环境（多标签绑定状态机在 uitest 环境的边缘态）；代码链路完整
 - navErrDiag 诊断日志保留（hilog 观察友好）
+
+## P18：搜索引擎完整功能——引擎注册表+设置切换+默认引擎持久化（2026-10-09）
+
+### 交付
+- **A 引擎注册表**（common/SearchEngines.ets 新建）：SearchEngine 类（id/name/queryUrl/homeUrl/desc）+ SEARCH_ENGINES 9 家（Google/Bing/DuckDuckGo/百度/搜狗/360/头条/Yandex/Brave）+ getEngineById（未命中回退 google）
+- **B 持久化+设置切换**：AppConfig/AppConfigUpdate 增 searchEngineId（默认 'google'，fromJSON 容错读旧配置）；ConfigManager.set 处理新字段 + getSearchEngineId()；SettingsPage 导航首位新增「搜索」节（当前引擎行+「更改」弹层+单选列表，选中即保存，ic_check 复用现有图标）；omnibox onAddressInput fallback 从硬编码 Constants.DEFAULT_SEARCH_ENGINE 改为 eng.queryUrl 拼接（Constants 保留兜底）
+- **C omnibox 引擎显示**：建议首行 title 拼引擎名（「百度 搜索 xx」）；OmniboxSuggestions 底部新增「搜索引擎 · 百度 | 切换」行，onSwitchEngine 回调深链 router.pushUrl 设置页搜索节（params.section='search'，aboutToAppear 读取直达 navSelection=0）
+
+### 验证（VM 127.0.0.1:15566 实机，build_v1_hap+install_p8 链）
+- 设置页搜索节全渲染：9 引擎名称+描述+queryUrl（dump .verify/p18_l8.json，截图 p18_s2.jpeg）
+- 切换百度生效：UI 当前引擎=百度 + https://www.baidu.com/s?wd=（p18_l9）；config.json 落盘 "searchEngineId":"baidu"；hilog `SettingsPage searchEngine switched: baidu`
+- 重启保持：应用重启后建议首行仍显示「百度 搜索」（config 跨启动持久化 ✓，p18_l25/l27）
+- omnibox 引擎显示：建议首行 `百度 搜索 xx` + 底栏 `搜索引擎 · 百度`+`切换` 入口（p18_l25/p27 dump + 截图 p18_s3.jpeg）
+- 证据：evidence/p18/REPORT.md + .verify/p18_*.json/jpeg
+
+### 遗留记录
+- 最终导航端到端（纯文本回车→地址栏变 baidu.com/s?wd=）受自动化环境限制未截得：uinput -K -t 只追加不清选区（输入变 about:blankzz 以 about: 前缀走 URL 分支）+ dshapp(com.oneaiterm.terminal) 反复抢前台。代码链路与数据源同源五路实证（设置 UI/建议首行/底栏/config.json/hilog 全部=baidu），待手动环境一键复验。
