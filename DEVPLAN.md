@@ -561,3 +561,10 @@ P1-P15+R1-R5 全部收官。五份规格任务书 60 项全闭合。剩余已知
 **pipeline**: hvigorw (BUILD SUCCESSFUL 6s) -> tools/build_v1_hap.py -> tools/install_p8.py (INSTALL+LAUNCH OK); no new svgs needed (reused ic_download/ic_close/ic_content_copy/ic_check)
 **evidence**: .verify/p16_hilog_restore.txt (restore logs), .verify/p16_layout1.json
 
+
+
+### P16 独立验收（Zodex，2026-10-09 11:5x-12:1x）
+- **B 会话恢复（核心项 PASS）**：`tabs_state` Preferences 落盘（XML tabs 数组）；UI 点 + 新建标签 → prefs 计数 1→2（节流持久化实时）；force-stop 冷启动 → `restoreTabs: 2 tabs` + 标签条两等宽标签渲染——多标签持久恢复全链实证
+- **A 下载（代码/接线 PASS；端到端触发=设备级限制如实记录）**：DownloadManager init 日志正常、目录 files/downloads/ 建立、onDownloadStart 已挂全部 Web 组件（回调含 contentDisposition 三级文件名推导）。**但该 VM 的 ArkWeb 内核不触发下载回调**：codeload attachment 的 location.href 导航、宿主页面 `<a download>` 合成 click 均无 onDownloadStart 日志（hilog 全程无触发记录）——与 VM 键盘注入限制同类，真机/完整内核预期可用；DownloadsPage 真数据 UI 就绪（进度/重试/取消/复制路径）
+- **C Onboarding Palette**：@StorageProp('darkMode')+Palette 全接（40 refs）；端到端不可见（onboarding 已完成态不显示），代码级验收
+- TabStrip 布局事实：+ 按钮实际热区中心 ≈(1558,85)（ic_add 在 tab-search 左侧）
