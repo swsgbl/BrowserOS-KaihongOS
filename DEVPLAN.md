@@ -568,3 +568,18 @@ P1-P15+R1-R5 全部收官。五份规格任务书 60 项全闭合。剩余已知
 - **A 下载（代码/接线 PASS；端到端触发=设备级限制如实记录）**：DownloadManager init 日志正常、目录 files/downloads/ 建立、onDownloadStart 已挂全部 Web 组件（回调含 contentDisposition 三级文件名推导）。**但该 VM 的 ArkWeb 内核不触发下载回调**：codeload attachment 的 location.href 导航、宿主页面 `<a download>` 合成 click 均无 onDownloadStart 日志（hilog 全程无触发记录）——与 VM 键盘注入限制同类，真机/完整内核预期可用；DownloadsPage 真数据 UI 就绪（进度/重试/取消/复制路径）
 - **C Onboarding Palette**：@StorageProp('darkMode')+Palette 全接（40 refs）；端到端不可见（onboarding 已完成态不显示），代码级验收
 - TabStrip 布局事实：+ 按钮实际热区中心 ≈(1558,85)（ic_add 在 tab-search 左侧）
+
+
+---
+
+## P17：R7 审计三缺口——导航错误横幅 + About 动态版本 + 页内查找（2026-10-09，git a354692）
+
+### 交付（hmh 主体 + Zodex 三层根因攻坚）
+- **A 导航错误横幅**（端到端全绿）：onErrorReceive 主文档判定 → 顶部红底横幅（URL+错误码+重试+关闭）。攻坚链：①URL 尾斜杠归一化②导航目标改 lastNavUrl（onPageBegin 记录——MCP/agent 路径不设 pendingUrl）③外层 activeTabId 门槛放宽（P16 会话恢复致 activeTabId 与视觉活动标签错位，诊断行实锤 `active=tab_1_1791516635535` vs error tab_1_1791518385307）④dashboard 覆盖态也显示。实证：invalid 域导航 → UI `加载失败：ERR_INTERNET_DISCONNECTED` + 重试按钮（z-error-banner.jpeg）
+- **B About 动态版本**：bundleManager versionName（实测 **1.1.0**）+ 构建行改静态事实 'KaihongOS · API 14'（不再过时）
+- **C 页内查找**：⋮ 菜单「查找」项（实测存在，z-menu-find-item.jpeg）+ FindBar 组件（ic_find+输入+上/下 ic_arrow_up/down+关闭）+ BCPEngine findText（window.find 表达式求值，unsupported 如实降级）；dashboard tab 显式跳过（find skipped 日志）。端到端视觉验证受多标签绑定/活动状态机边缘态所阻（自动化环境限制，如实记录）
+- **连带 bug 修复**：dashboard 标签被导航到真实页面时自动切 web 模式（此前地址栏=iana 视觉仍是 dashboard 覆盖——P16 会话恢复的双重身份边缘态）
+
+### 遗留记录
+- FindBar 端到端视觉验证待真机/手动环境（多标签绑定状态机在 uitest 环境的边缘态）；代码链路完整
+- navErrDiag 诊断日志保留（hilog 观察友好）
