@@ -541,3 +541,23 @@ p11a-icons*/p11b-*（标签条 shape + tab-search）/p11c-*（右键菜单三屏
 
 ### 项目终态
 P1-P15+R1-R5 全部收官。五份规格任务书 60 项全闭合。剩余已知项均为设备/端点级（VM 键盘注入、agnes 免费限流、IME 回灌），代码侧无未修缺陷。
+
+
+## P16 (2026-10-09): R6 audit gaps - downloads / tab restore / onboarding palette
+
+**A 下载 (commit 6c4d8d6)**
+- new service/DownloadManager.ets: @ohos.net.http requestInStream -> files/downloads/, (n) conflict suffix, dataReceive incremental write, headersReceive content-length, DOWNLOAD_CHANGED EventBus (500ms throttle), dir-scan restore, retry/cancel/cleanup
+- SDK fact: OnDownloadStartEvent = {url,userAgent,contentDisposition,mimetype,contentLength} - NO suggestedFileName (SDK14 web.d.ts since 12); filename derived: contentDisposition filename*/filename= -> url last segment -> download_<ts>
+- BrowserShell: Web.onDownloadStart wired; DownloadsPage real list (progress bar, size, copy-path w/ pasteboard, retry, cancel); download indicator button (ic_download + amber dot) while active
+
+**B 会话恢复 (commit dafdc0d)**
+- TabManager: Preferences tabs_state {id,title,url,isDashboard,agentId} x max 8, dashboard first; persistTabs + 500ms throttled schedulePersist hooked into createTab/createAgentTab/switchTab/closeTab; restoreTabs() rebuild before loadContent; takeRestoreUrls() consumed by BrowserShell restoreUrlMap -> onControllerAttached loadUrl
+- EntryAbility: DownloadManager.init(context) + TabManager.setContext + restoreTabs before entry page decision
+- verified: force-stop -> relaunch => 'restoreTabs: 1 tabs' + 'BrowserShell tabs loaded: 1' (was 0 pre-P16)
+
+**C Onboarding palette (commit 5ccac19)**
+- OnboardingPage: @StorageProp darkMode + pal(); 40 refs swapped (#FFFFFF->surface, #F8F8F8->surfaceAlt, #EEEEEE->surfaceInput, #333333->text, #666/#999/#BBB->text2, #007DFF->accent, step indicator->accent/border)
+
+**pipeline**: hvigorw (BUILD SUCCESSFUL 6s) -> tools/build_v1_hap.py -> tools/install_p8.py (INSTALL+LAUNCH OK); no new svgs needed (reused ic_download/ic_close/ic_content_copy/ic_check)
+**evidence**: .verify/p16_hilog_restore.txt (restore logs), .verify/p16_layout1.json
+
