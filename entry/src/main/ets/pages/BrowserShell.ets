@@ -24,6 +24,7 @@ import { common } from '@kit.AbilityKit'
 import { KeyCode } from '@kit.InputKit'
 import { pasteboard } from '@kit.BasicServicesKit'
 import { Palette } from '../common/Palette'
+import { DownloadManager, DownloadItem, DownloadStatus } from '../service/DownloadManager'
 
 interface PageLoadErrorData {
   tabId: string
@@ -79,6 +80,8 @@ struct BrowserShell {
   private controllers: Map<string, webview.WebviewController> = new Map()
   private pendingUrl: string = ''
   private pendingUrlTab: string = ''
+  // P16b: session restore URL (tabId->url), consumed by onControllerAttached
+  private restoreUrlMap: Map<string, string> = new Map()
   // P5: 覆盖态（NeoDashboard 前台）@State 赋值不驱动渲染；返回时需强制 ForEach 重建
   private tabsDirty: boolean = false
   /** P5: 覆盖态标记 —— NeoDashboardPage/Onboarding 覆盖时 BrowserShell 不可见 */
@@ -102,6 +105,13 @@ struct BrowserShell {
     try {
       this.tabs = TabManager.getAllTabs()
       console.info('BrowserShell tabs loaded: ' + this.tabs.length)
+      // P16b: 会话恢复 URL 补载 —— restoreTabs 重建的标签 URL 存入 map，
+      // onControllerAttached（每个常驻 Web 均触发）按 tabId 消费 loadUrl
+      const restoreUrls = TabManager.takeRestoreUrls()
+      for (const ru of restoreUrls) {
+        this.restoreUrlMap.set(ru.tabId, ru.url)
+        console.info('BrowserShell restore url pending: ' + ru.url + ' tab=' + ru.tabId)
+      }
       if (this.tabs.length === 0) {
         const tab = TabManager.createTab(true)
         this.tabs = [tab]
@@ -125,6 +135,7 @@ struct BrowserShell {
     EventBus.off(EventBusEvents.TAB_STATUS_CHANGE, this.onTabStatusChange)
     EventBus.off(EventBusEvents.BOOKMARKS_CHANGED, this.onBookmarksChanged)
     EventBus.off(EventBusEvents.HISTORY_CHANGED, this.onHistoryChanged)
+    EventBus.off(EventBusEvents.DOWNLOAD_CHANGED, this.onDownloadChanged)
   }
 
   /** P5: 页面回到前台（router.back 从 NeoDashboard 返回）时强制重同步标签栏
@@ -604,6 +615,11 @@ struct BrowserShell {
   }
   @State importPath: string = ''
   @State importResult: string = ''
+  // P16a: 下载指示状态（DOWNLOAD_CHANGED 订阅驱动）
+  @State dlActive: boolean = false
+  private onDownloadChanged = (data: Object): void => {
+    this.dlActive = DownloadManager.hasActive()
+  }
 
   private importLoginState(): void {
     this.importPath = ''
@@ -1104,6 +1120,24 @@ struct BrowserShell {
                 console.error('BrowserShell pendingUrl load error: ' + e)
               }
             }
+            // P16b: 会话恢复 URL 补载
+            if (this.restoreUrlMap.has(tabId)) {
+              const rUrl = this.restoreUrlMap.get(tabId)!
+              this.restoreUrlMap.delete(tabId)
+              try {
+                this.getControllerFor(tabId)?.loadUrl(rUrl)
+                console.info('BrowserShell restoreUrl loaded after attach: ' + rUrl + ' tab=' + tabId)
+              } catch (e) {
+                console.error('BrowserShell restoreUrl load error: ' + e)
+              }
+            }
+          })
+          // P16a: 下载接线 —— SDK14 OnDownloadStartEvent{url,userAgent,contentDisposition,mimetype,contentLength}
+          // 无 suggestedFileName 字段，文件名由 DownloadManager.extractFileName 三级推导
+          .onDownloadStart((e) => {
+            const fn: string = DownloadManager.fileNameFrom(e.contentDisposition, e.url)
+            console.info('BrowserShell onDownloadStart url=' + e.url + ' mime=' + e.mimetype + ' len=' + e.contentLength + ' file=' + fn)
+            DownloadManager.start(e.url, fn, e.mimetype)
           })
           .onPageBegin((event) => {
             console.info('BrowserShell onPageBegin tabId=' + tab.tabId + ' url=' + event.url)

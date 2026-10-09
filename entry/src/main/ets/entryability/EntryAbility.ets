@@ -7,6 +7,8 @@ import { MCPServer } from '../service/MCPServer'
 import { HistoryManager } from '../service/HistoryManager'
 import { LoginStateManager } from '../service/LoginStateManager'
 import { SessionManager } from '../service/SessionManager'
+import { DownloadManager } from '../service/DownloadManager'
+import { TabManager } from '../service/TabManager'
 
 export default class EntryAbility extends UIAbility {
   onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
@@ -70,6 +72,20 @@ export default class EntryAbility extends UIAbility {
     // p10a: dark dispatch via AppStorage
     AppStorage.setOrCreate('darkMode', ConfigManager.get().darkMode)
     console.info('EntryAbility darkMode=' + ConfigManager.get().darkMode + ' sensitiveConfirm=' + ConfigManager.isSensitiveConfirm())
+    // P16a: 下载管理器初始化（建目录 + 扫描恢复已完成列表）
+    try {
+      DownloadManager.init(this.context)
+    } catch (e) {
+      console.error('EntryAbility DownloadManager init error: ' + e)
+    }
+    // P16b: 标签会话恢复 —— loadContent 前重建持久化标签（dashboard 永远第一个）+ 注入 prefs context
+    try {
+      TabManager.setContext(this.context)
+      const restoredCount = TabManager.restoreTabs()
+      console.info('EntryAbility tabs restored: ' + restoredCount)
+    } catch (e) {
+      console.error('EntryAbility restoreTabs error: ' + e)
+    }
     const entryPage = ConfigManager.isOnboardingCompleted() ? 'pages/BrowserShell' : 'pages/OnboardingPage'
     console.info('EntryAbility entry page: ' + entryPage + ' (onboardingCompleted=' + ConfigManager.isOnboardingCompleted() + ')')
     windowStage.loadContent(entryPage, (err: BusinessError) => {
