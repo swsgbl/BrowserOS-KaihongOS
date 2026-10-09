@@ -4,10 +4,18 @@ import { ConfigManager } from '../storage/ConfigManager'
 import { EventBus, EventBusEvents } from '../infra/EventBus'
 import { AppConfigUpdate } from '../model/AppConfig'
 import { router } from '@kit.ArkUI'
+import { Palette } from '../common/Palette'
 
 @Entry
 @Component
 struct OnboardingPage {
+  /** p16c: AppStorage darkMode */
+  @StorageProp('darkMode') darkMode: boolean = false
+
+  private pal(): Palette {
+    return Palette.of(this.darkMode)
+  }
+
   @State currentStep: number = 0
   @State totalSteps: number = 5
   @State detectedTools: string[] = []
@@ -39,7 +47,7 @@ struct OnboardingPage {
     }
     .width('100%')
     .height('100%')
-    .backgroundColor('#FFFFFF')
+    .backgroundColor(this.pal().surface)
     .padding({ left: 24, right: 24 })
   }
 
@@ -50,7 +58,7 @@ struct OnboardingPage {
         Circle()
           .width(step === this.currentStep ? 12 : 8)
           .height(step === this.currentStep ? 12 : 8)
-          .fill(step <= this.currentStep ? '#007DFF' : '#CCCCCC')
+          .fill(step <= this.currentStep ? this.pal().accent : this.pal().border)
           .margin({ left: 4, right: 4 })
       })
     }
@@ -65,17 +73,17 @@ struct OnboardingPage {
       Text('欢迎使用 BrowserOS KaihongOS')
         .fontSize(24)
         .fontWeight(FontWeight.Bold)
-        .fontColor('#333333')
+        .fontColor(this.pal().text)
         .margin({ top: 40 })
 
       Text('AI代理浏览器 - 深开鸿版本')
         .fontSize(16)
-        .fontColor('#666666')
+        .fontColor(this.pal().text2)
         .margin({ top: 12 })
 
       Text('让AI代理使用你已登录的账户浏览网页，并行运行多个代理，实时监控和回放每个会话。')
         .fontSize(14)
-        .fontColor('#999999')
+        .fontColor(this.pal().text2)
         .margin({ top: 24 })
         .textAlign(TextAlign.Center)
 
@@ -83,7 +91,7 @@ struct OnboardingPage {
         Text('核心功能:')
           .fontSize(14)
           .fontWeight(FontWeight.Medium)
-          .fontColor('#333333')
+          .fontColor(this.pal().text)
           .margin({ bottom: 8 })
 
         this.FeatureRow('AI代理驱动浏览器，使用你的真实登录状态')
@@ -95,7 +103,7 @@ struct OnboardingPage {
       .margin({ top: 32 })
       .padding(16)
       .borderRadius(8)
-      .backgroundColor('#F8F8F8')
+      .backgroundColor(this.pal().surfaceAlt)
     }
     .width('100%')
     .layoutWeight(1)
@@ -109,30 +117,30 @@ struct OnboardingPage {
       Text('连接AI工具')
         .fontSize(20)
         .fontWeight(FontWeight.Bold)
-        .fontColor('#333333')
+        .fontColor(this.pal().text)
         .margin({ top: 20 })
 
       Text('BrowserOS会自动检测本地已安装的AI工具，一键连接即可使用。')
         .fontSize(14)
-        .fontColor('#666666')
+        .fontColor(this.pal().text2)
         .margin({ top: 12 })
 
       if (this.detectedTools.length === 0) {
         Column() {
           Text('未检测到已安装的AI工具')
             .fontSize(14)
-            .fontColor('#999999')
+            .fontColor(this.pal().text2)
             .margin({ top: 24 })
 
           Text('请先安装 Claude Code、Codex 或 Cursor')
             .fontSize(12)
-            .fontColor('#BBBBBB')
+            .fontColor(this.pal().text2)
             .margin({ top: 8 })
         }
         .width('100%')
         .padding(24)
         .borderRadius(8)
-        .backgroundColor('#F8F8F8')
+        .backgroundColor(this.pal().surfaceAlt)
         .margin({ top: 16 })
       } else {
         List() {
@@ -141,7 +149,7 @@ struct OnboardingPage {
               Row() {
                 Text(tool)
                   .fontSize(14)
-                  .fontColor('#333333')
+                  .fontColor(this.pal().text)
                   .layoutWeight(1)
 
                 if (this.connectedTools.includes(tool)) {
@@ -152,7 +160,7 @@ struct OnboardingPage {
                   Button('连接')
                     .fontSize(12)
                     .height(28)
-                    .backgroundColor('#007DFF')
+                    .backgroundColor(this.pal().accent)
                     .onClick(() => {
                       const toolName = this.getToolNameByDisplayName(tool)
                       if (toolName) {
@@ -165,7 +173,7 @@ struct OnboardingPage {
               .width('100%')
               .padding(12)
               .borderRadius(8)
-              .backgroundColor('#F8F8F8')
+              .backgroundColor(this.pal().surfaceAlt)
             }
           })
         }
@@ -183,12 +191,12 @@ struct OnboardingPage {
       Text('导入登录状态')
         .fontSize(20)
         .fontWeight(FontWeight.Bold)
-        .fontColor('#333333')
+        .fontColor(this.pal().text)
         .margin({ top: 20 })
 
       Text('一键导入Chrome的登录状态，让AI代理使用你的真实账户。')
         .fontSize(14)
-        .fontColor('#666666')
+        .fontColor(this.pal().text2)
         .margin({ top: 12 })
 
       if (this.isImporting) {
@@ -199,7 +207,7 @@ struct OnboardingPage {
 
         Text('正在导入...')
           .fontSize(14)
-          .fontColor('#666666')
+          .fontColor(this.pal().text2)
           .margin({ top: 8 })
       } else if (this.importedDomains.length > 0) {
         Text(`已导入 ${this.importedDomains.length} 个网站的登录状态`)
@@ -212,7 +220,7 @@ struct OnboardingPage {
             ListItem() {
               Text(domain)
                 .fontSize(12)
-                .fontColor('#333333')
+                .fontColor(this.pal().text)
                 .padding(8)
             }
           })
@@ -244,54 +252,54 @@ struct OnboardingPage {
       Text('功能演示')
         .fontSize(20)
         .fontWeight(FontWeight.Bold)
-        .fontColor('#333333')
+        .fontColor(this.pal().text)
         .margin({ top: 20 })
 
       Text('以下是BrowserOS KaihongOS的核心功能演示：')
         .fontSize(14)
-        .fontColor('#666666')
+        .fontColor(this.pal().text2)
         .margin({ top: 12 })
 
       Column() {
         Text('1. AI代理浏览网页')
           .fontSize(14)
-          .fontColor('#333333')
+          .fontColor(this.pal().text)
           .margin({ bottom: 8 })
         Text('   代理在独立标签页中自动浏览网页，执行点击、输入等操作')
           .fontSize(12)
-          .fontColor('#666666')
+          .fontColor(this.pal().text2)
           .margin({ bottom: 12 })
 
         Text('2. 实时仪表盘')
           .fontSize(14)
-          .fontColor('#333333')
+          .fontColor(this.pal().text)
           .margin({ bottom: 8 })
         Text('   新标签页展示所有代理的实时工作状态')
           .fontSize(12)
-          .fontColor('#666666')
+          .fontColor(this.pal().text2)
           .margin({ bottom: 12 })
 
         Text('3. 会话回放')
           .fontSize(14)
-          .fontColor('#333333')
+          .fontColor(this.pal().text)
           .margin({ bottom: 8 })
         Text('   每个会话自动录制，可随时回放查看代理操作过程')
           .fontSize(12)
-          .fontColor('#666666')
+          .fontColor(this.pal().text2)
           .margin({ bottom: 12 })
 
         Text('4. MCP协议')
           .fontSize(14)
-          .fontColor('#333333')
+          .fontColor(this.pal().text)
           .margin({ bottom: 8 })
         Text('   10个标准工具：navigate/click/type/screenshot/snapshot等')
           .fontSize(12)
-          .fontColor('#666666')
+          .fontColor(this.pal().text2)
       }
       .margin({ top: 24 })
       .padding(16)
       .borderRadius(8)
-      .backgroundColor('#F8F8F8')
+      .backgroundColor(this.pal().surfaceAlt)
     }
     .width('100%')
     .layoutWeight(1)
@@ -308,19 +316,19 @@ struct OnboardingPage {
 
       Text('BrowserOS KaihongOS 已准备就绪')
         .fontSize(16)
-        .fontColor('#333333')
+        .fontColor(this.pal().text)
         .margin({ top: 12 })
 
       Text('现在你可以开始使用AI代理浏览网页了')
         .fontSize(14)
-        .fontColor('#666666')
+        .fontColor(this.pal().text2)
         .margin({ top: 8 })
 
       Button('开始使用')
         .fontSize(16)
         .width(200)
         .height(48)
-        .backgroundColor('#007DFF')
+        .backgroundColor(this.pal().accent)
         .margin({ top: 32 })
         .onClick(() => {
           const updateData: AppConfigUpdate = { isOnboardingCompleted: true }
@@ -346,7 +354,7 @@ struct OnboardingPage {
         .margin({ right: 6 })
       Text(text)
         .fontSize(12)
-        .fontColor('#666666')
+        .fontColor(this.pal().text2)
     }
     .alignItems(VerticalAlign.Center)
     .margin({ bottom: 4 })
@@ -360,8 +368,8 @@ struct OnboardingPage {
         Button('上一步')
           .fontSize(14)
           .width(100)
-          .backgroundColor('#EEEEEE')
-          .fontColor('#333333')
+          .backgroundColor(this.pal().surfaceInput)
+          .fontColor(this.pal().text)
           .onClick(() => {
             this.currentStep--
           })
@@ -371,7 +379,7 @@ struct OnboardingPage {
         Button('下一步')
           .fontSize(14)
           .width(100)
-          .backgroundColor('#007DFF')
+          .backgroundColor(this.pal().accent)
           .margin({ left: 12 })
           .onClick(() => {
             this.currentStep++
@@ -380,8 +388,8 @@ struct OnboardingPage {
         Button('跳过')
           .fontSize(14)
           .width(80)
-          .backgroundColor('#EEEEEE')
-          .fontColor('#666666')
+          .backgroundColor(this.pal().surfaceInput)
+          .fontColor(this.pal().text2)
           .margin({ left: 8 })
           .onClick(() => {
             this.currentStep++
