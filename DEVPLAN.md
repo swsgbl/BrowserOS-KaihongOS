@@ -619,3 +619,10 @@ P1-P15+R1-R5 全部收官。五份规格任务书 60 项全闭合。剩余已知
 - **C 站点权限弹窗**: Web.onPermissionRequest(SDK14 真实签名经 web.d.ts 核实)→ origin+资源弹层→阻止/允许(grant/deny)。构建+装机+常规浏览无假弹窗;真媒体设备触发 QEMU 不可覆盖,如实记录。
 
 遗留: C 真权限站点 E2E、A 的 LLM 真任务回流(需 IME;Dashboard 入口可键盘驱动后续补)。
+
+
+### P19 独立验收（Zodex，2026-10-10 09:0x，全项通过，git b674529→6a46136→aa1a21b→b10204a）
+- **B 清除浏览数据（端到端已由 hmh 验证 65→0+重启 RDB 持久）**：我方独立 dump 实证设置页隐私节「清除浏览数据」卡完整渲染（浏览历史/书签/已保存登录态/下载记录四项勾选行+清除数据按钮+本地数据说明）
+- **A 侧栏答案回流**：hmh 生命周期日志验证（mounted→polling stopped→重开 mounted，定时器无泄漏）；LLM 真任务回流受 VM IME 输入限制（老限制）——代码链 finalAnswers+pollSettled+settledAgents 去重+Scroller 滚底构建绿装机；我方实测侧栏打开正常（0 个代理在跑/发送按钮/占位符），inputText 被 IME 吞（已知设备级）
+- **C 站点权限弹窗**：SDK14 OnPermissionRequestEvent 真实签名核实（getOrigin/getAccessibleResource/grant/deny）；装机后常规站点无假弹窗；真媒体设备触发 VM 不可覆盖（如实记录）
+- **R8 终回归（P19 最终构建全绿）**：MCP WS 8765 ALL-PASS（101+10 工具+Pong）+ MCP HTTP 9222 initialize 200 + 桌面快捷双击 pid 430 拉起
