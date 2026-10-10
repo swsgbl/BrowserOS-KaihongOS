@@ -26,6 +26,20 @@ struct BookmarksPage {
   @State items: BookmarkRow[] = []
   @State editingId: string = ''
   @State editTitle: string = ''
+  // P20-B: 搜索关键字（内存过滤 title/url,与 HistoryPage 同款交互）
+  @State keyword: string = ''
+
+  /** P20-B: 关键词内存过滤（大小写不敏感,匹配标题或 URL;空关键词=全量） */
+  private filtered(): BookmarkRow[] {
+    const kw = this.keyword.trim().toLowerCase()
+    if (kw.length === 0) {
+      return this.items
+    }
+    return this.items.filter((b: BookmarkRow) => {
+      const t = b.title.length > 0 ? b.title : b.url
+      return t.toLowerCase().indexOf(kw) >= 0 || b.url.toLowerCase().indexOf(kw) >= 0
+    })
+  }
 
   /** P14b: 书签订阅——列表页停留期间其它入口（星标气泡等）改动即时同步 */
   private onBookmarksChanged = (data: Object): void => {
@@ -56,6 +70,7 @@ struct BookmarksPage {
           .fillColor(this.pal().text2)
           .draggable(false)
           .width(36)
+          .accessibilityText('返回')
           .onClick(() => {
             router.back()
           })
@@ -64,7 +79,7 @@ struct BookmarksPage {
           .fontWeight(FontWeight.Bold)
           .fontColor(this.pal().text)
           .layoutWeight(1)
-        Text(`${this.items.length} 条`)
+        Text(`${this.filtered().length} 条`)
           .fontSize(11)
           .fontColor(this.pal().text2)
       }
@@ -72,6 +87,47 @@ struct BookmarksPage {
       .height(48)
       .padding({ left: 8, right: 16 })
       .backgroundColor(this.pal().surfaceAlt)
+
+      // P20-B: 搜索框（HistoryPage 同款: ic_search + TextInput + 清除钮）
+      Row() {
+        Image($r('app.media.ic_search'))
+          .width(16).height(16)
+          .fillColor(this.pal().text2)
+          .draggable(false)
+        TextInput({ text: this.keyword, placeholder: '搜索书签' })
+          .fontColor(this.pal().text)
+          .placeholderColor(this.pal().text2)
+          .layoutWeight(1)
+          .height(32)
+          .fontSize(13)
+          .type(InputType.Normal)
+          .backgroundColor(Color.Transparent)
+          .padding({ left: 4, right: 4 })
+          .onChange((v: string) => {
+            this.keyword = v
+          })
+        if (this.keyword.length > 0) {
+          Button({ type: ButtonType.Normal }) {
+            Image($r('app.media.ic_close'))
+              .width(14).height(14)
+              .fillColor(this.pal().text2)
+              .draggable(false)
+          }
+          .width(26)
+          .height(26)
+          .backgroundColor(Color.Transparent)
+          .accessibilityText('清除搜索')
+          .onClick(() => {
+            this.keyword = ''
+          })
+        }
+      }
+      .width('100%')
+      .padding({ left: 16, right: 16, top: 8, bottom: 8 })
+      .borderRadius(18)
+      .backgroundColor(this.pal().surface)
+      .border({ width: 1, color: this.pal().border })
+      .margin({ left: 12, right: 12, top: 10 })
 
       if (this.items.length === 0) {
         Column() {
@@ -86,10 +142,19 @@ struct BookmarksPage {
         }
         .width('100%')
         .margin({ top: 100 })
+      } else if (this.filtered().length === 0) {
+        // P20-B: 有关键词但无命中
+        Column() {
+          Text('无匹配书签')
+            .fontSize(13)
+            .fontColor(this.pal().text2)
+            .margin({ top: 60 })
+        }
+        .width('100%')
       } else {
         Scroll() {
           Column() {
-            ForEach(this.items, (b: BookmarkRow) => {
+            ForEach(this.filtered(), (b: BookmarkRow) => {
               Column() {
                 Row() {
                   Image($r('app.media.ic_star_filled'))
