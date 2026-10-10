@@ -294,8 +294,9 @@ struct BrowserShell {
   build(): void {
     Stack() {
       Column() {
-        this.AddressBar()
+        // P22: Chromium 布局顺序 —— 标签条最顶、工具栏其下（此前 AddressBar 在上，与原生颠倒）
         this.TabBar()
+        this.AddressBar()
         // P11d: 书签条 —— 仅新标签页(dashboard)/驾驶舱(neo)显示
         if (this.showDashboard || this.showNeo) {
           BookmarkBar({
