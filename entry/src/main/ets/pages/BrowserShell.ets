@@ -98,6 +98,52 @@ struct BrowserShell {
   /** P5: 覆盖态标记 —— NeoDashboardPage/Onboarding 覆盖时 BrowserShell 不可见 */
   private covering: boolean = false
   private attachedTabs: Set<string> = new Set()
+  /** P19c: 站点权限请求弹层 —— origin + 资源列表 + 待决 request */
+  @State permOrigin: string = ''
+  @State permKinds: string = ''
+  private pendingPermReq: PermissionRequest | null = null
+
+  /** P19c: ProtectedResourceType -> 中文说明 */
+  private permResLabel(res: string): string {
+    if (res.includes('VIDEO')) {
+      return '摄像头'
+    }
+    if (res.includes('AUDIO')) {
+      return '麦克风'
+    }
+    if (res.includes('MIDI')) {
+      return 'MIDI 设备'
+    }
+    if (res.includes('SENSOR')) {
+      return '运动传感器'
+    }
+    return '设备资源'
+  }
+
+  /** P19c: 权限弹层显隐 */
+  private showPermDialog(origin: string, resources: string[], req: PermissionRequest): void {
+    this.permOrigin = origin
+    this.permKinds = resources.map((r: string) => this.permResLabel(r)).join('、')
+    this.pendingPermReq = req
+    console.info('P19c perm dialog: origin=' + origin + ' res=' + resources.join(','))
+  }
+
+  private grantPerm(allow: boolean): void {
+    const req = this.pendingPermReq
+    if (req) {
+      if (allow) {
+        const res = req.getAccessibleResource()
+        req.grant(res)
+        console.info('P19c perm GRANT: ' + this.permOrigin + ' res=' + res.join(','))
+      } else {
+        req.deny()
+        console.info('P19c perm DENY: ' + this.permOrigin)
+      }
+    }
+    this.pendingPermReq = null
+    this.permOrigin = ''
+    this.permKinds = ''
+  }
 
   aboutToAppear(): void {
     console.info('BrowserShell aboutToAppear start')
@@ -407,6 +453,62 @@ struct BrowserShell {
             this.showMenu = false
           }
         })
+      }
+      // P19c: 站点权限请求弹层
+      if (this.permOrigin.length > 0) {
+        Column()
+        .width('100%')
+        .height('100%')
+        .justifyContent(FlexAlign.Center)
+        .backgroundColor('rgba(0,0,0,0.45)')
+        .onClick(() => {
+          this.grantPerm(false)
+        })
+
+        Column() {
+          Text(this.permOrigin)
+            .fontSize(13)
+            .fontWeight(FontWeight.Bold)
+            .fontColor(this.pal().text)
+            .maxLines(1)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+          Text('想要使用' + this.permKinds)
+            .fontSize(13)
+            .fontColor(this.pal().text)
+            .margin({ top: 8 })
+          Text('允许后该站点可在你使用浏览器时访问' + this.permKinds + '。')
+            .fontSize(11)
+            .fontColor(this.pal().text2)
+            .margin({ top: 6 })
+            .textAlign(TextAlign.Center)
+          Row({ space: 10 }) {
+            Button('阻止')
+              .fontSize(13)
+              .height(34)
+              .layoutWeight(1)
+              .backgroundColor(this.pal().surfaceAlt)
+              .fontColor(this.pal().text)
+              .onClick(() => {
+                this.grantPerm(false)
+              })
+            Button('允许')
+              .fontSize(13)
+              .height(34)
+              .layoutWeight(1)
+              .backgroundColor('#1A73E8')
+              .fontColor('#FFFFFF')
+              .onClick(() => {
+                this.grantPerm(true)
+              })
+          }
+          .width('100%')
+          .margin({ top: 16 })
+        }
+        .width('76%')
+        .padding(20)
+        .borderRadius(14)
+        .backgroundColor(this.pal().surface)
+        .alignItems(HorizontalAlign.Center)
       }
     }
     .width('100%')
@@ -1122,6 +1224,20 @@ struct BrowserShell {
               return false
             }
             return this.onWebInterceptKeyEvent(event)
+          })
+          .onPermissionRequest((event: OnPermissionRequestEvent) => {
+            // P19c: 站点资源权限请求 —— 弹层用户裁决（仅渲染弹层，request 挂起待决）
+            if (event && event.request) {
+              const req = event.request
+              try {
+                const origin = req.getOrigin()
+                const resources = req.getAccessibleResource()
+                this.showPermDialog(origin, resources, req)
+              } catch (e) {
+                console.warn('P19c perm request read fail: ' + e)
+                req.deny()
+              }
+            }
           })
           .onControllerAttached(() => {
             // 闭包捕获事件源 tabId（多 Web 下 activeTabId 不可靠）
