@@ -668,3 +668,25 @@ P1-P15+R1-R5 全部收官。五份规格任务书 60 项全闭合。剩余已知
 - BrowserShell.ets 是 CRLF + UTF-8：PowerShell Get-Content/Set-Content 往返会按 ANSI 重写毁掉全部中文注释（376 行假 diff）。处置：git checkout 恢复后改用 node 脚本做 CRLF 安全的 surgical replace（.verify/p21b_patch.cjs）。此后该文件一律 edit_file/node，禁 PowerShell 管道。
 - QEMU VM 窗口化后点击坐标随窗口位置漂移：agent 钮实际 (1323,213)，先 dumpLayout 再定位，不可沿用旧坐标。
 - uinput 点击若落在窗口外（如误点桌面/锁屏），应用失焦→可能进系统锁屏，需上滑解锁 + aa start 拉回。
+
+
+---
+
+## P21：AI 窗口集成修复 + 上游仓库对标（2026-10-10，用户点名批评"AI 窗口独立弹出"）
+
+### 根因（Zodex 定位）
+AgentSidePanel 原挂在 BrowserShell **根 Stack 的浮层**（360vp 宽+100% 高+阴影），覆盖在工具栏/标签条之上——视觉似独立窗口。上游事实（packages/browseros-agent/apps/app/entrypoints/sidepanel/App.tsx + toggleSidePanel.ts 拉取核实）：**chrome.sidePanel 原生停靠**——工具栏/标签条横贯窗口顶部、面板停靠内容区右侧、页面内容左移并排；面板内两条路由（Chat + **ChatHistory**）。
+
+### P21-A 停靠手术（Zodex 直接实现，git dca5677）
+- 浮层块从根 Stack 删除；内容 Stack 包入 `Row { 内容Stack.layoutWeight(1) + if(showAgentPanel) 面板Column(360) }`
+- **实证（z-docked-sidepanel.jpeg + dump）**：工具栏/标签条/书签条恢复全宽横贯（面板上方）；驾驶舱内容左移（BrowserOS neo 标题 721→571）；Agent 面板停靠右栏（x1045-1335、顶 y256 在 chrome 之下）——与上游 chrome.sidePanel 语义一致
+- 期间 VM 崩溃一次（QEMU 消失）：官方快捷方式复活（数据保留）
+
+### P21-B ChatHistory 视图 + 布局细修（hmh 一棒，git faebcb3）
+- panelView 'chat'|'history' 双视图切换（头部 ic_history 钮）；history 列出 SessionManager 会话（URL+日期+步数，时间倒序），点击行进 SessionPlayerPage 回放；空态文案
+- 面板底色 surfaceAlt+左侧 1px 分隔线（替代大面积阴影，上游细分隔线风格）；消息区 layoutWeight 滚动、输入区固定底部
+- **hmh 自测实证**："历史列表渲染成功：会话行显示 URL + 2025-10-10 · 2 步"；label 回退 urlSequence[0]（AgentConfig 不在内存，符合会话恢复语义）
+- Zodex 独立复验受阻：窗口化坐标漂移（❐ 热区随窗口位移）+ tty7 欢迎弹窗抢前台——设备级限制如实记录（与 FindBar 先例同）
+
+### 上游对标复查（C 节）
+上游 ChatLayout/Chat.tsx 结构：双路由（chat/history）、模型选择在头部、消息气泡含工具调用折叠——我们 chat 视图已对齐大半；history 本轮补齐；工具调用折叠气泡列为后续可选精化
