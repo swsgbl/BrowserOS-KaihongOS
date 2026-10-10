@@ -1,0 +1,13 @@
+10-10 08:39:25.612  7697  7697 I A00123/HimaLauncher:  [VirtualDesktopView] clearSelectedState
+10-10 08:39:25.612  7697  7697 I A00123/HimaLauncher:  [VirtualDesktopView] clearSelectedState
+10-10 08:39:25.818  7697  7697 I A00123/HimaLauncher:  [VirtualDesktopView] clearSelectedState
+10-10 08:39:25.818  7697  7697 I A00123/HimaLauncher:  [VirtualDesktopView] clearSelectedState
+10-10 08:46:52.699  7697  7697 I A00123/HimaLauncher:  [VirtualDesktopView] clearSelectedState
+10-10 08:46:52.699  7697  7697 I A00123/HimaLauncher:  [VirtualDesktopView] clearSelectedState
+10-10 08:55:57.292  7697  7697 I A00123/HimaLauncher:  [VirtualDesktopView] clearSelectedState
+10-10 08:55:57.292  7697  7697 I A00123/HimaLauncher:  [VirtualDesktopView] clearSelectedState
+10-10 08:59:53.122  7697  7697 I A00123/HimaLauncher:  [VirtualDesktopView] clearSelectedState
+10-10 08:59:53.122  7697  7697 I A00123/HimaLauncher:  [VirtualDesktopView] clearSelectedState
+10-10 09:00:47.083 24653 24653 I A03d00/JSAPP: SettingsPage clearSelected done
+10-10 09:00:47.084 24653 24653 I A03d00/JSAPP: [SessionManager] clearAllSessions done, removed=16
+10-10 09:00:47.106 24653 24653 I A03d00/JSAPP: [HistoryManager] clearAllHistory done

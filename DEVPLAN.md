@@ -608,3 +608,14 @@ P1-P15+R1-R5 全部收官。五份规格任务书 60 项全闭合。剩余已知
 - config 持久化实证：`searchEngineId` 落盘（当前 "bing"——hmh 多引擎自测终态，佐证切换即时写盘）
 - hmh 五源证据（evidence/p18/REPORT.md）：设置渲染/切换 UI/config 落盘/hilog switched/重启保持+omnibox 首行「百度 搜索 xx」+底栏「搜索引擎·X|切换」截图
 - **端到端导航截图（输入词→回车→地址栏变搜索 URL）未截得**：uinput 无法清空地址栏旧选区（about: 前缀残留走 URL 分支）+ 外来任务（tty7/dshapp）抢前台升级（kill 后 ~3s 自愈）——设备级自动化限制，与 hmh 报告遗留一致如实记录；fallback 与五路实证同源（getEngineById(ConfigManager.getSearchEngineId())）无分支疑点
+
+
+## P19 R8 审计三缺口(2026-10-10)
+
+三笔 commit: b674529(p19a 侧栏答案回流) / 6a46136(p19b 清除浏览数据) / aa1a21b(p19c 站点权限弹窗)。验收详情 evidence/p19/REPORT-p19.md。
+
+- **A 侧栏答案回流**: AgentEngine.finalAnswers 终态答案库 + AgentSidePanel 1s 轮询回流气泡(500字截断/失败原因/去重/滚底/aboutToDisappear 清定时器)。E2E 生命周期日志 PASS;LLM 真任务回流受 QEMU IME 限制,代码路径构建+装机验证。
+- **B 清除浏览数据**: 三个服务 clearAll(书签/下载/会话) + HistoryPage 顶栏清除按钮+确认弹层 + SettingsPage 隐私节清除卡(4 项计数/勾选/二次确认/成功提示)。E2E 全链路 PASS: 历史 65→0 条(RDB 持久,重启仍 0),会话 removed=16,未勾选项保留。
+- **C 站点权限弹窗**: Web.onPermissionRequest(SDK14 真实签名经 web.d.ts 核实)→ origin+资源弹层→阻止/允许(grant/deny)。构建+装机+常规浏览无假弹窗;真媒体设备触发 QEMU 不可覆盖,如实记录。
+
+遗留: C 真权限站点 E2E、A 的 LLM 真任务回流(需 IME;Dashboard 入口可键盘驱动后续补)。
