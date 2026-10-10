@@ -45,7 +45,14 @@ class AgentEngineImpl {
   private agentActivities: Map<string, string> = new Map()
   private runningTasks: Set<string> = new Set()
   private agentSessions: Map<string, string> = new Map()
+  /** P19a: 终态答案库（完成=最终答复 / 失败=原因），AgentSidePanel 轮询回流用 */
+  private finalAnswers: Map<string, string> = new Map()
   private static readonly MAX_STEPS: number = 15
+
+  /** P19a: 取任务终态答案（引擎侧保留，面板消费后自行去重） */
+  getFinalAnswer(agentId: string): string | null {
+    return this.finalAnswers.get(agentId) ?? null
+  }
   private static readonly LLM_TIMEOUT_MS: number = 30000
 
   createAgent(name: string, targetUrl: string, taskDescription: string,
@@ -358,6 +365,7 @@ class AgentEngineImpl {
       this.setAgentError(agentId, 'LLM 未配置：请先在设置中填写 API 端点')
       this.setAgentActivity(agentId, 'LLM 未配置：请先在设置中填写 API 端点')
       console.error('[AgentEngine] LLM not configured, agent aborted: ' + agentId)
+      this.finalAnswers.set(agentId, 'LLM 未配置：请先在设置中填写 API 端点')
       this.runningTasks.delete(agentId)
       return
     }
@@ -514,9 +522,11 @@ class AgentEngineImpl {
       console.error(`[AgentEngine] task failed: ${agentId} reason=${failReason}`)
       this.setAgentError(agentId, failReason)
       this.setAgentActivity(agentId, '失败: ' + failReason)
+      this.finalAnswers.set(agentId, '任务失败: ' + failReason)
     } else {
       this.setAgentActivity(agentId, '完成: ' + finalAnswer.substring(0, 80))
       this.setAgentCompleted(agentId)
+      this.finalAnswers.set(agentId, finalAnswer.length > 0 ? finalAnswer : '(空答复)')
     }
 
     // P4: stop recording and persist (keep agentId->sessionId mapping for replay entry)

@@ -5,7 +5,7 @@
  */
 import { AgentEngine } from '../service/AgentEngine'
 import { ConfigManager } from '../storage/ConfigManager'
-import { RunStrategy } from '../common/Types'
+import { RunStrategy, AgentStatus } from '../common/Types'
 import { AgentStatusInfo } from '../model/AgentStatus'
 import { Palette } from '../common/Palette'
 
@@ -30,6 +30,12 @@ export struct AgentSidePanel {
   @State agents: AgentStatusInfo[] = []
   @State showModelDropdown: boolean = false
   onClose: () => void = () => {}
+  /** P19a: 已回流过终态的 agent（去重，避免轮询重复推气泡） */
+  private settledAgents: Set<string> = new Set()
+  /** P19a: 终态轮询句柄（aboutToDisappear 必清） */
+  private pollTimer: number = -1
+  /** P19a: 消息列表滚动控制器（答案回流后滚底） */
+  private scroller: Scroller = new Scroller()
 
   private readonly modelOptions: string[] = ['agnes-3.0-flash', 'agnes-3.0-pro', 'glm-4.7', '自定义(取配置)']
 
@@ -41,6 +47,58 @@ export struct AgentSidePanel {
       agentId: ''
     })
     console.info('AgentSidePanel mounted, agents=' + this.agents.length)
+    this.startSettlePolling()
+  }
+
+  aboutToDisappear(): void {
+    if (this.pollTimer >= 0) {
+      clearInterval(this.pollTimer)
+      this.pollTimer = -1
+      console.info('AgentSidePanel settle polling stopped')
+    }
+  }
+
+  /** P19a: 轮询本面板派发过的 agent 终态，答案/失败原因回流成气泡 */
+  private startSettlePolling(): void {
+    this.pollTimer = setInterval(() => {
+      this.pollSettled()
+    }, 1000)
+  }
+
+  private pollSettled(): void {
+    let changed = false
+    for (const msg of this.messages) {
+      if (msg.agentId.length > 0) {
+        this.settledAgents.add(msg.agentId)
+      }
+    }
+    for (const st of this.agents) {
+      const id = st.agentId
+      if (this.settledAgents.has(id)) {
+        continue
+      }
+      if (st.status === AgentStatus.COMPLETED) {
+        const ans = AgentEngine.getFinalAnswer(id)
+        const text = ans !== null ? (ans.length > 500 ? ans.substring(0, 500) + '…' : ans) : '(已完成)'
+        this.messages.push({ role: 'agent', text: text, agentId: id })
+        this.settledAgents.add(id)
+        changed = true
+        console.info('AgentSidePanel answer reflux agent=' + id + ' len=' + text.length)
+      } else if (st.status === AgentStatus.ERROR || st.status === AgentStatus.STOPPED) {
+        const reason = st.errorMessage.length > 0 ? st.errorMessage : (AgentEngine.getFinalAnswer(id) ?? '任务已终止')
+        this.messages.push({ role: 'hint', text: '⚠ ' + reason, agentId: id })
+        this.settledAgents.add(id)
+        changed = true
+        console.info('AgentSidePanel fail reflux agent=' + id + ' reason=' + reason)
+      }
+    }
+    if (changed) {
+      this.agents = AgentEngine.getAllAgentStatus()
+      // 新气泡推入后滚到底部（下一帧执行，确保布局已更新）
+      setTimeout(() => {
+        this.scroller.scrollEdge(Edge.Bottom)
+      }, 50)
+    }
   }
 
   private sendTask(): void {
@@ -115,7 +173,7 @@ export struct AgentSidePanel {
       .border({ width: { bottom: 1 }, color: this.pal().border })
 
       // 消息列表
-      List() {
+      List({ scroller: this.scroller }) {
         ForEach(this.messages, (msg: ChatMessage, index: number) => {
           ListItem() {
             if (msg.role === 'user') {
