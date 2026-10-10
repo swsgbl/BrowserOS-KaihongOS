@@ -347,8 +347,8 @@ struct BrowserShell {
         }
         .width(360)
         .height('100%')
-        .backgroundColor(this.pal().surface)
-        .shadow({ radius: 12, color: '#33000000', offsetX: -4, offsetY: 0 })
+        .backgroundColor(this.pal().surfaceAlt)
+        .border({ width: { left: 1 }, color: this.pal().border }) // P21b: hairline divider replaces heavy shadow (upstream style)
       }
       }
       .layoutWeight(1)

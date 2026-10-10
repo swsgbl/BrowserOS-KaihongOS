@@ -633,3 +633,38 @@ P1-P15+R1-R5 全部收官。五份规格任务书 60 项全闭合。剩余已知
 - **B 书签搜索框**：经书签条"全部书签"入口进页 dump 实证——TextInput 占位"搜索书签" @ [292,209][1322,237]，列表 3 条+编辑/删除齐备
 - **C smoke_reg.py**：实测 7 项 6 PASS（设备在线/包安装/冷启动生命周期/前台渲染标题+omnibox/a11y 静态/MCP HTTP initialize）；第 7 项（书签搜索框入口）FAIL 为脚本自身入口导航坐标偏移（非功能缺陷，功能已由本验收 B 项独立实证）——脚本入口修为可后续小改
 - 过程注记：hdc 中途掉线一次（kill/start/tconn 恢复后 smoke 首项即 PASS）
+
+
+## P21-B 交付记录：侧栏 ChatHistory 历史路由 + 布局细修（hmh，2026-10-10）
+
+### A. ChatHistory 视图（上游对标落地）
+- AgentSidePanel 头部新增 ic_history 切换钮，`panelView: 'chat' | 'history'` 双视图（对标上游 sidepanel App.tsx 的 index/history 双路由）。
+- history 视图 = 会话列表：ic_robot 图标 + 任务描述行（taskDescription→urlSequence[0]→agentId 三级回退）+ 相对时间（今天 HH:mm / 昨天 / MM-DD / YYYY-MM-DD，对标 dayjs.fromNow）+ 步数（operationLogs.length）。
+- 数据源 SessionManager.getSessionListAsync()（活跃内存 + 磁盘 persisted 对账），每次进入拉一次，无下拉刷新（任务书要求）。
+- 行点击 → router.pushUrl SessionPlayerPage（param sessionId）。
+- 空态对标上游：robot 图标 + "暂无历史会话" + "开始新对话"链接（点击回 chat 视图）。
+- 加载态：LoadingProgress + 防闪空态（loading && empty 才显示 spinner）。
+
+### B. 布局细修
+- 面板底色 pal.surfaceAlt（原 surface 白，与浏览器 chrome 无区分）。
+- BrowserShell 挂载处：大面积阴影（radius 12）→ 左侧 1px hairline 分隔线（上游风格）。
+- chat 视图内容区与面板底同色 surfaceAlt，助手气泡改 surface 卡片区分；消息列表 layoutWeight(1) 保留（红线）。
+
+### C. 上游对标复查（3-5 项结构性差异，已记录）
+抓取 browseros-ai/BrowserOS main 分支 sidepanel 源码（App.tsx / ChatLayout.tsx / ChatHeader.tsx / ChatHistory.tsx / ConversationList.tsx / ConversationGroup.tsx / ConversationItem.tsx）对比：
+1. **路由结构**：上游 HashRouter 双路由（index=Chat, history=ChatHistory），共享 ChatLayout（含 ChatHeader）。本实现用 panelView 状态切换等效替代（ArkUI 无嵌套路由需求，侧栏是 BrowserShell 内组件）。✅ 已对标
+2. **头部切换**：上游 ChatHeader 在非 history 页显示 History 图标钮，history 页换成 Plus（新会话）+ 语义为"回到根路由"。本实现一致（ic_history ↔ ic_add）。✅ 已对标
+3. **时间分组**：上游 ConversationList 按 today/thisWeek/thisMonth/older 四组渲染（groupConversations）。本实现单列表 + 行内相对时间标签（未做分组标题——会话量小，分组标题省略，记为差异）。⚠️ 差异保留
+4. **删除会话**：上游每行带 Trash2 + AlertDialog 确认删除。本实现未做（任务书未要求，记为后续项）。⚠️ 差异保留
+5. **分页加载**：上游 IntersectionObserver 无限滚动 + isRefreshing 刷新提示。本实现一次性拉取（任务书明确"进入拉一次，无下拉"）。✅ 按任务书裁剪
+
+### 验证（evidence/p21/）
+- 构建绿（CompileArkTS 3.8s）→ build_v1_hap.py（V1 index 4533B）→ install_p8.py 装机 OK。
+- E2E（uitest dump 实证）：面板开 → Agent 标题 + ic_history @[1122,295] 渲染 → 点历史 → 空态"暂无历史会话/开始新对话" → 注入测试会话 p21b-test-1.json 重启 → 列表渲染（https://example.com + 2025-10-10 · 2 步）→ 点行 → SessionPlayerPage 渲染（播放/停止/倍速/操作时间线，视觉确认 PASS）。
+- 截图：hmh-panel-chat.jpeg（面板+hairline 分隔视觉确认）/ hmh-sessionplayer.jpeg（回放页）。
+- 测试会话文件已从设备清理。
+
+### 坑（新）
+- BrowserShell.ets 是 CRLF + UTF-8：PowerShell Get-Content/Set-Content 往返会按 ANSI 重写毁掉全部中文注释（376 行假 diff）。处置：git checkout 恢复后改用 node 脚本做 CRLF 安全的 surgical replace（.verify/p21b_patch.cjs）。此后该文件一律 edit_file/node，禁 PowerShell 管道。
+- QEMU VM 窗口化后点击坐标随窗口位置漂移：agent 钮实际 (1323,213)，先 dumpLayout 再定位，不可沿用旧坐标。
+- uinput 点击若落在窗口外（如误点桌面/锁屏），应用失焦→可能进系统锁屏，需上滑解锁 + aa start 拉回。
