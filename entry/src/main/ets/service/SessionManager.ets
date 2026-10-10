@@ -95,6 +95,15 @@ class SessionManagerImpl {
     }
   }
 
+  /** P19b: 清空全部会话录制（内存 + 磁盘 + 索引），设置页「清除浏览数据」用 */
+  async clearAllSessions(): Promise<void> {
+    const all = this.getSessionList()
+    for (const s of all) {
+      await this.deleteSession(s.sessionId)
+    }
+    console.info('[SessionManager] clearAllSessions done, removed=' + all.length)
+  }
+
   private async removeFromIndex(sessionId: string): Promise<void> {
     const ids = await this.loadSessionIndex()
     const idx = ids.indexOf(sessionId)

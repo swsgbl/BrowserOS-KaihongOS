@@ -94,6 +94,17 @@ class BookmarkManagerImpl {
     return result
   }
 
+  /** P19b: 清空全部书签（设置页「清除浏览数据」用） */
+  clearAllBookmarks(): void {
+    if (this.bookmarks.size === 0) {
+      return
+    }
+    this.bookmarks.clear()
+    this.persist()
+    this.notifyChanged('clear_all')
+    console.info('[BookmarkManager] clearAllBookmarks done')
+  }
+
   private async persist(): Promise<void> {
     const data: Record<string, BookmarkData> = {}
     this.bookmarks.forEach((bookmark: Bookmark, id: string) => {

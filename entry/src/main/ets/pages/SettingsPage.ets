@@ -12,6 +12,11 @@ import { bundleManager } from '@kit.AbilityKit'
 import { router } from '@kit.ArkUI'
 import { Palette } from '../common/Palette'
 import { SearchEngine, SEARCH_ENGINES, getEngineById } from '../common/SearchEngines'
+import { HistoryManager } from '../service/HistoryManager'
+import { BookmarkManager } from '../service/BookmarkManager'
+import { LoginStateManager } from '../service/LoginStateManager'
+import { DownloadManager } from '../service/DownloadManager'
+import { SessionManager } from '../service/SessionManager'
 
 interface NavItem {
   key: string
@@ -39,6 +44,18 @@ struct SettingsPage {
   // 外观（darkMode 改由 @StorageProp 提供）
   // 隐私
   @State sensitiveConfirmOn: boolean = true
+  // P19b: 清除浏览数据
+  @State clearShowConfirm: boolean = false
+  @State clearDoneHint: string = ''
+  @State cntHistory: number = 0
+  @State cntBookmarks: number = 0
+  @State cntLogins: number = 0
+  @State cntDownloads: number = 0
+  @State cntSessions: number = 0
+  @State selHistory: boolean = true
+  @State selBookmarks: boolean = false
+  @State selLogins: boolean = false
+  @State selDownloads: boolean = false
   // P18: 搜索引擎
   @State searchEngineId: string = 'google'
   @State showEnginePicker: boolean = false
@@ -55,6 +72,39 @@ struct SettingsPage {
     { key: 'mcp', icon: $r('app.media.ic_info'), label: 'MCP' },
     { key: 'about', icon: $r('app.media.ic_help'), label: '关于' }
   ]
+
+  /** P19b: 刷新各类数据计数 */
+  private refreshClearCounts(): void {
+    this.cntHistory = HistoryManager.getAllHistory(9999).length
+    this.cntBookmarks = BookmarkManager.getAllBookmarks().length
+    this.cntLogins = LoginStateManager.getImportedDomains().length
+    this.cntDownloads = DownloadManager.getDownloads().length
+    this.cntSessions = SessionManager.getSessionList().length
+    console.info('SettingsPage clear counts: hist=' + this.cntHistory + ' bm=' + this.cntBookmarks + ' login=' + this.cntLogins + ' dl=' + this.cntDownloads + ' sess=' + this.cntSessions)
+  }
+
+  /** P19b: 执行所选清除 */
+  private doClearSelected(): void {
+    if (this.selHistory) {
+      HistoryManager.clearAllHistory()
+      SessionManager.clearAllSessions()
+    }
+    if (this.selBookmarks) {
+      BookmarkManager.clearAllBookmarks()
+    }
+    if (this.selLogins) {
+      LoginStateManager.clearAll()
+    }
+    if (this.selDownloads) {
+      DownloadManager.clearAllDownloads()
+    }
+    this.clearShowConfirm = false
+    this.clearDoneHint = '已清除所选数据'
+    console.info('SettingsPage clearSelected done')
+    setTimeout(() => {
+      this.refreshClearCounts()
+    }, 300)
+  }
 
   aboutToAppear(): void {
     const cfg = ConfigManager.get()
@@ -442,6 +492,112 @@ struct SettingsPage {
       }
       .width('100%')
       .margin({ top: 16 })
+
+      Divider().color(this.pal().border).margin({ top: 16, bottom: 12 })
+
+      // P19b: 清除浏览数据卡片
+      Row() {
+        Text('清除浏览数据')
+          .fontSize(13)
+          .fontColor(this.pal().text)
+          .layoutWeight(1)
+        Button('清除数据')
+          .fontSize(12)
+          .height(30)
+          .backgroundColor('#D93025')
+          .fontColor('#FFFFFF')
+          .borderRadius(15)
+          .padding({ left: 14, right: 14 })
+          .onClick(() => {
+            this.refreshClearCounts()
+            this.clearShowConfirm = true
+            console.info('SettingsPage clear confirm shown')
+          })
+      }
+      .width('100%')
+      .onAppear(() => {
+        this.refreshClearCounts()
+      })
+
+      Column({ space: 6 }) {
+        Row() {
+          Checkbox().select(this.selHistory).selectedColor('#1A73E8')
+            .onChange((v: boolean) => { this.selHistory = v })
+            .width(18).height(18)
+          Text('浏览历史')
+            .fontSize(12)
+            .fontColor(this.pal().text)
+            .layoutWeight(1)
+          Text(this.cntHistory + ' 条')
+            .fontSize(11)
+            .fontColor(this.pal().text2)
+        }.width('100%')
+        Row() {
+          Checkbox().select(this.selBookmarks).selectedColor('#1A73E8')
+            .onChange((v: boolean) => { this.selBookmarks = v })
+            .width(18).height(18)
+          Text('书签')
+            .fontSize(12)
+            .fontColor(this.pal().text)
+            .layoutWeight(1)
+          Text(this.cntBookmarks + ' 条')
+            .fontSize(11)
+            .fontColor(this.pal().text2)
+        }.width('100%')
+        Row() {
+          Checkbox().select(this.selLogins).selectedColor('#1A73E8')
+            .onChange((v: boolean) => { this.selLogins = v })
+            .width(18).height(18)
+          Text('已保存登录态')
+            .fontSize(12)
+            .fontColor(this.pal().text)
+            .layoutWeight(1)
+          Text(this.cntLogins + ' 个域名')
+            .fontSize(11)
+            .fontColor(this.pal().text2)
+        }.width('100%')
+        Row() {
+          Checkbox().select(this.selDownloads).selectedColor('#1A73E8')
+            .onChange((v: boolean) => { this.selDownloads = v })
+            .width(18).height(18)
+          Text('下载记录')
+            .fontSize(12)
+            .fontColor(this.pal().text)
+            .layoutWeight(1)
+          Text(this.cntDownloads + ' 项')
+            .fontSize(11)
+            .fontColor(this.pal().text2)
+        }.width('100%')
+      }
+      .width('100%')
+      .margin({ top: 10 })
+      .alignItems(HorizontalAlign.Start)
+
+      if (this.clearShowConfirm) {
+        Row({ space: 10 }) {
+          Text('确认清除所选数据？此操作不可撤销。')
+            .fontSize(12)
+            .fontColor(this.pal().text2)
+            .layoutWeight(1)
+          Button('取消')
+            .fontSize(12).height(28)
+            .backgroundColor(this.pal().surfaceAlt).fontColor(this.pal().text)
+            .onClick(() => { this.clearShowConfirm = false })
+          Button('确认清除')
+            .fontSize(12).height(28)
+            .backgroundColor('#D93025').fontColor('#FFFFFF')
+            .onClick(() => { this.doClearSelected() })
+        }
+        .width('100%')
+        .margin({ top: 10 })
+      }
+
+      if (this.clearDoneHint.length > 0) {
+        Text(this.clearDoneHint)
+          .fontSize(11)
+          .fontColor('#1E8E3E')
+          .margin({ top: 6 })
+      }
 
       Divider().color(this.pal().border).margin({ top: 16, bottom: 12 })
 

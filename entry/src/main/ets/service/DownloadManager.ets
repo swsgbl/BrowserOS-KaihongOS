@@ -66,6 +66,31 @@ class DownloadManagerImpl {
     return this.dir
   }
 
+  /** P19b: 清空下载记录并删除已落盘文件（进行中的先取消） */
+  clearAllDownloads(): void {
+    for (const item of this.downloads) {
+      if (item.status === DownloadStatus.RUNNING) {
+        this.cancel(item.id)
+      }
+    }
+    // 删除已落盘文件
+    try {
+      const names = fs.listFileSync(this.dir)
+      for (const name of names) {
+        try {
+          fs.unlinkSync(this.dir + '/' + name)
+        } catch (e) {
+          console.warn('[DownloadManager] clearAll unlink fail: ' + name)
+        }
+      }
+    } catch (e) {
+      console.warn('[DownloadManager] clearAll listDir fail')
+    }
+    this.downloads = []
+    EventBus.emit(EventBusEvents.DOWNLOAD_CHANGED)
+    console.info('[DownloadManager] clearAllDownloads done')
+  }
+
   getDownloads(): DownloadItem[] {
     return this.downloads
   }

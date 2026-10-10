@@ -28,9 +28,25 @@ struct HistoryPage {
   @State entries: HistoryEntry[] = []
   @State grouped: GroupedEntry[] = []
   @State sessions: SessionRecord[] = []
+  /** P19b: 清除确认弹层 */
+  @State showClearConfirm: boolean = false
 
   aboutToAppear(): void {
     this.reload()
+  }
+
+  /** P19b: 执行清除（历史 + 会话录制） */
+  private doClear(): void {
+    HistoryManager.clearAllHistory().then(() => {
+      console.info('HistoryPage clearAllHistory resolved')
+    })
+    SessionManager.clearAllSessions().then(() => {
+      console.info('HistoryPage clearAllSessions resolved')
+    })
+    this.showClearConfirm = false
+    this.entries = []
+    this.sessions = []
+    this.regroup()
   }
 
   private reload(): void {
@@ -92,6 +108,7 @@ struct HistoryPage {
   }
 
   build(): void {
+    Stack() {
     Column() {
       // 顶栏
       Row() {
@@ -111,10 +128,23 @@ struct HistoryPage {
         Text(`${this.entries.length} 条`)
           .fontSize(11)
           .fontColor(this.pal().text2)
+          .margin({ right: 10 })
+        Button('清除')
+          .fontSize(12)
+          .height(28)
+          .padding({ left: 12, right: 12 })
+          .fontColor('#D93025')
+          .backgroundColor(Color.Transparent)
+          .borderRadius(14)
+          .border({ width: 1, color: '#D93025' })
+          .onClick(() => {
+            this.showClearConfirm = true
+            console.info('HistoryPage clear confirm shown')
+          })
       }
       .width('100%')
       .height(48)
-      .padding({ left: 8, right: 16 })
+      .padding({ left: 8, right: 12 })
       .backgroundColor(this.pal().surfaceAlt)
 
       // 搜索框
@@ -261,6 +291,61 @@ struct HistoryPage {
       .align(Alignment.Top)
       .scrollBar(BarState.Off)
       .backgroundColor(this.pal().surface)
+    }
+    .width('100%')
+    .height('100%')
+    .backgroundColor(this.pal().surface)
+
+    // P19b: 清除确认弹层
+    if (this.showClearConfirm) {
+      Column()
+      .width('100%')
+      .height('100%')
+      .justifyContent(FlexAlign.Center)
+      .backgroundColor('rgba(0,0,0,0.45)')
+      .onClick(() => {
+        this.showClearConfirm = false
+      })
+
+      Column() {
+        Text('清除浏览数据')
+          .fontSize(16)
+          .fontWeight(FontWeight.Bold)
+          .fontColor(this.pal().text)
+        Text('将删除全部浏览历史与代理会话录制，此操作不可撤销。')
+          .fontSize(12)
+          .fontColor(this.pal().text2)
+          .margin({ top: 10 })
+          .textAlign(TextAlign.Center)
+        Row({ space: 10 }) {
+          Button('取消')
+            .fontSize(13)
+            .height(34)
+            .layoutWeight(1)
+            .backgroundColor(this.pal().surfaceAlt)
+            .fontColor(this.pal().text)
+            .onClick(() => {
+              this.showClearConfirm = false
+            })
+          Button('清除')
+            .fontSize(13)
+            .height(34)
+            .layoutWeight(1)
+            .backgroundColor('#D93025')
+            .fontColor('#FFFFFF')
+            .onClick(() => {
+              this.doClear()
+            })
+        }
+        .width('100%')
+        .margin({ top: 18 })
+      }
+      .width('78%')
+      .padding(20)
+      .borderRadius(14)
+      .backgroundColor(this.pal().surface)
+      .alignItems(HorizontalAlign.Center)
+    }
     }
     .width('100%')
     .height('100%')
