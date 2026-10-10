@@ -310,6 +310,9 @@ struct BrowserShell {
       // P6 治本：Web 层常驻 —— 所有 tab 的 Web 组件始终挂载（非激活 Hidden 保活），
       // dashboard/NeoDashboard 作为覆盖层置顶。修复「dashboard 激活时全部 Web 销毁、
       // 覆盖态 ForEach 不新增」的时序缺口：agent tab 创建即有 WebView，BCP 立即可用。
+      // P21: 上游 chrome.sidePanel 停靠语义 —— 工具栏/标签条横贯窗口顶部，
+      // 面板停靠内容区右侧与页面并排（此前为根 Stack 浮层覆盖工具栏，视觉似独立窗口）
+      Row() {
       Stack({ alignContent: Alignment.Top }) {
         this.WebViewContent()
         this.ErrorBanner()
@@ -331,6 +334,22 @@ struct BrowserShell {
             }
           })
         }
+      }
+      .layoutWeight(1)
+      if (this.showAgentPanel) {
+        Column() {
+          AgentSidePanel({
+            onClose: () => {
+              console.info('BrowserShell agent panel closed')
+              this.showAgentPanel = false
+            }
+          })
+        }
+        .width(360)
+        .height('100%')
+        .backgroundColor(this.pal().surface)
+        .shadow({ radius: 12, color: '#33000000', offsetX: -4, offsetY: 0 })
+      }
       }
       .layoutWeight(1)
       if (this.showHistory) {
@@ -396,20 +415,6 @@ struct BrowserShell {
             this.showBookmarkBubble = false
           }
         })
-      }
-      if (this.showAgentPanel) {
-        Column() {
-          AgentSidePanel({
-            onClose: () => {
-              console.info('BrowserShell agent panel closed')
-              this.showAgentPanel = false
-            }
-          })
-        }
-        .width(360)
-        .height('100%')
-        .backgroundColor(this.pal().surface)
-        .shadow({ radius: 12, color: '#33000000', offsetX: -4, offsetY: 0 })
       }
       if (this.showTabSearch) {
         TabSearchPanel({
