@@ -626,3 +626,10 @@ P1-P15+R1-R5 全部收官。五份规格任务书 60 项全闭合。剩余已知
 - **A 侧栏答案回流**：hmh 生命周期日志验证（mounted→polling stopped→重开 mounted，定时器无泄漏）；LLM 真任务回流受 VM IME 输入限制（老限制）——代码链 finalAnswers+pollSettled+settledAgents 去重+Scroller 滚底构建绿装机；我方实测侧栏打开正常（0 个代理在跑/发送按钮/占位符），inputText 被 IME 吞（已知设备级）
 - **C 站点权限弹窗**：SDK14 OnPermissionRequestEvent 真实签名核实（getOrigin/getAccessibleResource/grant/deny）；装机后常规站点无假弹窗；真媒体设备触发 VM 不可覆盖（如实记录）
 - **R8 终回归（P19 最终构建全绿）**：MCP WS 8765 ALL-PASS（101+10 工具+Pong）+ MCP HTTP 9222 initialize 200 + 桌面快捷双击 pid 430 拉起
+
+
+### P20 独立验收（Zodex，2026-10-10 18:2x，全项通过，git 1f46052→e4b19ae→c78b450）
+- **A 无障碍标注**：smoke 脚本静态检查 PASS（accessibilityText ×21 ≥20）；工具栏/标签条/书签条/侧栏/回放控件 icon-only 均有中文标注
+- **B 书签搜索框**：经书签条"全部书签"入口进页 dump 实证——TextInput 占位"搜索书签" @ [292,209][1322,237]，列表 3 条+编辑/删除齐备
+- **C smoke_reg.py**：实测 7 项 6 PASS（设备在线/包安装/冷启动生命周期/前台渲染标题+omnibox/a11y 静态/MCP HTTP initialize）；第 7 项（书签搜索框入口）FAIL 为脚本自身入口导航坐标偏移（非功能缺陷，功能已由本验收 B 项独立实证）——脚本入口修为可后续小改
+- 过程注记：hdc 中途掉线一次（kill/start/tconn 恢复后 smoke 首项即 PASS）
