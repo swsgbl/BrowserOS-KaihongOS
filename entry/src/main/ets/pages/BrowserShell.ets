@@ -527,6 +527,7 @@ struct BrowserShell {
       .width(36)
       .height(36)
       .backgroundColor(Color.Transparent)
+      .accessibilityText('后退')
       .onClick(() => {
         console.info('BrowserShell back button clicked, tabId=' + this.activeTabId)
         const controller = this.getActiveController()
@@ -547,6 +548,7 @@ struct BrowserShell {
       .width(36)
       .height(36)
       .backgroundColor(Color.Transparent)
+      .accessibilityText('前进')
       .onClick(() => {
         console.info('BrowserShell forward button clicked, tabId=' + this.activeTabId)
         const controller = this.getActiveController()
@@ -568,6 +570,7 @@ struct BrowserShell {
       .width(36)
       .height(36)
       .backgroundColor(Color.Transparent)
+      .accessibilityText(this.isLoading ? '停止加载' : '刷新')
       .onClick(() => {
         if (this.isLoading) {
           this.stopActiveLoad()
@@ -640,6 +643,7 @@ struct BrowserShell {
       .width(36)
       .height(36)
       .backgroundColor(Color.Transparent)
+      .accessibilityText(this.isBookmarked ? '编辑书签' : '添加书签')
       .onClick(() => {
         this.openBookmarkBubble()
       })
@@ -653,6 +657,7 @@ struct BrowserShell {
       .width(36)
       .height(36)
       .backgroundColor(Color.Transparent)
+      .accessibilityText('历史记录')
       .onClick(() => {
         this.openHistory()
       })
@@ -666,6 +671,7 @@ struct BrowserShell {
       .width(36)
       .height(36)
       .backgroundColor(Color.Transparent)
+      .accessibilityText('回到主页')
       .onClick(() => {
         this.goHome()
       })
@@ -680,6 +686,7 @@ struct BrowserShell {
       .width(36)
       .height(36)
       .backgroundColor(Color.Transparent)
+      .accessibilityText('AI 代理侧栏')
       .onClick(() => {
         console.info('BrowserShell agent panel toggled: ' + !this.showAgentPanel)
         this.showAgentPanel = !this.showAgentPanel
@@ -695,6 +702,7 @@ struct BrowserShell {
       .width(36)
       .height(36)
       .backgroundColor(Color.Transparent)
+      .accessibilityText('主菜单')
       .onClick(() => {
         console.info('BrowserShell three-dot menu toggled: ' + !this.showMenu)
         this.showMenu = !this.showMenu
@@ -1439,6 +1447,7 @@ struct BrowserShell {
         .height(28)
         .backgroundColor(Color.Transparent)
         .margin({ left: 4 })
+        .accessibilityText('查找上一个')
         .onClick(() => { this.doFind('prev') })
         Button({ type: ButtonType.Normal }) {
           Image($r('app.media.ic_arrow_down'))
@@ -1449,6 +1458,7 @@ struct BrowserShell {
         .width(28)
         .height(28)
         .backgroundColor(Color.Transparent)
+        .accessibilityText('查找下一个')
         .onClick(() => { this.doFind('next') })
         Button({ type: ButtonType.Normal }) {
           Image($r('app.media.ic_close'))
@@ -1551,6 +1561,7 @@ struct BrowserShell {
         .width(28)
         .height(28)
         .backgroundColor(Color.Transparent)
+        .accessibilityText('关闭错误提示')
         .margin({ left: 4 })
         .onClick(() => {
           this.navError = ''

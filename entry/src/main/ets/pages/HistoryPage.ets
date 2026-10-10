@@ -117,6 +117,7 @@ struct HistoryPage {
           .fillColor(this.pal().text2)
           .draggable(false)
           .width(36)
+          .accessibilityText('返回')
           .onClick(() => {
             router.back()
           })

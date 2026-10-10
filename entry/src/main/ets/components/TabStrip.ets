@@ -81,6 +81,7 @@ export struct TabStrip {
             .height(22)
             .opacity(tab.tabId === this.activeTabId || this.hoverTabId === tab.tabId ? 1 : 0)
             .backgroundColor(Color.Transparent)
+            .accessibilityText('关闭标签页 ' + (tab.title || '新标签页'))
             .onClick(() => {
               if (this.onTabClose) {
                 this.onTabClose(tab.tabId)
@@ -119,6 +120,7 @@ export struct TabStrip {
       .height(30)
       .margin({ left: 2 })
       .backgroundColor(Color.Transparent)
+      .accessibilityText('新建标签页')
       .onClick(() => {
         if (this.onTabCreate) {
           this.onTabCreate()
@@ -135,6 +137,7 @@ export struct TabStrip {
       .width(30)
       .height(30)
       .backgroundColor(Color.Transparent)
+      .accessibilityText('搜索标签页')
       .onClick(() => {
         if (this.onSearchToggle) {
           this.onSearchToggle()
@@ -203,6 +206,7 @@ export struct TabSearchPanel {
                 }
                 .width(22).height(22)
                 .backgroundColor(Color.Transparent)
+                .accessibilityText('关闭标签页 ' + (tab.title || '新标签页'))
                 .onClick(() => {
                   this.onCloseTab(tab.tabId)
                 })

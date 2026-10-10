@@ -162,6 +162,7 @@ export struct AgentSidePanel {
           .fillColor(this.pal().text2)
           .draggable(false)
           .width(28)
+          .accessibilityText('关闭代理侧栏')
           .onClick(() => {
             this.onClose()
           })

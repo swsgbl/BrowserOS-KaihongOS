@@ -55,6 +55,7 @@ export struct BookmarkBar {
             .borderRadius(12)
             .backgroundColor(this.pal().surfaceAlt)
             .margin({ right: 6 })
+            .accessibilityText('打开书签 ' + (bm.title.length > 0 ? bm.title : bm.url))
             .onClick(() => {
               this.onOpenBookmark(bm.url)
             })
@@ -83,6 +84,7 @@ export struct BookmarkBar {
       .padding({ left: 10, right: 10 })
       .borderRadius(12)
       .margin({ left: 8 })
+      .accessibilityText('全部书签')
       .onClick(() => {
         router.pushUrl({ url: 'pages/BookmarksPage' })
       })
