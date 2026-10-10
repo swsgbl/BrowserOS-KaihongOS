@@ -73,7 +73,6 @@ struct BrowserShell {
   @State findQuery: string = ''
   @State findStatus: string = ''
   @State isBookmarked: boolean = false
-  @State showHistory: boolean = false
   // P9-A: chrome 补全 —— ⋮ 菜单 / omnibox 建议 / 书签气泡
   @State showMenu: boolean = false
   @State showSuggestions: boolean = false
@@ -86,7 +85,6 @@ struct BrowserShell {
   @State showAgentPanel: boolean = false
   // P6: NeoDashboard 内嵌覆盖层（不再 router.pushUrl，规避覆盖态不渲染）
   @State showNeo: boolean = false
-  @State historyItems: HistoryEntry[] = []
   // 每个 Tab 独立的 WebviewController（key=tabId）
   private controllers: Map<string, webview.WebviewController> = new Map()
   private pendingUrl: string = ''
@@ -353,9 +351,6 @@ struct BrowserShell {
       }
       }
       .layoutWeight(1)
-      if (this.showHistory) {
-        this.HistoryPanel()
-      }
       // P5: 敏感操作确认对话框（自监听 SENSITIVE_OPERATION_DETECTED）
       ConfirmDialog({
         onConfirm: (agentId: string, operationType: SensitiveOperationType) => {
@@ -665,7 +660,8 @@ struct BrowserShell {
       .backgroundColor(Color.Transparent)
       .accessibilityText('历史记录')
       .onClick(() => {
-        this.openHistory()
+        // P22: 统一历史入口 —— 工具栏与 ⋮ 菜单同走 Chromium 风格路由页（旧内嵌面板删除）
+        router.pushUrl({ url: 'pages/HistoryPage' })
       })
 
       Button({ type: ButtonType.Normal }) {
@@ -836,14 +832,7 @@ struct BrowserShell {
     .backgroundColor('#161B22')
   }
 
-  /** P5: 历史面板（HistoryManager 接线） */
-  private openHistory(): void {
-    this.historyItems = HistoryManager.getAllHistory(50)
-    this.showHistory = true
-    console.info('BrowserShell history opened: ' + this.historyItems.length + ' entries')
-  }
-
-  /** P5: 回首页 —— 切换到 Dashboard 标签（找不到则把当前 tab 置为 Dashboard） */
+    
   private goHome(): void {
     console.info('BrowserShell goHome clicked')
     let dashTab = TabManager.getAllTabs().find((t: TabInfo) => t.isDashboard)
@@ -1151,78 +1140,7 @@ struct BrowserShell {
   }
 
   /** P5: 历史记录面板（覆盖层） */
-  @Builder
-  HistoryPanel(): void {
-    Column() {
-      Row() {
-        Text('历史记录')
-          .fontSize(18)
-          .fontWeight(FontWeight.Bold)
-          .fontColor('#E6EDF3')
-          .layoutWeight(1)
-
-        Button('关闭')
-          .fontSize(14)
-          .height(36)
-          .backgroundColor('#30363D')
-          .fontColor('#E6EDF3')
-          .onClick(() => {
-            this.showHistory = false
-          })
-      }
-      .width('100%')
-      .padding({ left: 16, right: 16, top: 16 })
-
-      if (this.historyItems.length === 0) {
-        Text('暂无历史记录')
-          .fontSize(14)
-          .fontColor('#8B949E')
-          .margin({ top: 32 })
-      } else {
-        Scroll() {
-          Column() {
-            ForEach(this.historyItems, (entry: HistoryEntry, index: number) => {
-              Column() {
-                Text(entry.title && entry.title.length > 0 ? entry.title : entry.url)
-                  .fontSize(13)
-                  .fontColor('#E6EDF3')
-                  .maxLines(1)
-                  .textOverflow({ overflow: TextOverflow.Ellipsis })
-                Text(entry.url)
-                  .fontSize(10)
-                  .fontColor('#8B949E')
-                  .maxLines(1)
-                  .textOverflow({ overflow: TextOverflow.Ellipsis })
-                  .margin({ top: 2 })
-              }
-              .width('100%')
-              .alignItems(HorizontalAlign.Start)
-              .padding(10)
-              .borderRadius(6)
-              .backgroundColor('#161B22')
-              .margin({ top: 6 })
-              .onClick(() => {
-                console.info('BrowserShell history item clicked: ' + entry.url)
-                this.showHistory = false
-                this.navigate(this.normalizeUrl(entry.url))
-              })
-            }, (entry: HistoryEntry, index: number) => entry.url + '_' + entry.timestamp + '_' + index)
-          }
-          .width('100%')
-          .padding({ left: 16, right: 16, bottom: 16 })
-        }
-        .align(Alignment.Top)
-        .layoutWeight(1)
-      }
-    }
-    .width('100%')
-    .layoutWeight(1)
-    .backgroundColor('#0D1117F0')
-  }
-
-  /** P5: 多 Web 并行架构 —— 每个 tab 常驻一个 Web 组件（Hidden 保活），
-   *  active tab 可见。agent tab 创建即挂载（onControllerAttached → registerWebView
-   *  → BCPEngine.bindWebView），从根上解决 P4 的 "agent tab 无 WebView" 缺口 */
+  
   @Builder
   WebViewContent(): void {
     Stack() {
