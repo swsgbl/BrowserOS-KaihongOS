@@ -27,6 +27,45 @@ interface HarnessDesc {
   logoText: string
 }
 
+/** P25a: MCP 连接器目录条目(对标上游 claw-app 46 家品牌图标目录) */
+interface ConnectorItem {
+  name: string
+}
+
+/** P25a: 上游 mcp-icons/ 46 连接器品牌(字母序,与 apps/app/assets/mcp-icons 一致) */
+const CONNECTORS: ConnectorItem[] = [
+  { name: 'Airtable' }, { name: 'Asana' }, { name: 'Box' }, { name: 'Brave Search' },
+  { name: 'Cal.com' }, { name: 'Canva' }, { name: 'ClickUp' }, { name: 'Cloudflare' },
+  { name: 'Confluence' }, { name: 'Discord' }, { name: 'Dropbox' }, { name: 'Exa' },
+  { name: 'Figma' }, { name: 'GitHub' }, { name: 'GitLab' }, { name: 'Gmail' },
+  { name: 'Google' }, { name: 'Google Calendar' }, { name: 'Google Docs' }, { name: 'Google Drive' },
+  { name: 'Google Forms' }, { name: 'HubSpot' }, { name: 'Intercom' }, { name: 'Jira' },
+  { name: 'Linear' }, { name: 'LinkedIn' }, { name: 'Memo' }, { name: 'Microsoft Teams' },
+  { name: 'Mixpanel' }, { name: 'Monday' }, { name: 'Notion' }, { name: 'OneDrive' },
+  { name: 'Outlook' }, { name: 'PostHog' }, { name: 'Postman' }, { name: 'Resend' },
+  { name: 'Salesforce' }, { name: 'Shopify' }, { name: 'Slack' }, { name: 'Stripe' },
+  { name: 'Supabase' }, { name: 'Vercel' }, { name: 'WhatsApp' }, { name: 'WordPress' },
+  { name: 'YouTube' }, { name: 'Zendesk' }
+]
+
+/** P25a: 连接器稳定 hash 色(同品牌恒定;8 色板循环) */
+function connectorColor(name: string): string {
+  let h = 0
+  for (let i = 0; i < name.length; i++) {
+    h = (h * 31 + name.charCodeAt(i)) % 100000
+  }
+  const palette = ['#1A73E8', '#0F9D58', '#D93025', '#9334E6', '#E8710A', '#148F9C', '#C5221F', '#4285F4']
+  return palette[h % palette.length]
+}
+
+/** P25a: 连接器显示首字母(取名称首个字母大写) */
+function connectorInitial(name: string): string {
+  if (name.length === 0) {
+    return '?'
+  }
+  return name.substring(0, 1).toUpperCase()
+}
+
 @Extend(Text)
 function monoText(): void {
   .fontFamily('monospace')
@@ -637,6 +676,82 @@ export struct NeoDashboardPanel {
     .alignItems(HorizontalAlign.Start)
   }
 
+  // ---------- P25a: 连接器目录(46 家品牌) ----------
+
+  /** 连接器点击 toast 文案('' = 隐藏) */
+  @State connectorToast: string = ''
+
+  /** P25a: 连接器卡片(首字母彩色圆徽 + 名称;点击复制连接器名) */
+  @Builder
+  ConnectorCatalog(): void {
+    Column() {
+      Text(`连接器目录 (${CONNECTORS.length})`)
+        .fontSize(14)
+        .fontWeight(FontWeight.Bold)
+        .fontColor(this.pal().text)
+      Text('更多品牌连接器陆续接入 —— 点击卡片复制连接器名')
+        .fontSize(10)
+        .fontColor(this.pal().text2)
+        .margin({ top: 2 })
+
+      GridRow({ columns: 4, gutter: { x: 8, y: 8 } }) {
+        ForEach(CONNECTORS, (c: ConnectorItem) => {
+          GridCol() {
+            Column() {
+              Text(connectorInitial(c.name))
+                .fontSize(16)
+                .fontWeight(FontWeight.Bold)
+                .fontColor('#FFFFFF')
+                .width(34)
+                .height(34)
+                .textAlign(TextAlign.Center)
+                .borderRadius(17)
+                .backgroundColor(connectorColor(c.name))
+              Text(c.name)
+                .fontSize(9)
+                .fontColor(this.pal().text)
+                .maxLines(1)
+                .textOverflow({ overflow: TextOverflow.Ellipsis })
+                .margin({ top: 5 })
+            }
+            .width('100%')
+            .padding({ top: 8, bottom: 8 })
+            .borderRadius(10)
+            .backgroundColor(this.pal().surface)
+            .justifyContent(FlexAlign.Center)
+            .alignItems(HorizontalAlign.Center)
+            .onClick(() => {
+              this.copyConnectorName(c.name)
+            })
+          }
+        }, (c: ConnectorItem) => c.name)
+      }
+      .width('100%')
+      .margin({ top: 10 })
+    }
+    .width('100%')
+    .padding(14)
+    .borderRadius(14)
+    .backgroundColor(this.pal().surfaceInput)
+    .margin({ top: 12 })
+    .alignItems(HorizontalAlign.Start)
+  }
+
+  /** P25a: 复制连接器名 + toast 反馈 */
+  private copyConnectorName(name: string): void {
+    try {
+      const data = pasteboard.createData(pasteboard.MIMETYPE_TEXT_PLAIN, name)
+      pasteboard.getSystemPasteboard().setData(data)
+    } catch (e) {
+      console.error('ConnectorCatalog copy error: ' + e)
+    }
+    this.connectorToast = name + ' · 即将支持'
+    setTimeout(() => {
+      this.connectorToast = ''
+    }, 1500)
+    console.info('ConnectorCatalog click: ' + name)
+  }
+
   // ---------- C2: MCP Install Board ----------
 
   @Builder
@@ -784,6 +899,9 @@ export struct NeoDashboardPanel {
             }
             .width('100%')
             .margin({ top: 12 })
+
+            // P25a: 连接器目录区块(46 家品牌)
+            this.ConnectorCatalog()
           }
           .width('100%')
           .padding({ left: 16, right: 16, bottom: 20 })
@@ -851,6 +969,18 @@ export struct NeoDashboardPanel {
         .padding(16)
         .borderRadius(14)
         .backgroundColor('#2D2D30')
+      }
+
+      // P25a: 连接器 toast 浮层(底部居中)
+      if (this.connectorToast.length > 0) {
+        Text(this.connectorToast)
+          .fontSize(12)
+          .fontColor('#FFFFFF')
+          .backgroundColor('#CC1F1F22')
+          .borderRadius(16)
+          .padding({ left: 14, right: 14, top: 8, bottom: 8 })
+          .position({ x: '50%', y: '88%' })
+          .translate({ x: -60 })
       }
     }
     .width('100%')
