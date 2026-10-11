@@ -754,3 +754,10 @@ AgentSidePanel 原挂在 BrowserShell **根 Stack 的浮层**（360vp 宽+100% �
 - **C 侧栏停止钮**：输入区发送钮在 agent 运行中切换为红底 ic_stop→terminateAgent（terminateAgent 引用确认）；拒绝发送保留草稿
 - **视觉截图受阻（如实）**：tty7 前台争夺+书签气泡窗口化坐标纠缠——多轮点击均落星标按钮；上游 glow 视觉（橙脉冲+红圆钮）与起手按钮的屏幕截图留待手动环境（代码链完整无分支疑点）
 - 上游细节对标终态：辉光/起手词/停止钮三细节闭合；selection 捕获/chat 模式切换/attached tabs/changelog 通知记录为后续可选
+
+
+## P25 上游三次深挖收官（2026-10-11 20:3x，装机级通过，git f8c06b9→b0249ca）
+- **A MCP 连接器目录 46 家（装机通过）**：MCP 安装板在 5 家 harness 网格下新增「连接器目录 (46)」区块——GridRow 4 列品牌卡片，首字母彩色圆徽（稳定 hash 色 8 色板）+名称；点击复制连接器名+「· 即将支持」toast（1.5s 自动消失）。E2E 实证：目录标题+34 品牌卡单屏可视+Slack 点击 toast 命中（evidence/p25/p25_mcp_catalog.jpeg + p25_connector_toast.jpeg）
+- **B 会话回放 TabView（装机通过）**：SessionPlayerPage 顶部三页签（回放/时间线/标签页），Chrome 系下划线激活态（#1A73E8 蓝字+2px 下划线）。回放=截图+播放控件原布局；时间线=操作列表全高（List layoutWeight 直挂根链防塌缩）；标签页=该会话 urlSequence 去重 URL 列表（如实展示——sessions 数据有 screenshots 无 tab 结构，蓝点+URL 行）。E2E 实证：三 Tab 切换/时间线页签激活/标签页页签显示 apihub.agnes-ai.com/v1 一条（evidence/p25/p25_replay_tab{0,1,2}*.jpeg）
+- **上游 ultrafast/skills/contextMenus 结论**：contextMenus API 零使用（浏览器右键=Chromium 原生，我方 P3 已覆盖）无需对标；ultrafast/skills 两屏与 MCP 连接器/会话回放非同级差距，留待后续轮次
+- 技术记录：NeoDashboardPanel.ets 为 LF 行尾（全库少数），补丁锚点按 LF；SessionPlayerPage 为 CRLF。构建链 harmony build→build_v1_hap.py→install_p8.py 不变
