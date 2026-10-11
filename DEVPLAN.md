@@ -716,3 +716,26 @@ AgentSidePanel 原挂在 BrowserShell **根 Stack 的浮层**（360vp 宽+100% �
 - **双历史 UI 不一致**：工具栏 🕘 按钮此前打开 P5 时代旧内嵌面板（#161B22 暗色旧样式），而 ⋮ 菜单打开 P9 Chromium 风格路由页——同一功能两副面孔。修复：工具栏按钮改走 router HistoryPage（与菜单同路径），旧 HistoryPanel/openHistory/showHistory/historyItems 全删（-86 行，残留引用 0）
 - 装机验证：构建绿+装机启动正常+P22 顺序保持（标签条 y187 顶/地址栏 y213 次）；按钮点击坐标盲点未命中（窗口化漂移），但代码路径与菜单项完全相同（router.pushUrl HistoryPage——该路径多轮 e2e 验证）
 - 其余排查面：多窗口（诚实降级记录）/主题默认（原生参考深色、我方浅色，可切换非缺陷）/快捷键列表 UI（可选）——无新必改项
+
+
+## P23：上游 12 屏对标差距前二——定时任务 + LLM Hub（2026-10-11，git 094d97a/bfd2d07）
+
+上游 apps/app 12 屏已对齐 10 屏，本轮补齐剩余两大差距：
+
+### A. 定时任务（feat(p23a) 094d97a）
+- ScheduleManager.ets（service/）：ScheduleTask{interval:hourly/daily/weekly+timeOfDay} 60s tick 调度；到点 AgentEngine.createAgent(ONCE)→终态轮询(5s*120 上限)→getFinalAnswer 截 200 字写 lastResult；防重入 runningRounds；超 maxAgents 记失败不崩
+- ScheduledTasksPage.ets：列表（名称/频率/Toggle 开关/上次运行/结果摘要 2 行/立即运行/删除）+ 新建面板（名称/提示词/目标URL/频率 pill 单选/timeOfDay 仅 daily|weekly 显示）
+- 挂点：EventBus.SCHEDULES_CHANGED 新事件；⋮ 菜单 group3 头插「定时任务」（ic_schedule.svg 新增 43 号图标，走 p11 三步同步）；EntryAbility onCreate ConfigManager.load 后 init()、onDestroy stop()
+- 装机实证：hilog [ScheduleManager] init done tasks=0；菜单渲染 [1161,410]；页面三要素（标题/计数/新建/空态）layout+截图 evidence/p23/p23a-scheduled-page.jpeg 全绿
+
+### B. LLM Hub（feat(p23b) bfd2d07）
+- AppConfig 增 llmProviders: string（JSON [{name,baseUrl,apiKey,model}]）六处同步（接口/Update/类字段/toJSON/fromJSON 容错读/ConfigManager.set）
+- LlmHubPage.ets：供应商列表（名称/端点截断/模型/Key 掩码/当前标记/设为当前/编辑/删除）+ 添加编辑面板（四字段+校验 http 前缀）+ toast
+- 「设为当前」= ConfigManager.update 写回 llmBaseUrl/llmApiKey/llmModel 三生效字段，AgentEngine 零改动
+- 双入口：SettingsPage AiSection 尾「管理供应商预设…」行；AgentSidePanel 模型循环第 5 项「管理供应商…」跳 Hub
+- 装机实证：设置 AI 区入口渲染 [508,578]；LlmHubPage layout（LLM Hub/添加/当前:apihub.agnes-ai.com 真实 config 读取/空态）+ 截图 evidence/p23/p23b-llmhub-page.jpeg 全绿
+
+### 遗留（下棒可选）
+- jtbd/command 等上游剩余 3 屏（任务书口径 12 屏已完成 10，我方第 9/10 页本轮补齐）
+- ScheduleManager 到点自动触发 e2e（本棒验证了 init+手动链路；自动触发逻辑 isDue 纯函数已评审）
+- LlmHubPage「测试连接」按钮（任务书可选，SettingsPage 已有同款可复用 LLMClient.chat ping）
