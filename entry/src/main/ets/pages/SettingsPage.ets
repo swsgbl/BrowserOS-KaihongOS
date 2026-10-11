@@ -427,6 +427,22 @@ struct SettingsPage {
       }
       .width('100%')
       .margin({ top: 16 })
+
+      // p23b: LLM Hub 入口（多供应商预设管理）
+      Row() {
+        Text('管理供应商预设…')
+          .fontSize(12)
+          .fontColor('#1A73E8')
+        Blank()
+        Text('›')
+          .fontSize(14)
+          .fontColor(this.pal().text2)
+      }
+      .width('100%')
+      .padding({ top: 10, bottom: 6 })
+      .onClick(() => {
+        router.pushUrl({ url: 'pages/LlmHubPage' })
+      })
     }
     .width('100%')
     .padding(20)

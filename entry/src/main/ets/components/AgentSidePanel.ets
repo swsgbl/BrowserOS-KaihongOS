@@ -46,7 +46,7 @@ export struct AgentSidePanel {
   /** P19a: 消息列表滚动控制器（答案回流后滚底） */
   private scroller: Scroller = new Scroller()
 
-  private readonly modelOptions: string[] = ['agnes-3.0-flash', 'agnes-3.0-pro', 'glm-4.7', '自定义(取配置)']
+  private readonly modelOptions: string[] = ['agnes-3.0-flash', 'agnes-3.0-pro', 'glm-4.7', '自定义(取配置)', '管理供应商…']
 
   aboutToAppear(): void {
     this.agents = AgentEngine.getAllAgentStatus()
@@ -242,6 +242,12 @@ export struct AgentSidePanel {
           .backgroundColor(this.pal().selected)
           .onClick(() => {
             this.modelSelection = (this.modelSelection + 1) % this.modelOptions.length
+            if (this.modelOptions[this.modelSelection] === '管理供应商…') {
+              // p23b: 循环到管理项 = 跳 LLM Hub，选择回退保持原模型显示
+              router.pushUrl({ url: 'pages/LlmHubPage' })
+              this.modelSelection = 0
+              return
+            }
             console.info('AgentSidePanel model switch: ' + this.modelOptions[this.modelSelection])
           })
 

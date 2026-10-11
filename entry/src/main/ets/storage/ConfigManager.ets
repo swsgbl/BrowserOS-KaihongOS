@@ -88,6 +88,9 @@ class ConfigManagerImpl {
     if (config.searchEngineId !== undefined) {
       this.config.searchEngineId = config.searchEngineId
     }
+    if (config.llmProviders !== undefined) {
+      this.config.llmProviders = config.llmProviders
+    }
   }
 
   async update(config: AppConfigUpdate): Promise<boolean> {

@@ -8,6 +8,7 @@
     "pages/BookmarksPage",
     "pages/DownloadsPage",
     "pages/ViewSourcePage",
-    "pages/ScheduledTasksPage"
+    "pages/ScheduledTasksPage",
+    "pages/LlmHubPage"
   ]
 }

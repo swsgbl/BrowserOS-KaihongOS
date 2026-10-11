@@ -24,9 +24,11 @@ interface AppConfigJSON {
   llmApiKey: string
   llmModel: string
   searchEngineId: string
+  llmProviders: string
 }
 
 export interface AppConfigUpdate {
+  llmProviders?: string
   mcpPort?: number
   maxAgents?: number
   recordingQuality?: RecordingQuality
@@ -68,6 +70,8 @@ export class AppConfig {
   llmApiKey: string = ''
   llmModel: string = ''
   searchEngineId: string = 'google'
+  /** p23b: LLM 供应商预设列表 JSON（[{name,baseUrl,apiKey,model}]），空串=无预设 */
+  llmProviders: string = ''
 
   toJSON(): AppConfigJSON {
     const result: AppConfigJSON = {
@@ -93,7 +97,8 @@ export class AppConfig {
       llmBaseUrl: this.llmBaseUrl,
       llmApiKey: this.llmApiKey,
       llmModel: this.llmModel,
-      searchEngineId: this.searchEngineId
+      searchEngineId: this.searchEngineId,
+      llmProviders: this.llmProviders
     }
     return result
   }
@@ -126,6 +131,8 @@ export class AppConfig {
     config.llmModel = (json['llmModel'] as string) || ''
     // p18: tolerant read — old config.json without searchEngineId keeps default 'google'
     config.searchEngineId = json['searchEngineId'] !== undefined && json['searchEngineId'] !== null ? json['searchEngineId'] as string : 'google'
+    // p23b: tolerant read — old config.json without llmProviders keeps default ''
+    config.llmProviders = json['llmProviders'] !== undefined && json['llmProviders'] !== null ? json['llmProviders'] as string : ''
     return config
   }
 
