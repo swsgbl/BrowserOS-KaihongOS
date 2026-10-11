@@ -22,6 +22,10 @@ struct SessionPlayerPage {
   @State operationLogs: OperationLog[] = []
   @State showNotice: boolean = true
   @State marks: TimelineMark[] = []
+  /** P25b: 顶部页签 0=回放 1=时间线 2=标签页 */
+  @State activeTab: number = 0
+  /** P25b: 会话标签页(URL 去重列表,数据源 session.urlSequence) */
+  @State tabUrls: string[] = []
   private replayer: SessionReplayer | null = null
 
   aboutToAppear(): void {
@@ -50,7 +54,26 @@ struct SessionPlayerPage {
         this.updateCurrentView()
       }
       this.rebuildMarks()
+      this.rebuildTabUrls()
     }
+  }
+
+  /** P25b: 由 urlSequence 构建去重标签 URL 列表 */
+  private rebuildTabUrls(): void {
+    const out: string[] = []
+    const seen: Set<string> = new Set<string>()
+    const s = this.session
+    if (s) {
+      for (let i = 0; i < s.urlSequence.length; i++) {
+        const u = s.urlSequence[i]
+        if (u.length > 0 && !seen.has(u)) {
+          seen.add(u)
+          out.push(u)
+        }
+      }
+    }
+    this.tabUrls = out
+    console.info('[SessionPlayer] tabUrls built: ' + out.length)
   }
 
   private updateCurrentView(): void {
@@ -130,30 +153,86 @@ struct SessionPlayerPage {
         .backgroundColor('#FFF3E0')
       }
 
-      if (this.currentScreenshot) {
-        Image(this.currentScreenshot)
+      // P25b: 顶部 Tab 条(Chrome 系下划线激活态)
+      this.TabBar()
+
+      if (this.activeTab === 0) {
+        // 回放页签:截图 + 播放控件(原有布局)
+        if (this.currentScreenshot) {
+          Image(this.currentScreenshot)
+            .width('100%')
+            .layoutWeight(1)
+            .objectFit(ImageFit.Contain)
+        } else {
+          Column() {
+            Text('无截图数据')
+              .fontSize(16)
+              .fontColor('#999999')
+          }
           .width('100%')
           .layoutWeight(1)
-          .objectFit(ImageFit.Contain)
-      } else {
-        Column() {
-          Text('无截图数据')
-            .fontSize(16)
-            .fontColor('#999999')
+          .justifyContent(FlexAlign.Center)
+          .alignItems(HorizontalAlign.Center)
         }
-        .width('100%')
+
+        this.PlaybackControls()
+      } else if (this.activeTab === 1) {
+        // 时间线页签:List 自滚动,layoutWeight 直挂根 Column 高度链(防塌缩)
+        this.OperationTimeline()
+      } else {
+        // 标签页页签:该会话涉及的 URL 去重列表
+        Scroll() {
+          Column() {
+            this.TabsView()
+          }
+          .width('100%')
+          .padding({ top: 4, bottom: 12 })
+        }
         .layoutWeight(1)
-        .justifyContent(FlexAlign.Center)
-        .alignItems(HorizontalAlign.Center)
+        .align(Alignment.Top)
+        .scrollBar(BarState.Off)
       }
-
-      this.PlaybackControls()
-
-      this.OperationTimeline()
     }
     .width('100%')
     .height('100%')
     .backgroundColor('#FFFFFF')
+  }
+
+  /** P25b: 顶部 Tab 条 —— 下划线激活态(Chrome 系) */
+  @Builder
+  TabBar(): void {
+    Row() {
+      this.TabItem('回放', 0)
+      this.TabItem('时间线', 1)
+      this.TabItem('标签页', 2)
+    }
+    .width('100%')
+    .padding({ left: 16 })
+    .constraintSize({ minHeight: 38 })
+    .backgroundColor('#FFFFFF')
+  }
+
+  @Builder
+  TabItem(label: string, idx: number): void {
+    Column() {
+      Text(label)
+        .fontSize(13)
+        .fontWeight(this.activeTab === idx ? FontWeight.Medium : FontWeight.Normal)
+        .fontColor(this.activeTab === idx ? '#1A73E8' : '#5F6368')
+        .margin({ top: 8 })
+      // 下划线激活态
+      Row()
+        .width(idx === 0 ? 40 : 48)
+        .height(2)
+        .borderRadius(1)
+        .backgroundColor(this.activeTab === idx ? '#1A73E8' : '#FFFFFF')
+        .margin({ top: 6, bottom: 4 })
+    }
+    .margin({ right: 18 })
+    .onClick(() => {
+      this.activeTab = idx
+      console.info('[SessionPlayer] tab switch -> ' + idx)
+    })
   }
 
   @Builder
@@ -256,6 +335,49 @@ struct SessionPlayerPage {
     .backgroundColor('#F5F5F5')
   }
 
+  /** P25b: 标签页视图 —— 该会话涉及的 URL 去重列表(如实展示,无 tab 结构数据) */
+  @Builder
+  TabsView(): void {
+    Column() {
+      Text('会话标签页')
+        .fontSize(14)
+        .fontWeight(FontWeight.Medium)
+        .fontColor('#333333')
+        .margin({ top: 8, bottom: 4 })
+
+      if (this.tabUrls.length === 0) {
+        Text('本会话未记录标签页数据')
+          .fontSize(12)
+          .fontColor('#999999')
+          .margin({ top: 20 })
+      } else {
+        List() {
+          ForEach(this.tabUrls, (url: string) => {
+            ListItem() {
+              Row() {
+                Circle({ width: 6, height: 6 })
+                  .fill('#1A73E8')
+                  .margin({ right: 8 })
+                Text(url)
+                  .fontSize(12)
+                  .fontColor('#333333')
+                  .layoutWeight(1)
+                  .maxLines(1)
+                  .textOverflow({ overflow: TextOverflow.Ellipsis })
+              }
+              .width('100%')
+              .padding({ top: 8, bottom: 8 })
+            }
+          }, (url: string) => url)
+        }
+        .width('100%')
+      }
+    }
+    .width('100%')
+    .padding({ left: 16, right: 16 })
+    .backgroundColor('#F8F8F8')
+  }
+
   @Builder
   OperationTimeline(): void {
     Column() {
@@ -312,9 +434,10 @@ struct SessionPlayerPage {
         })
       }
       .width('100%')
-      .height(120)
+      .layoutWeight(1)
     }
     .width('100%')
+    .layoutWeight(1)
     .padding({ left: 16, right: 16 })
     .backgroundColor('#F8F8F8')
   }
