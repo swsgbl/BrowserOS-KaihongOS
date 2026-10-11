@@ -739,3 +739,10 @@ AgentSidePanel 原挂在 BrowserShell **根 Stack 的浮层**（360vp 宽+100% �
 - jtbd/command 等上游剩余 3 屏（任务书口径 12 屏已完成 10，我方第 9/10 页本轮补齐）
 - ScheduleManager 到点自动触发 e2e（本棒验证了 init+手动链路；自动触发逻辑 isDue 纯函数已评审）
 - LlmHubPage「测试连接」按钮（任务书可选，SettingsPage 已有同款可复用 LLMClient.chat ping）
+
+
+### P23 独立验收（Zodex，2026-10-11 09:0x，通过，git 094d97a→bfd2d07→8e3e8db）
+- **设备实证（evidence/p23 布局 dump 复核）**：⋮ 菜单 10 项含新增「定时任务」（1161,410，下载与设置之间）；ScheduledTasksPage 四要素（标题/0 个/新建/空态）+ LlmHubPage 真实 config 读取（当前: apihub.agnes-ai.com/v1）——hmh 装机布局证据链完整复核
+- 架构复核：ScheduleManager 60s tick+runningRounds 防重入+finalAnswer 截 200 字回写；LlmHub「设为当前」写回三生效字段 AgentEngine 零改动——设计合理
+- 上游对标终态：12 屏中 10 屏已对齐（含本轮 2 新增）；jtbd 调查弹窗/agent-command 对话首页变体 2 屏记录为可选（营销向，优先级低）
+- 验收过程注记：tty7 前台争夺再现（最小化+窗口化坐标恢复法）
