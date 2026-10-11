@@ -254,6 +254,60 @@ const BCP_BRIDGE_SCRIPT = `
     }
   };
 
+
+  // P24a: Agent 运行辉光 overlay + 底部停止钮(对标上游 glow.content)
+  // start=注入 fixed 覆盖层(inset box-shadow 橙脉冲 3s 循环) + 48px 红圆停止钮;
+  // 停止钮 onclick 置 window.__bcp_glow_stop_requested=true(同步标记, ArkTS 侧轮询)
+  window.__bcp_glow_stop_requested = false;
+
+  window.__bcp_glow_start = function() {
+    try {
+      if (document.getElementById('browseros-glow-overlay')) return;
+      var ov = document.createElement('div');
+      ov.id = 'browseros-glow-overlay';
+      ov.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:2147483646;'
+        + 'animation:__bcp_glow_pulse 3s ease-in-out infinite;'
+        + 'box-shadow:inset 0 0 24px 6px rgba(251,102,24,0.55);';
+      var st = document.createElement('style');
+      st.id = 'browseros-glow-style';
+      st.textContent = '@keyframes __bcp_glow_pulse{0%,100%{box-shadow:inset 0 0 24px 6px rgba(251,102,24,0.55)}'
+        + '50%{box-shadow:inset 0 0 42px 12px rgba(251,102,24,0.9)}}';
+      document.documentElement.appendChild(st);
+      document.documentElement.appendChild(ov);
+
+      var btn = document.createElement('div');
+      btn.id = 'browseros-glow-stop';
+      btn.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);'
+        + 'width:48px;height:48px;border-radius:50%;background:#DC2626;'
+        + 'box-shadow:0 4px 14px rgba(0,0,0,0.35);cursor:pointer;z-index:2147483647;'
+        + 'pointer-events:auto;display:flex;align-items:center;justify-content:center;';
+      btn.title = 'Stop agent';
+      var sq = document.createElement('div');
+      sq.style.cssText = 'width:14px;height:14px;background:#FFFFFF;border-radius:3px;';
+      btn.appendChild(sq);
+      btn.addEventListener('click', function() {
+        window.__bcp_glow_stop_requested = true;
+        try { window.__bcp_glow_stop(); } catch (e) { }
+      });
+      document.documentElement.appendChild(btn);
+    } catch (e) {
+      console.warn('[BCP] glow_start error: ' + e);
+    }
+  };
+
+  window.__bcp_glow_stop = function() {
+    try {
+      var ov = document.getElementById('browseros-glow-overlay');
+      if (ov) ov.remove();
+      var btn = document.getElementById('browseros-glow-stop');
+      if (btn) btn.remove();
+      var st = document.getElementById('browseros-glow-style');
+      if (st) st.remove();
+    } catch (e) {
+      console.warn('[BCP] glow_stop error: ' + e);
+    }
+  };
+
   console.log('[BCP] Bridge script injected successfully');
 })();
 `
@@ -320,6 +374,20 @@ class JSBridgeInjectorImpl {
 
   getHtml2CanvasLoader(): string {
     return HTML2CANVAS_LOADER
+  }
+
+  /** P24a: 辉光脚本片段(随桥注入, 同 BCP_BRIDGE_SCRIPT 常量字符串) */
+  glowStart(): string {
+    return 'window.__bcp_glow_start ? window.__bcp_glow_start() : (function(){return 1;})()'
+  }
+
+  glowStop(): string {
+    return 'window.__bcp_glow_stop ? window.__bcp_glow_stop() : (function(){return 1;})()'
+  }
+
+  /** P24a: 停止标记查询脚本(runJavaScript 求值 true/false) */
+  glowStopRequested(): string {
+    return 'window.__bcp_glow_stop_requested === true'
   }
 }
 

@@ -9,6 +9,7 @@ import { Constants } from '../common/Constants'
 import { ConfigManager } from '../storage/ConfigManager'
 import { LLMClient, LLMChatMessage, LLMToolCall, LLMToolSpec, LLMParamProp, LLMParamEntry, LLMParamsSchema } from './LLMClient'
 import { BCPEngine } from '../protocol/BCPEngine'
+import { JSBridgeInjector } from '../protocol/JSBridgeInjector'
 import { SensitiveOperationDetector } from './SensitiveOperationDetector'
 import { BCPResult } from '../common/Types'
 import { SessionManager } from './SessionManager'
@@ -47,6 +48,47 @@ class AgentEngineImpl {
   private agentSessions: Map<string, string> = new Map()
   /** P19a: 终态答案库（完成=最终答复 / 失败=原因），AgentSidePanel 轮询回流用 */
   private finalAnswers: Map<string, string> = new Map()
+  /** P24a: 向 agent 绑定 tab 注入/移除页面辉光 overlay(容错: webview 未挂载或换页即静默失败) */
+  private __glowStart(agentId: string): void {
+    const config0 = this.agents.get(agentId)
+    if (!config0) return
+    const inst = TabManager.getWebView(config0.tabId)
+    if (inst === null || inst.controller === undefined) return
+    try {
+      inst.controller.runJavaScript(JSBridgeInjector.glowStart())
+      console.info('[AgentEngine] glow started on tab ' + config0.tabId)
+    } catch (e) {
+      console.warn('[AgentEngine] glow start failed: ' + e)
+    }
+  }
+
+  private __glowStop(agentId: string): void {
+    const config0 = this.agents.get(agentId)
+    if (!config0) return
+    const inst = TabManager.getWebView(config0.tabId)
+    if (inst === null || inst.controller === undefined) return
+    try {
+      inst.controller.runJavaScript(JSBridgeInjector.glowStop())
+      console.info('[AgentEngine] glow stopped on tab ' + config0.tabId)
+    } catch (e) {
+      console.warn('[AgentEngine] glow stop failed: ' + e)
+    }
+  }
+
+  /** P24a: 查询页面停止钮是否被点击(1s 轮询由 runAgentTask 循环间 await 兜底) */
+  private async __glowStopRequested(agentId: string): Promise<boolean> {
+    const config0 = this.agents.get(agentId)
+    if (!config0) return false
+    const inst = TabManager.getWebView(config0.tabId)
+    if (inst === null || inst.controller === undefined) return false
+    try {
+      const r = await inst.controller.runJavaScript(JSBridgeInjector.glowStopRequested())
+      return `${r}` === 'true'
+    } catch (e) {
+      return false
+    }
+  }
+
   private static readonly MAX_STEPS: number = 15
 
   /** P19a: 取任务终态答案（引擎侧保留，面板消费后自行去重） */
@@ -97,6 +139,9 @@ class AgentEngineImpl {
       EventBus.emit(EventBusEvents.AGENT_STATUS_CHANGE, status.toJSON())
       this.notifyStatusChange(agentId, AgentStatus.STOPPED)
     }
+
+    // P24a: 终止时移除页面辉光(tab 关闭前执行, webview 仍可用)
+    this.__glowStop(agentId)
 
     TabManager.closeTab(config.tabId)
 
@@ -398,7 +443,10 @@ class AgentEngineImpl {
     }
     if (!bound) {
       console.warn('[AgentEngine] WebView not registered for tab ' + config.tabId + ' after 10s, agent tools will fail')
-    } else if (config.targetUrl && config.targetUrl.length > 0) {
+    } else {
+      // P24a: 绑定成功即点亮页面辉光(运行中视觉指示)
+      this.__glowStart(agentId)
+      if (config.targetUrl && config.targetUrl.length > 0) {
       // P6: agent tab 创建即自动导航到目标页（Web 层常驻架构，前台后台均生效），
       // 消灭「依赖人工点击 tab 触发渲染」的时序缺口
       try {
@@ -406,6 +454,7 @@ class AgentEngineImpl {
         console.info('[AgentEngine] auto-navigate agent tab to target: ' + config.targetUrl)
       } catch (e) {
         console.warn('[AgentEngine] auto-navigate failed: ' + e)
+      }
       }
     }
 
@@ -422,6 +471,18 @@ class AgentEngineImpl {
 
     try {
       for (let step = 1; step <= AgentEngineImpl.MAX_STEPS; step++) {
+        // P24a: 页面停止钮轮询——标记即终止(镜像 terminateAgent 清理链)
+        if (await this.__glowStopRequested(agentId)) {
+          console.info('[AgentEngine] stop requested via page glow button: ' + agentId)
+          this.terminateAgent(agentId)
+          this.runningTasks.delete(agentId)
+          this.finalAnswers.set(agentId, '任务已通过页面停止钮终止')
+          const sid0 = this.agentSessions.get(agentId)
+          if (sid0) {
+            SessionManager.stopRecording(sid0)
+          }
+          return
+        }
         console.info(`[AgentEngine] step ${step}/${AgentEngineImpl.MAX_STEPS} agent=${agentId}`)
         this.updateAgentProgress(agentId, Math.round((step - 1) * 100 / AgentEngineImpl.MAX_STEPS))
 
@@ -528,6 +589,9 @@ class AgentEngineImpl {
       this.setAgentCompleted(agentId)
       this.finalAnswers.set(agentId, finalAnswer.length > 0 ? finalAnswer : '(空答复)')
     }
+
+    // P24a: 终态(完成/失败/停止)移除页面辉光
+    this.__glowStop(agentId)
 
     // P4: stop recording and persist (keep agentId->sessionId mapping for replay entry)
     const sid2 = this.agentSessions.get(agentId)
