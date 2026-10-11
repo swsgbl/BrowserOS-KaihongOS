@@ -11,11 +11,31 @@ import { RunStrategy, AgentStatus } from '../common/Types'
 import { AgentStatusInfo } from '../model/AgentStatus'
 import { Palette } from '../common/Palette'
 import { router } from '@kit.ArkUI'
+import { preferences } from '@kit.ArkData'
+import { BusinessError } from '@kit.BasicServicesKit'
 
 interface ChatMessage {
   role: string // 'user' | 'agent' | 'hint'
   text: string
   agentId: string
+}
+
+/** P24b: 起手提示词(对标上游 starter-prompts.ts: display 短标签 + prompt 完整指令) */
+class StarterPrompt {
+  display: string = ''
+  prompt: string = ''
+  constructor(display: string, prompt: string) {
+    this.display = display
+    this.prompt = prompt
+  }
+}
+
+function defaultStarterPrompts(): StarterPrompt[] {
+  return [
+    new StarterPrompt('总结本页', 'Read the current tab and summarize it in bullet points'),
+    new StarterPrompt('本页讲了什么', 'Read the current tab and describe what it is about in 1-2 lines'),
+    new StarterPrompt('提取本页评论', 'Read the current tab and extract comments as bullet points')
+  ]
 }
 
 @Component
@@ -32,6 +52,19 @@ export struct AgentSidePanel {
   @State modelSelection: number = 0
   @State agents: AgentStatusInfo[] = []
   @State showModelDropdown: boolean = false
+  /** P24b: 起手提示词(Preferences 持久化, 容错回默认) */
+  @State starters: StarterPrompt[] = defaultStarterPrompts()
+  /** P24b: 自定义提示词内联编辑器开合 */
+  @State editingStarters: boolean = false
+  /** P24b: 编辑器三对输入(display/prompt 各3) */
+  @State edDisplay0: string = ''
+  @State edPrompt0: string = ''
+  @State edDisplay1: string = ''
+  @State edPrompt1: string = ''
+  @State edDisplay2: string = ''
+  @State edPrompt2: string = ''
+  /** P24c: 最近派发且仍在运行的 agentId(停止钮目标) */
+  @State lastRunningAgentId: string = ''
   /** P21b: 面板双视图——chat(默认,上游 index 路由) / history(上游 /history 路由) */
   @State panelView: string = 'chat'
   /** P21b: history 视图数据(时间倒序,getSessionListAsync) */
@@ -56,6 +89,7 @@ export struct AgentSidePanel {
       agentId: ''
     })
     console.info('AgentSidePanel mounted, agents=' + this.agents.length)
+    this.loadStarterPrompts()
     this.startSettlePolling()
   }
 
@@ -110,6 +144,121 @@ export struct AgentSidePanel {
     }
   }
 
+  /** P24b: Preferences 加载 starter_prompts(JSON 数组3元素 {display,prompt}, 解析失败回默认) */
+  private loadStarterPrompts(): void {
+    try {
+      const ctx = getContext(this)
+      preferences.getPreferences(ctx, 'sidepanel_prefs').then((p: preferences.Preferences) => {
+        return p.get('starter_prompts', '')
+      }).then((v: preferences.ValueType) => {
+        const raw = `${v}`
+        if (raw.length > 0) {
+          try {
+            const arr = JSON.parse(raw) as Array<Record<string, string>>
+            if (arr !== null && arr !== undefined && arr.length === 3) {
+              const loaded: StarterPrompt[] = []
+              for (const it of arr) {
+                loaded.push(new StarterPrompt(it.display ?? '', it.prompt ?? ''))
+              }
+              this.starters = loaded
+              console.info('AgentSidePanel starter prompts loaded from Preferences')
+              return
+            }
+          } catch (e) {
+            console.warn('AgentSidePanel starter prompts parse failed, fallback to defaults')
+          }
+        }
+        this.starters = defaultStarterPrompts()
+      }).catch((e: BusinessError) => {
+        console.warn('AgentSidePanel starter prompts load error: ' + e.code)
+      })
+    } catch (e) {
+      console.warn('AgentSidePanel starter prompts getContext error: ' + e)
+    }
+  }
+
+  /** P24b: 保存自定义起手词到 Preferences */
+  private saveStarterPrompts(list: StarterPrompt[]): void {
+    try {
+      const ctx = getContext(this)
+      const arr: Array<Record<string, string>> = []
+      for (const s of list) {
+        const m: Record<string, string> = {}
+        m['display'] = s.display
+        m['prompt'] = s.prompt
+        arr.push(m)
+      }
+      const raw = JSON.stringify(arr)
+      preferences.getPreferences(ctx, 'sidepanel_prefs').then((p: preferences.Preferences) => {
+        p.put('starter_prompts', raw).then(() => {
+          return p.flush()
+        }).then(() => {
+          console.info('AgentSidePanel starter prompts saved')
+        }).catch((e: BusinessError) => {
+          console.warn('AgentSidePanel starter prompts save error: ' + e.code)
+        })
+      })
+    } catch (e) {
+      console.warn('AgentSidePanel starter prompts save exception: ' + e)
+    }
+  }
+
+  /** P24b: 打开内联编辑器(预填当前值) */
+  private openStarterEditor(): void {
+    this.edDisplay0 = this.starters[0].display
+    this.edPrompt0 = this.starters[0].prompt
+    this.edDisplay1 = this.starters[1].display
+    this.edPrompt1 = this.starters[1].prompt
+    this.edDisplay2 = this.starters[2].display
+    this.edPrompt2 = this.starters[2].prompt
+    this.editingStarters = true
+  }
+
+  /** P24b: 保存编辑(空 prompt 行忽略→回默认该行) */
+  private applyStarterEdits(): void {
+    const d0 = this.edDisplay0.trim().length > 0 ? this.edDisplay0.trim() : '提示词 1'
+    const p0 = this.edPrompt0.trim().length > 0 ? this.edPrompt0.trim() : defaultStarterPrompts()[0].prompt
+    const d1 = this.edDisplay1.trim().length > 0 ? this.edDisplay1.trim() : '提示词 2'
+    const p1 = this.edPrompt1.trim().length > 0 ? this.edPrompt1.trim() : defaultStarterPrompts()[1].prompt
+    const d2 = this.edDisplay2.trim().length > 0 ? this.edDisplay2.trim() : '提示词 3'
+    const p2 = this.edPrompt2.trim().length > 0 ? this.edPrompt2.trim() : defaultStarterPrompts()[2].prompt
+    const list: StarterPrompt[] = [new StarterPrompt(d0, p0), new StarterPrompt(d1, p1), new StarterPrompt(d2, p2)]
+    this.starters = list
+    this.saveStarterPrompts(list)
+    this.editingStarters = false
+  }
+
+  /** P24b: 点起手按钮 = 以 prompt 作为任务文本直接发送 */
+  private sendStarter(s: StarterPrompt): void {
+    this.inputText = s.prompt
+    this.sendTask()
+  }
+
+  /** P24c: 是否有本面板派发且仍在运行的 agent */
+  private hasRunningAgent(): boolean {
+    this.agents = AgentEngine.getAllAgentStatus()
+    for (const st of this.agents) {
+      if (st.status === AgentStatus.RUNNING) {
+        this.lastRunningAgentId = st.agentId
+        return true
+      }
+    }
+    this.lastRunningAgentId = ''
+    return false
+  }
+
+  /** P24c: 停止最近运行的 agent */
+  private stopRunningAgent(): void {
+    if (this.lastRunningAgentId.length === 0) {
+      this.hasRunningAgent()
+    }
+    if (this.lastRunningAgentId.length > 0) {
+      console.info('AgentSidePanel stop agent: ' + this.lastRunningAgentId)
+      AgentEngine.terminateAgent(this.lastRunningAgentId)
+      this.lastRunningAgentId = ''
+    }
+  }
+
   private sendTask(): void {
     const task = this.inputText.trim()
     if (task.length === 0) {
@@ -127,6 +276,7 @@ export struct AgentSidePanel {
         agentId: agent.agentId
       })
       this.agents = AgentEngine.getAllAgentStatus()
+      this.lastRunningAgentId = agent.agentId
       this.inputText = ''
       console.info('AgentSidePanel task dispatched: ' + task + ' agent=' + agent.agentId)
     } else {
@@ -275,6 +425,125 @@ export struct AgentSidePanel {
 
       // 主体：chat 视图（消息列表 + 输入区） / history 视图（会话历史列表,上游 ChatHistory）
       if (this.panelView === 'chat') {
+        // P24b: 空态 = 起手提示词面板(对标 ChatEmptyState: 图标+标题+3按钮+自定义入口)
+        if (this.messages.length <= 1 && !this.editingStarters) {
+          Column() {
+            Image($r('app.media.ic_agent'))
+              .width(44)
+              .height(44)
+              .fillColor('#FB6618')
+              .draggable(false)
+              .margin({ top: 36 })
+            Text('代理随时待命')
+              .fontSize(16)
+              .fontWeight(FontWeight.Bold)
+              .fontColor(this.pal().text)
+              .margin({ top: 12 })
+            Text('给代理一个任务，或从下面快速开始')
+              .fontSize(11)
+              .fontColor(this.pal().text2)
+              .margin({ top: 4 })
+            Column() {
+              ForEach(this.starters, (s: StarterPrompt) => {
+                Text(s.display)
+                  .fontSize(13)
+                  .fontColor(this.pal().text)
+                  .padding({ left: 14, right: 14, top: 10, bottom: 10 })
+                  .borderRadius(10)
+                  .backgroundColor(this.pal().surface)
+                  .border({ width: 1, color: this.pal().border })
+                  .width('100%')
+                  .textAlign(TextAlign.Center)
+                  .margin({ top: 8 })
+                  .onClick(() => {
+                    this.sendStarter(s)
+                  })
+              }, (s: StarterPrompt, idx: number) => 'starter_' + idx)
+            }
+            .width('100%')
+            .constraintSize({ maxWidth: 320 })
+            .margin({ top: 16 })
+            Text('自定义提示词')
+              .fontSize(11)
+              .fontColor('#FB6618')
+              .margin({ top: 14 })
+              .onClick(() => {
+                this.openStarterEditor()
+              })
+          }
+          .width('100%')
+          .layoutWeight(1)
+          .alignItems(HorizontalAlign.Center)
+          .backgroundColor(this.pal().surfaceAlt)
+        } else if (this.editingStarters) {
+          // P24b: 内联编辑器(3 对 display+prompt 输入 + 保存/取消)
+          Scroll() {
+            Column() {
+              Text('自定义起手提示词')
+                .fontSize(14)
+                .fontWeight(FontWeight.Bold)
+                .fontColor(this.pal().text)
+                .margin({ top: 16 })
+              Text('显示为按钮的短标签 / 实际发给代理的完整指令')
+                .fontSize(10)
+                .fontColor(this.pal().text2)
+                .margin({ top: 4, bottom: 8 })
+              ForEach([0, 1, 2], (idx: number) => {
+                Column() {
+                  TextInput({ text: idx === 0 ? this.edDisplay0 : idx === 1 ? this.edDisplay1 : this.edDisplay2, placeholder: '按钮标签 ' + (idx + 1) })
+                    .fontSize(12)
+                    .height(36)
+                    .backgroundColor(this.pal().surface)
+                    .borderRadius(8)
+                    .onChange((v: string) => {
+                      if (idx === 0) { this.edDisplay0 = v } else if (idx === 1) { this.edDisplay1 = v } else { this.edDisplay2 = v }
+                    })
+                  TextArea({ text: idx === 0 ? this.edPrompt0 : idx === 1 ? this.edPrompt1 : this.edPrompt2, placeholder: '发送给代理的指令 ' + (idx + 1) })
+                    .fontSize(12)
+                    .height(56)
+                    .backgroundColor(this.pal().surface)
+                    .borderRadius(8)
+                    .margin({ top: 6 })
+                    .onChange((v: string) => {
+                      if (idx === 0) { this.edPrompt0 = v } else if (idx === 1) { this.edPrompt1 = v } else { this.edPrompt2 = v }
+                    })
+                }
+                .width('100%')
+                .margin({ top: 10 })
+              }, (idx: number) => 'ed_' + idx)
+              Row() {
+                Button('取消')
+                  .fontSize(12)
+                  .height(32)
+                  .backgroundColor(this.pal().surface)
+                  .fontColor(this.pal().text2)
+                  .borderRadius(16)
+                  .border({ width: 1, color: this.pal().border })
+                  .onClick(() => {
+                    this.editingStarters = false
+                  })
+                Blank()
+                Button('保存')
+                  .fontSize(12)
+                  .height(32)
+                  .backgroundColor('#FB6618')
+                  .fontColor('#FFFFFF')
+                  .borderRadius(16)
+                  .onClick(() => {
+                    this.applyStarterEdits()
+                  })
+              }
+              .width('100%')
+              .margin({ top: 16, bottom: 20 })
+            }
+            .width('100%')
+            .constraintSize({ maxWidth: 320 })
+          }
+          .width('100%')
+          .layoutWeight(1)
+          .align(Alignment.Top)
+          .backgroundColor(this.pal().surfaceAlt)
+        } else {
         // 消息列表
         List({ scroller: this.scroller }) {
           ForEach(this.messages, (msg: ChatMessage, index: number) => {
@@ -313,8 +582,9 @@ export struct AgentSidePanel {
         .width('100%')
         .padding({ left: 12, right: 12 })
         .scrollBar(BarState.Off)
-        // P21b: chat 内容区与面板底同色(surfaceAlt),气泡用 surface 卡片区分
+        // P21b: chat 内容区与面板底同色(surfaceAlt), 气泡用 surface 卡片区分
         .backgroundColor(this.pal().surfaceAlt)
+        }
 
         // 底部输入区
         Column() {
@@ -332,15 +602,37 @@ export struct AgentSidePanel {
               .fontSize(10)
               .fontColor('#9AA0A6')
               .layoutWeight(1)
-            Button('发送')
-              .fontSize(13)
+            if (this.hasRunningAgent()) {
+              // P24c: 运行中 = 红底停止钮(对标 chat-actions stop)
+              Row() {
+                Image($r('app.media.ic_stop'))
+                  .width(14)
+                  .height(14)
+                  .fillColor('#FFFFFF')
+                  .draggable(false)
+                  .margin({ right: 6 })
+                Text('停止')
+                  .fontSize(13)
+                  .fontColor('#FFFFFF')
+              }
               .height(32)
-              .backgroundColor('#1A73E8')
-              .fontColor('#FFFFFF')
+              .padding({ left: 16, right: 16 })
+              .backgroundColor('#DC2626')
               .borderRadius(16)
               .onClick(() => {
-                this.sendTask()
+                this.stopRunningAgent()
               })
+            } else {
+              Button('发送')
+                .fontSize(13)
+                .height(32)
+                .backgroundColor('#1A73E8')
+                .fontColor('#FFFFFF')
+                .borderRadius(16)
+                .onClick(() => {
+                  this.sendTask()
+                })
+            }
           }
           .width('100%')
           .margin({ top: 8 })
