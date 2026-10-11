@@ -746,3 +746,11 @@ AgentSidePanel 原挂在 BrowserShell **根 Stack 的浮层**（360vp 宽+100% �
 - 架构复核：ScheduleManager 60s tick+runningRounds 防重入+finalAnswer 截 200 字回写；LlmHub「设为当前」写回三生效字段 AgentEngine 零改动——设计合理
 - 上游对标终态：12 屏中 10 屏已对齐（含本轮 2 新增）；jtbd 调查弹窗/agent-command 对话首页变体 2 屏记录为可选（营销向，优先级低）
 - 验收过程注记：tty7 前台争夺再现（最小化+窗口化坐标恢复法）
+
+
+### P24 独立验收（Zodex，2026-10-11 15:0x，代码级+装机级通过，视觉截图受阻如实记录，git 7b26991→e55a6c9）
+- **A 页面辉光+停止钮（装机通过）**：__bcp_glow_start/stop 注入脚本+AgentEngine 绑定时启动/终态停止+step 轮询 stop_requested→terminateAgent——构建绿+装机；hmh 自测截图链（evidence/p24/p24-tr*.png 系列）记录了页面右上角区域抓取过程
+- **B 起手提示词空态（代码级+装机级）**：工作树代码验证（Starter×38 引用/总结本页等 3 默认 display+prompt/自定义编辑器/Preferences 'starter_prompts' 持久化容错回默认）；构建绿+装机成功
+- **C 侧栏停止钮**：输入区发送钮在 agent 运行中切换为红底 ic_stop→terminateAgent（terminateAgent 引用确认）；拒绝发送保留草稿
+- **视觉截图受阻（如实）**：tty7 前台争夺+书签气泡窗口化坐标纠缠——多轮点击均落星标按钮；上游 glow 视觉（橙脉冲+红圆钮）与起手按钮的屏幕截图留待手动环境（代码链完整无分支疑点）
+- 上游细节对标终态：辉光/起手词/停止钮三细节闭合；selection 捕获/chat 模式切换/attached tabs/changelog 通知记录为后续可选
