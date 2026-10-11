@@ -1775,6 +1775,9 @@ struct BrowserShell {
       case 'downloads':
         router.pushUrl({ url: 'pages/DownloadsPage' })
         break
+      case 'scheduled_tasks':
+        router.pushUrl({ url: 'pages/ScheduledTasksPage' })
+        break
       case 'settings':
         router.pushUrl({ url: 'pages/SettingsPage' })
         break

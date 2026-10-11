@@ -9,6 +9,7 @@ import { LoginStateManager } from '../service/LoginStateManager'
 import { SessionManager } from '../service/SessionManager'
 import { DownloadManager } from '../service/DownloadManager'
 import { TabManager } from '../service/TabManager'
+import { ScheduleManager } from '../service/ScheduleManager'
 
 export default class EntryAbility extends UIAbility {
   onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
@@ -56,6 +57,10 @@ export default class EntryAbility extends UIAbility {
     }).catch((e: BusinessError) => {
       console.error('EntryAbility ConfigManager load error: ' + e.message)
     })
+    // P23a: 定时任务调度器（config 就绪后启动 1 分钟 tick）
+    ScheduleManager.init().catch((e: BusinessError) => {
+      console.error('EntryAbility ScheduleManager init error: ' + e.message)
+    })
   }
 
   onDestroy(): void {
@@ -64,6 +69,8 @@ export default class EntryAbility extends UIAbility {
     MCPServer.stop().catch((e: BusinessError) => {
       console.error('EntryAbility MCPServer stop error: ' + e.code + '/' + e.message)
     })
+    // P23a: 停定时器
+    ScheduleManager.stop()
   }
 
   onWindowStageCreate(windowStage: window.WindowStage): void {

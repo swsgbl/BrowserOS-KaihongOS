@@ -74,4 +74,5 @@ export class EventBusEvents {
   static readonly DOC_PROBLEM_ESCALATED: string = 'doc-problem-escalated'
   static readonly DOC_VERSION_RELEASED: string = 'doc-version-released'
   static readonly DOC_CONFIG_CHANGE: string = 'doc-config-changed'
+  static readonly SCHEDULES_CHANGED: string = 'schedules_changed'
 }
