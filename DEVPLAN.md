@@ -761,3 +761,9 @@ AgentSidePanel 原挂在 BrowserShell **根 Stack 的浮层**（360vp 宽+100% �
 - **B 会话回放 TabView（装机通过）**：SessionPlayerPage 顶部三页签（回放/时间线/标签页），Chrome 系下划线激活态（#1A73E8 蓝字+2px 下划线）。回放=截图+播放控件原布局；时间线=操作列表全高（List layoutWeight 直挂根链防塌缩）；标签页=该会话 urlSequence 去重 URL 列表（如实展示——sessions 数据有 screenshots 无 tab 结构，蓝点+URL 行）。E2E 实证：三 Tab 切换/时间线页签激活/标签页页签显示 apihub.agnes-ai.com/v1 一条（evidence/p25/p25_replay_tab{0,1,2}*.jpeg）
 - **上游 ultrafast/skills/contextMenus 结论**：contextMenus API 零使用（浏览器右键=Chromium 原生，我方 P3 已覆盖）无需对标；ultrafast/skills 两屏与 MCP 连接器/会话回放非同级差距，留待后续轮次
 - 技术记录：NeoDashboardPanel.ets 为 LF 行尾（全库少数），补丁锚点按 LF；SessionPlayerPage 为 CRLF。构建链 harmony build→build_v1_hap.py→install_p8.py 不变
+
+### P25 独立验收（Zodex，2026-10-11 20:5x 复核，通过，git f8c06b9→b0249ca→982cf00）
+- **A 连接器目录**：设备证据复核（evidence/p25/p25_mcp_catalog.jpeg + toast 截图）——46 品牌首字母彩徽网格+点击复制名称 toast 落地；与上游 mcp-icons 46 家清单逐名核对一致
+- **B 回放 TabView**：三页签证据（p25_replay_tab0/1/2 截图）——回放/时间线（整高列表）/标签页（urlSequence 去重）+Chrome 下划线激活样式
+- **contextMenus 结论固化**：上游扩展零使用 contextMenus API——浏览器右键菜单=Chromium 原生，我方 P11c 已覆盖，无需追加
+- 上游三次深挖累计闭合：屏级 10/12 + 细节级（辉光/起手词/停止钮/连接器目录/TabView）；剩余可选（ultrafast/skills/jtbd/command/selection 捕获）已记录
