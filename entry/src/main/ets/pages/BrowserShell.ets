@@ -48,8 +48,15 @@ interface BarItem {
 @Entry
 @Component
 struct BrowserShell {
-  /** p10a: AppStorage('darkMode') 消费 —— EntryAbility 启动时与设置页开关写入 */
-  @StorageProp('darkMode') darkMode: boolean = false
+  /** p10a: AppStorage('darkMode') 消费 —— EntryAbility 启动时与设置页开关写入
+   * P26: @Watch 强制重渲染（@StorageProp 更新不触发 @Builder 重调——设置页切主题时壳不跟随的根因） */
+  @StorageProp('darkMode') @Watch('onThemeFlip') darkMode: boolean = false
+  @State themeVersion: number = 0
+
+  onThemeFlip(): void {
+    this.themeVersion++
+    console.info('BrowserShell theme flipped: darkMode=' + this.darkMode + ' v=' + this.themeVersion)
+  }
 
   private pal(): Palette {
     return Palette.of(this.darkMode)
@@ -293,6 +300,10 @@ struct BrowserShell {
     Stack() {
       Column() {
         // P22: Chromium 布局顺序 —— 标签条最顶、工具栏其下（此前 AddressBar 在上，与原生颠倒）
+        // P26: themeVersion 作为渲染依赖锚（@Watch 递增触发全树重渲染）
+        if (this.themeVersion < 0) {
+          Text('').fontSize(0)
+        }
         this.TabBar()
         this.AddressBar()
         // P11d: 书签条 —— 仅新标签页(dashboard)/驾驶舱(neo)显示

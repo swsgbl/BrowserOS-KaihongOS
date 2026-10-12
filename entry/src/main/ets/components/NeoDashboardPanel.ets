@@ -425,7 +425,7 @@ export struct NeoDashboardPanel {
         .margin({ top: 5, bottom: 5 })
 
         if (status.status === AgentStatus.COMPLETED || status.status === AgentStatus.ERROR) {
-          Text('▶ 回放')
+          Text('回放')
             .fontSize(10)
             .fontColor('#2E6FE8')
             .onClick(() => {
@@ -493,7 +493,7 @@ export struct NeoDashboardPanel {
               .fontSize(10)
               .fontColor('#9AA0A6')
               .margin({ right: 8 })
-            Text('回放 ▶')
+            Text('回放')
               .fontSize(10)
               .fontColor('#8AB4F8')
               .onClick(() => {

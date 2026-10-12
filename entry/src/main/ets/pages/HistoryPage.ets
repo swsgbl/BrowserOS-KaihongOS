@@ -150,10 +150,11 @@ struct HistoryPage {
 
       // 搜索框
       Row() {
-        Text('🔍')
-          .fontSize(13)
-          .width(28)
-          .textAlign(TextAlign.Center)
+        Image($r('app.media.ic_search'))
+          .width(16).height(16)
+          .fillColor(this.pal().text2)
+          .draggable(false)
+          .margin({ left: 8, right: 6 })
         TextInput({ text: this.keyword, placeholder: '搜索历史记录' }).fontColor(this.pal().text).placeholderColor(this.pal().text2)
           .layoutWeight(1)
           .height(34)
@@ -210,7 +211,7 @@ struct HistoryPage {
                 .layoutWeight(1)
                 .margin({ left: 10 })
 
-                Text('▶ 回放')
+                Text('回放')
                   .fontSize(12)
                   .fontColor('#1A73E8')
                   .padding({ left: 10, right: 10, top: 5, bottom: 5 })
@@ -232,9 +233,10 @@ struct HistoryPage {
           // 浏览历史（按日期分组）
           if (this.entries.length === 0) {
             Column() {
-              Text('🕘')
-                .fontSize(36)
-                .fontColor('#DADCE0')
+              Image($r('app.media.ic_history'))
+                .width(36).height(36)
+                .fillColor(this.pal().text2)
+                .draggable(false)
               Text('暂无历史记录')
                 .fontSize(13)
                 .fontColor(this.pal().text2)
