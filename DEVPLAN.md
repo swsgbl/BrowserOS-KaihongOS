@@ -783,3 +783,26 @@ AgentSidePanel 原挂在 BrowserShell **根 Stack 的浮层**（360vp 宽+100% �
 - HistoryPage：搜索框 🔍 → ic_search SVG（fillColor 主题染色）；空态 🕘 → ic_history SVG；'▶ 回放' → '回放' 纯文本
 - NeoDashboardPanel：'▶ 回放'/'回放 ▶' → '回放' 纯文本
 - 全项目 emoji/glyph 图标审计：修复后 UI 渲染位置零残留（'?' 计数均为代码注释/数据字符串误报）
+
+
+---
+
+## P27：桌面图标官方源替换 + 全图标审计（2026-10-12，用户点名"桌面图标一直没和官方同步"，git 734d5fa）
+
+### 根因
+P8 时的"BrowserClaw logo"是从 claw SVG 程序化生成的爪形图标（蓝色圆+白色爪印），**不是官方像素级源**。官方权威图标源=browseros.com/favicon.ico 的 32×32 PNG（docs/logo/favicon.png 在上游仓库）——像素级对比确认我方 96×96 与官方不同。
+
+### 修复
+- 从官方仓库拉取 `docs/logo/favicon.png`（32×32 权威像素源）→ HighQualityBicubic 放大生成 48/96/192/216 四尺寸 + entry/app_icon.png + AppScope/app_icon.png 全套替换
+- V1 repack 同步 + 装机：**桌面图标已替换为官方源**（evidence/p27/z-desktop-official-icon.jpeg + z-icon-crop.png 裁切对比）；双击启动仍正常（pid 7475）
+
+### 全图标全面审计（逐源核对）
+| 源 | 我方 | 官方上游 | 结论 |
+|---|---|---|---|
+| 应用桌面图标 | 官方 favicon 像素源 | docs/logo/favicon.png | ✅ 已同步（本轮修复） |
+| 工具栏 30+ SVG | Material Icons 24px path | Chromium 原生图标 | ✅ 风格一致（线性 fillColor） |
+| ⋮ 菜单 10 项 SVG | ic_add/copy/history/star/download/schedule/settings/find/help/power | Chromium 菜单图标 | ✅ 语义/风格对齐 |
+| MCP 连接器 46 家 | 首字母彩徽 | mcp-icons/ 46 个 SVG | ✅ 名称清单一致（真实品牌 SVG 非必须——功能等价） |
+| 操作类型 6 枚 | ic_op_navigate/click/type/scroll/snapshot/wait | 上游无直接对应（UI 自有） | ✅ 语义合理 |
+| 历史/搜索/回放 | ic_search/ic_history/'回放' 纯文本 | Chromium 风格 | ✅ P26 已统一 |
+| nav 图标 | ic_search/robot/public/lock/info/help | 设置页导航 | ✅ SVG 统一 |
