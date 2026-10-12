@@ -806,3 +806,19 @@ P8 时的"BrowserClaw logo"是从 claw SVG 程序化生成的爪形图标（蓝�
 | 操作类型 6 枚 | ic_op_navigate/click/type/scroll/snapshot/wait | 上游无直接对应（UI 自有） | ✅ 语义合理 |
 | 历史/搜索/回放 | ic_search/ic_history/'回放' 纯文本 | Chromium 风格 | ✅ P26 已统一 |
 | nav 图标 | ic_search/robot/public/lock/info/help | 设置页导航 | ✅ SVG 统一 |
+
+
+---
+
+## P28：原生布局重构——竖排标签条 + hover 侧边菜单栏（2026-10-12，用户点名"标签页应左侧竖排+可展开/收起侧栏"，git 1688492）
+
+### 上游事实（源码+截图色带双重核实）
+- **竖排标签**=上游 v0.42+ 默认（docs/browseros/features/vertical-tabs.mdx + chromium_patches vertical_tab_strip_state_controller.cc）——标签竖排左侧
+- **可收起侧边菜单栏**=components/sidebar/AppSidebar.tsx：`w-14`（收起 56px）/`w-64`（展开 256px）+ `transition-all duration-200 ease-in-out`；SidebarNavigation 四项（Home/CalendarClock/PlugZap/Settings）+SidebarBranding+SidebarUserFooter
+- 原生截图色带：左侧 chrome 竖条 #DBE5E7（0-~230px）→ 内容区 #FBFAF9（~240px 起）
+
+### 交付（Zodex 直接实现）
+- **TabStrip 竖排化**：标签竖排在左侧（favicon+标题+关闭钮，激活=白底/surface 色+左圆角，非激活=半透明），底部 + 新建；BrowserShell build 改为 `Row { 左竖排标签区 | 右主区(Row { SidebarRail + 内容(weight1) + [AgentSidePanel(360)] }) }`
+- **SidebarRail**（新组件）：收起态 14vp 宽仅图标（主页/定时/连接/设置/帮助）→ **onHover 自动展开 64vp（图标+文字）**，200ms EaseInOut 动画；点击分别导航 dashboard/ScheduledTasks/MCP 板/SettingsPage/帮助；顶部 BrowserOS logo 底部帮助
+- 布局 dump 实证：标签竖排 [12,45]-[12,109] 三行、工具栏全宽在右主区顶部 [180-1587,38-66]、书签条 [198-463,80-92]；色带 x0-270=chrome 色 #202125→x280+=内容区 #262E41（与原生同结构：左竖条→内容）
+- dark 模式竖排标签区 #202125/surfaceAlt ✓
