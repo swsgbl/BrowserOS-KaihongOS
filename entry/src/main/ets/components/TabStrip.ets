@@ -22,6 +22,8 @@ export struct TabStrip {
   onSearchToggle?: () => void
   /** P11c: 标签右键菜单构建器(shell 注入,避免循环依赖) */
   tabCtxEntries?: (tabId: string) => CtxEntry[]
+  /** P28: 竖排模式(原生 v0.42+ vertical tabs) —— false 保留旧横排兼容 */
+  vertical: boolean = false
 
   /** P11c: 标签右键菜单 Builder */
   @Builder
@@ -48,6 +50,131 @@ export struct TabStrip {
   }
 
   build(): void {
+    if (this.vertical) {
+      this.VerticalTabs()
+    } else {
+      this.HorizontalTabs()
+    }
+  }
+
+  /** P28-A: 竖排标签条(左侧栏,List 竖向滚动,激活=左侧大圆角+surface 色) */
+  @Builder
+  VerticalTabs(): void {
+    Column() {
+      Scroll() {
+        Column() {
+          ForEach(this.tabs, (tab: TabInfo) => {
+            Stack() {
+              Row() {
+                Stack() {
+                  Image(tab.agentId ? $r('app.media.ic_robot') : $r('app.media.ic_globe'))
+                    .width(12).height(12)
+                    .fillColor(tab.agentId ? '#8AB4F8' : (tab.tabId === this.activeTabId ? '#5F6368' : '#80868B'))
+                    .draggable(false)
+                }
+                .width(18).height(18)
+                .borderRadius(3)
+                .backgroundColor(tab.tabId === this.activeTabId
+                  ? (this.darkMode ? '#3C4043' : '#F1F3F4') : '#12000000')
+
+                Text(tab.title || (tab.agentId ? '代理 ' + tab.agentId.substring(0, 12) : '新标签页'))
+                  .fontSize(12)
+                  .maxLines(1)
+                  .textOverflow({ overflow: TextOverflow.Ellipsis })
+                  .layoutWeight(1)
+                  .fontColor(tab.tabId === this.activeTabId ? this.pal().text : this.pal().text2)
+
+                Button({ type: ButtonType.Normal }) {
+                  Image($r('app.media.ic_close'))
+                    .width(13).height(13)
+                    .fillColor(this.pal().text2)
+                    .draggable(false)
+                }
+                .width(20)
+                .height(20)
+                .opacity(tab.tabId === this.activeTabId || this.hoverTabId === tab.tabId ? 1 : 0)
+                .backgroundColor(Color.Transparent)
+                .accessibilityText('关闭标签页 ' + (tab.title || '新标签页'))
+                .onClick(() => {
+                  if (this.onTabClose) {
+                    this.onTabClose(tab.tabId)
+                  }
+                })
+              }
+              .padding({ left: 8, right: 4 })
+              .height(32)
+              .width('100%')
+              .borderRadius({ topLeft: 8, bottomLeft: 8 })
+              .backgroundColor(tab.tabId === this.activeTabId
+                ? this.pal().surface
+                : this.inactiveBg(tab.tabId))
+              .onClick(() => {
+                if (this.onTabSwitch) {
+                  this.onTabSwitch(tab.tabId)
+                }
+              })
+              .onHover((isHover: boolean) => {
+                this.hoverTabId = isHover ? tab.tabId : ''
+              })
+            }
+            .width('100%')
+            .height(32)
+            .bindContextMenu(this.TabCtxMenu(tab.tabId), ResponseType.LongPress)
+          }, (tab: TabInfo) => tab.tabId)
+        }
+        .width('100%')
+        .alignItems(HorizontalAlign.Start)
+      }
+      .layoutWeight(1)
+      .width('100%')
+      .align(Alignment.Top)
+      .scrollBar(BarState.Off)
+      .edgeEffect(EdgeEffect.None)
+
+      // P28-C: tab-search 入口移到竖排条底部(与 ic_add 并排)
+      Row({ space: 4 }) {
+        Button({ type: ButtonType.Normal }) {
+          Image($r('app.media.ic_add'))
+            .width(16).height(16)
+            .fillColor(this.pal().text2)
+            .draggable(false)
+        }
+        .width(28).height(28)
+        .backgroundColor(Color.Transparent)
+        .accessibilityText('新建标签页')
+        .onClick(() => {
+          if (this.onTabCreate) {
+            this.onTabCreate()
+          }
+        })
+
+        Button({ type: ButtonType.Normal }) {
+          Image($r('app.media.ic_tab_search'))
+            .width(16).height(16)
+            .fillColor(this.pal().text2)
+            .draggable(false)
+        }
+        .width(28).height(28)
+        .backgroundColor(Color.Transparent)
+        .accessibilityText('搜索标签页')
+        .onClick(() => {
+          if (this.onSearchToggle) {
+            this.onSearchToggle()
+          }
+        })
+      }
+      .width('100%')
+      .height(36)
+      .padding({ left: 6, right: 6 })
+      .justifyContent(FlexAlign.Start)
+    }
+    .width('100%')
+    .height('100%')
+  }
+
+  /** P11b: 横排标签条(保留,vertical=false 走此分支) */
+  @Builder
+  HorizontalTabs(): void {
     Row() {
       ForEach(this.tabs, (tab: TabInfo) => {
         Stack() {

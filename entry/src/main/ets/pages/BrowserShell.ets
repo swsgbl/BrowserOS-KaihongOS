@@ -20,6 +20,7 @@ import { LoginStateManager } from '../service/LoginStateManager'
 import { ThreeDotMenu, OmniboxSuggestions, BookmarkBubble, SuggestItem } from '../components/ChromeWidgets'
 import { AgentSidePanel } from '../components/AgentSidePanel'
 import { TabStrip, TabSearchPanel } from '../components/TabStrip'
+import { SidebarRail } from '../components/SidebarRail'
 import { BookmarkBar } from '../components/BookmarkBar'
 import { ContextMenu, CtxEntry, ctxDivider } from '../components/ContextMenu'
 import { common } from '@kit.AbilityKit'
@@ -298,13 +299,15 @@ struct BrowserShell {
 
   build(): void {
     Stack() {
-      Column() {
-        // P22: Chromium 布局顺序 —— 标签条最顶、工具栏其下（此前 AddressBar 在上，与原生颠倒）
+      // P28: 原生 v0.42+ 布局 —— 左侧竖排标签区(200) + 右主区(工具栏在内容区顶部)
+      Row() {
+        this.VerticalTabArea()
+
+        Column() {
         // P26: themeVersion 作为渲染依赖锚（@Watch 递增触发全树重渲染）
         if (this.themeVersion < 0) {
           Text('').fontSize(0)
         }
-        this.TabBar()
         this.AddressBar()
         // P11d: 书签条 —— 仅新标签页(dashboard)/驾驶舱(neo)显示
         if (this.showDashboard || this.showNeo) {
@@ -323,6 +326,14 @@ struct BrowserShell {
       // P21: 上游 chrome.sidePanel 停靠语义 —— 工具栏/标签条横贯窗口顶部，
       // 面板停靠内容区右侧与页面并排（此前为根 Stack 浮层覆盖工具栏，视觉似独立窗口）
       Row() {
+        // P28-B: hover 自动展开/收起侧边菜单栏(收起 14vp / 展开 64vp)
+        SidebarRail({
+          activeId: this.railActive,
+          onNav: (target: string) => {
+            this.onRailNav(target)
+          }
+        })
+
       Stack({ alignContent: Alignment.Top }) {
         this.WebViewContent()
         this.ErrorBanner()
@@ -373,6 +384,9 @@ struct BrowserShell {
           SensitiveOperationDetector.rejectOperation(agentId, operationType)
         }
       })
+      }
+      .layoutWeight(1)
+      .height('100%')
       }
       .width('100%')
       .height('100%')
@@ -724,7 +738,7 @@ struct BrowserShell {
     .width('100%')
     .height(48)
     .padding({ left: 8, right: 8 })
-    .backgroundColor(this.pal().surfaceAlt)
+    .backgroundColor(this.chromeBg())
   }
 
   /** P5: 书签切换（BookmarkManager 接线） */
@@ -864,18 +878,22 @@ struct BrowserShell {
   @State showTabSearch: boolean = false
   // P11d: 书签条数据(createdAt 降序,shell 侧维护)
   @State bookmarkBarItems: BarItem[] = []
+  // P28-B: 侧边栏当前激活项(home|scheduled|connect|settings)
+  @State railActive: string = 'home'
   // P11c: 网页右键菜单(Web.onContextMenuShow 拦截,手动覆盖层)
   @State ctxMenuX: number = -1
   @State ctxMenuY: number = -1
   @State ctxEntries: CtxEntry[] = []
   @State ctxLinkUrl: string = ''
 
+  /** P28-A: 竖排标签区(左侧,固定宽 200) —— TabStrip vertical + chrome 色背景 */
   @Builder
-  TabBar(): void {
+  VerticalTabArea(): void {
     Column() {
       TabStrip({
         tabs: this.tabs,
         activeTabId: this.activeTabId,
+        vertical: true,
         onTabSwitch: (tabId: string) => {
           TabManager.switchTab(tabId)
           this.activeTabId = tabId
@@ -900,7 +918,45 @@ struct BrowserShell {
         }
       })
     }
-    .width('100%')
+    .width(200)
+    .height('100%')
+    .padding({ top: 8, left: 4, right: 0, bottom: 0 })
+    .backgroundColor(this.chromeBg())
+    .border({ width: { right: 1 }, color: this.pal().border })
+  }
+
+  /** P28-A: chrome 区背景(标签条/工具栏统一) —— 浅 #DDE5E7 近似原生 / 深 #202124 */
+  private chromeBg(): string {
+    return this.darkMode ? '#202124' : '#DDE5E7'
+  }
+
+  /** P28-B: 侧边栏导航分发 */
+  private onRailNav(target: string): void {
+    console.info('P28 rail nav: ' + target)
+    switch (target) {
+      case 'home':
+        this.railActive = 'home'
+        this.goHome()
+        break
+      case 'scheduled':
+        this.railActive = 'scheduled'
+        router.pushUrl({ url: 'pages/ScheduledTasksPage' })
+        break
+      case 'connect':
+        this.railActive = 'connect'
+        this.showNeo = true
+        break
+      case 'settings':
+        this.railActive = 'settings'
+        router.pushUrl({ url: 'pages/SettingsPage' })
+        break
+      case 'help':
+        this.createNewTab()
+        this.navigate('https://www.browseros.com')
+        break
+      default:
+        break
+    }
   }
 
   /** P11c: 关闭 tab(带兜底:全关后自动建 dashboard tab) */
