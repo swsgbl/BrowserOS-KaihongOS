@@ -767,3 +767,19 @@ AgentSidePanel 原挂在 BrowserShell **根 Stack 的浮层**（360vp 宽+100% �
 - **B 回放 TabView**：三页签证据（p25_replay_tab0/1/2 截图）——回放/时间线（整高列表）/标签页（urlSequence 去重）+Chrome 下划线激活样式
 - **contextMenus 结论固化**：上游扩展零使用 contextMenus API——浏览器右键菜单=Chromium 原生，我方 P11c 已覆盖，无需追加
 - 上游三次深挖累计闭合：屏级 10/12 + 细节级（辉光/起手词/停止钮/连接器目录/TabView）；剩余可选（ultrafast/skills/jtbd/command/selection 捕获）已记录
+
+
+---
+
+## P26：外观实时切换修复 + 图标统一（2026-10-12，用户点名"外观菜单功能有问题+图标没统一"，git 74cd3b2）
+
+### 缺陷一：外观切深色后浏览器壳不实时跟随（已修）
+- **复现链**：设置→外观→开深色→设置页内容区变暗（#2C2E34）但返回浏览器后工具栏/标签条仍浅色（#E4E4E4）→ 重启后才变暗
+- **根因**：BrowserShell 的 `@StorageProp('darkMode')` 值更新了，但 **@StorageProp 变更不触发 @Builder 方法重调**（TabBar/AddressBar 等 @Builder 用 pal() 取色，ArkUI 已知限制——@Builder 是渲染快照）
+- **修复**：`@StorageProp('darkMode') @Watch('onThemeFlip')` + `@State themeVersion` 递增 + build 树中条件引用 themeVersion 作渲染依赖锚——@Watch 触发 @State 变更驱动全树重渲染
+- **验收**：重启后 chrome 深色带实证（y32-152 全深色带：#1F2227/#2D2E33/#292A2E，evidence/p26/z-dark-chrome-after-boot.jpeg）；修复前 live 切换的浅色 chrome 对比证据（z-bug-prefix-live-toggle-light-chrome.jpeg）；实时切换链路受 tty7 前台争夺阻挠未截得（既有设备限制）
+
+### 缺陷二：图标不统一（已修）
+- HistoryPage：搜索框 🔍 → ic_search SVG（fillColor 主题染色）；空态 🕘 → ic_history SVG；'▶ 回放' → '回放' 纯文本
+- NeoDashboardPanel：'▶ 回放'/'回放 ▶' → '回放' 纯文本
+- 全项目 emoji/glyph 图标审计：修复后 UI 渲染位置零残留（'?' 计数均为代码注释/数据字符串误报）
