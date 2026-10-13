@@ -822,3 +822,19 @@ P8 时的"BrowserClaw logo"是从 claw SVG 程序化生成的爪形图标（蓝�
 - **SidebarRail**（新组件）：收起态 14vp 宽仅图标（主页/定时/连接/设置/帮助）→ **onHover 自动展开 64vp（图标+文字）**，200ms EaseInOut 动画；点击分别导航 dashboard/ScheduledTasks/MCP 板/SettingsPage/帮助；顶部 BrowserOS logo 底部帮助
 - 布局 dump 实证：标签竖排 [12,45]-[12,109] 三行、工具栏全宽在右主区顶部 [180-1587,38-66]、书签条 [198-463,80-92]；色带 x0-270=chrome 色 #202125→x280+=内容区 #262E41（与原生同结构：左竖条→内容）
 - dark 模式竖排标签区 #202125/surfaceAlt ✓
+
+
+---
+
+## P29：新标签页聊天输入框（2026-10-12，用户点名"初始界面没有输入框"，git f7cf4da）
+
+### 上游事实核实
+- 拉取上游 screens/newtab/index/NewTabChat.tsx（8929B）+ layout/NewTabLayout.tsx + sidepanel ChatFooter.tsx（8276B）+ claw-app Cockpit.tsx
+- **上游 NewTab 页确实有聊天输入框**（NewTabChat 引用 ChatFooter→ChatInput+ChatModeToggle+发送），claw-app Cockpit 是仪表盘视图（无输入框）——两者是不同模式
+- 我方 DashboardContent 此前只有 hero 卡+三按钮+计数行——**缺输入框**（用户指出的差距）
+
+### 交付（f7cf4da）
+- DashboardContent hero 卡下方新增**大圆角聊天输入框**（TextInput placeholder"问点什么，或让代理帮你浏览..." + 右侧 44vp 圆形蓝色发送钮 ic_add）——宽度 86% 与 hero 卡同宽
+- `sendChatInput()`：非空文本→清空→打开 NeoDashboard（驾驶舱）→ AgentEngine.createAgent('newtab-chat', 'https://example.com', text, ONCE)
+- TextInput onChange+onSubmit(Enter 发送)
+- **装机 dump 实证**：`问点什么，或让代理帮你浏览...` placeholder @ [505,375][1229,413]（hero 卡与按钮行之间）——evidence/p29/z-newtab-chat-input.jpeg
