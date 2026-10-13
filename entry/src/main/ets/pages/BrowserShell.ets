@@ -28,6 +28,8 @@ import { KeyCode } from '@kit.InputKit'
 import { pasteboard } from '@kit.BasicServicesKit'
 import { Palette } from '../common/Palette'
 import { DownloadManager, DownloadItem, DownloadStatus } from '../service/DownloadManager'
+import { AgentEngine } from '../service/AgentEngine'
+import { RunStrategy } from '../common/Types'
 
 interface PageLoadErrorData {
   tabId: string
@@ -69,6 +71,9 @@ struct BrowserShell {
   @State activeTabId: string = ''
   @State isLoading: boolean = false
   @State ctrlHeld: boolean = false
+  // P29: 新标签页聊天输入框（对标上游 NewTabChat ChatFooter ChatInput）
+  @State chatInput: string = ''
+
   @State showDashboard: boolean = true
   @State loadProgress: number = 0
   // P17a: 导航错误横幅（主文档失败才置值；空=隐藏）
@@ -1112,6 +1117,18 @@ struct BrowserShell {
     router.pushUrl({ url: 'pages/ViewSourcePage', params: navParams })
   }
 
+  /** P29: 新标签页聊天输入发送——非空文本直接派发 agent 任务 */
+  private sendChatInput(): void {
+    const text = this.chatInput.trim()
+    if (text.length === 0) {
+      return
+    }
+    console.info('BrowserShell newtab chat input send: ' + text.substring(0, 60))
+    this.chatInput = ''
+    this.showNeo = true
+    AgentEngine.createAgent('newtab-chat', 'https://example.com', text, RunStrategy.ONCE)
+  }
+
   @Builder
   DashboardContent(): void {
     // P8 C1 空态：产品名 + 副标题 + 入口（查看代理/导入登录态/书签历史），对齐官网 neo 新标签页
@@ -1136,6 +1153,44 @@ struct BrowserShell {
         colors: [['#2E6FE8', 0.0], ['#8B5CF6', 1.0]]
       })
       .margin({ top: 40 })
+
+      // P29: 聊天输入框（对标上游新标签页 ConversationInput——大圆角搜索/提问框+发送）
+      Row() {
+        TextInput({ text: this.chatInput, placeholder: '问点什么，或让代理帮你浏览...' })
+          .fontSize(14)
+          .fontColor(this.pal().text)
+          .placeholderColor(this.pal().text2)
+          .placeholderFont({ size: 14 })
+          .layoutWeight(1)
+          .height(44)
+          .backgroundColor(this.pal().surface)
+          .borderRadius(22)
+          .padding({ left: 18, right: 8 })
+          .onChange((v: string) => {
+            this.chatInput = v
+          })
+          .onSubmit(() => {
+            this.sendChatInput()
+          })
+
+        Button({ type: ButtonType.Normal }) {
+          Image($r('app.media.ic_add'))
+            .width(18).height(18)
+            .fillColor('#FFFFFF')
+            .draggable(false)
+        }
+        .width(44)
+        .height(44)
+        .borderRadius(22)
+        .backgroundColor('#1A73E8')
+        .margin({ left: 10 })
+        .accessibilityText('发送')
+        .onClick(() => {
+          this.sendChatInput()
+        })
+      }
+      .width('86%')
+      .margin({ top: 16 })
 
       Row() {
         Button('新建标签页')
