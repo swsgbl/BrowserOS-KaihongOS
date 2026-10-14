@@ -86,14 +86,15 @@ export struct TabStrip {
 
                 Button({ type: ButtonType.Normal }) {
                   Image($r('app.media.ic_close'))
-                    .width(13).height(13)
+                    .width(16).height(16)
                     .fillColor(this.pal().text2)
                     .draggable(false)
                 }
-                .width(20)
-                .height(20)
-                .opacity(tab.tabId === this.activeTabId || this.hoverTabId === tab.tabId ? 1 : 0)
+                .width(28)
+                .height(28)
+                .opacity(1)
                 .backgroundColor(Color.Transparent)
+                .hitTestBehavior(HitTestMode.Default)
                 .accessibilityText('关闭标签页 ' + (tab.title || '新标签页'))
                 .onClick(() => {
                   if (this.onTabClose) {
@@ -206,7 +207,7 @@ export struct TabStrip {
             }
             .width(22)
             .height(22)
-            .opacity(tab.tabId === this.activeTabId || this.hoverTabId === tab.tabId ? 1 : 0)
+            .opacity(1)
             .backgroundColor(Color.Transparent)
             .accessibilityText('关闭标签页 ' + (tab.title || '新标签页'))
             .onClick(() => {
@@ -327,7 +328,7 @@ export struct TabSearchPanel {
                   .layoutWeight(1)
                 Button({ type: ButtonType.Normal }) {
                   Image($r('app.media.ic_close'))
-                    .width(13).height(13)
+                    .width(16).height(16)
                     .fillColor(this.pal().text2)
                     .draggable(false)
                 }
