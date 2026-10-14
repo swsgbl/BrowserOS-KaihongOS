@@ -838,3 +838,21 @@ P8 时的"BrowserClaw logo"是从 claw SVG 程序化生成的爪形图标（蓝�
 - `sendChatInput()`：非空文本→清空→打开 NeoDashboard（驾驶舱）→ AgentEngine.createAgent('newtab-chat', 'https://example.com', text, ONCE)
 - TextInput onChange+onSubmit(Enter 发送)
 - **装机 dump 实证**：`问点什么，或让代理帮你浏览...` placeholder @ [505,375][1229,413]（hero 卡与按钮行之间）——evidence/p29/z-newtab-chat-input.jpeg
+
+
+---
+
+## P30：竖排标签按钮修复（2026-10-15，用户点名"+ 打不开/× 关不了标签"，git d112353）
+
+### 用户报的三个问题逐一验证
+1. **"+" 新建标签按钮**：✅ 实测可用——装机点击后标签数 2→3（preferences 落盘实证）。按钮位于竖排标签条底部（dump @ [311,736][334,760]），代码回调 onTabCreate→createNewTab()→TabManager.createTab 全链畅通
+2. **"×" 关闭标签按钮**：❌→✅ 修复后才可用——三层根因：
+   - **条件透明度**：`.opacity(只在 active/hover 时=1 否则=0)` → 非激活标签的关闭钮完全不可见且不可点击 → 修复=`.opacity(1)` 恒可见
+   - **触摸目标过小**：13px 图标在 20vp 按钮内 → 修复=16px 图标/28vp 按钮
+   - **点击被父级拦截**：标签行的 onClick(切换标签) 消费了点击事件，子按钮收不到 → 修复=`.hitTestBehavior(HitTestMode.Default)` 让子按钮优先接收
+3. **新标签页输入框**：✅ P29 已交付（聊天式输入+发送派发 agent）
+
+### 修复后实测
+- 关闭按钮点击 → **标签数 3→2**（hilog `managerTabs=2` 实证）
+- 关闭按钮 dump @ [450,204][467,221] 28vp 可见可点
+- + 按钮持续正常
