@@ -173,6 +173,14 @@ struct BrowserShell {
     try {
       this.tabs = TabManager.getAllTabs()
       console.info('BrowserShell tabs loaded: ' + this.tabs.length)
+      // P31: 上游行为——冷启动默认落在 dashboard/新标签页（非最后活动网页）
+      const dashTab = this.tabs.find((t: TabInfo): boolean => t.isDashboard)
+      if (dashTab) {
+        this.activeTabId = dashTab.tabId
+        this.showDashboard = true
+        TabManager.switchTab(dashTab.tabId)
+        console.info('BrowserShell cold start: switched to dashboard tab ' + dashTab.tabId)
+      }
       // P16b: 会话恢复 URL 补载 —— restoreTabs 重建的标签 URL 存入 map，
       // onControllerAttached（每个常驻 Web 均触发）按 tabId 消费 loadUrl
       const restoreUrls = TabManager.takeRestoreUrls()
