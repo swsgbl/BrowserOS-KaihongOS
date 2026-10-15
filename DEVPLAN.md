@@ -868,3 +868,19 @@ P8 时的"BrowserClaw logo"是从 claw SVG 程序化生成的爪形图标（蓝�
 - **桌面快捷**：双击 → pid 7659 拉起
 - 排查面：代码 TODO=0、上游 12 屏 10 对齐（2 可选记录）、无新必改项
 - **项目终态：P1-P30+R1-R11 全收官，git 79 提交至 626f7bb，代码侧无未修缺陷**
+
+
+---
+
+## P31：冷启动默认落在新标签页（2026-10-15，用户"点进去没有"——实际是恢复了网页标签而非 dashboard，git 0a8583e）
+
+### 根因
+P16b 会话恢复保留了上次最后活动的标签为 active——如果上次最后看的是网页标签（about:blank），冷启动直接显示该网页。上游 BrowserOS 行为=打开浏览器默认落在**新标签页**（带聊天输入框）。
+
+### 修复
+BrowserShell aboutToAppear 中 tabs 加载后：`tabs.find(t => t.isDashboard)` → 找到则 `switchTab + showDashboard = true`。
+
+### 装机实证
+- hilog：`BrowserShell cold start: switched to dashboard tab tab_1_1792061915802`
+- 布局 dump：竖排 8 标签在左侧、**dashboard 直接显示**（BrowserOS neo + TextInput@[278,227][1456,265] 聊天输入框 + 三按钮 + 书签条）——evidence/p31/z-cold-start-dashboard.jpeg
+- 之前用户看到空白 = 恢复了 about:blank 网页标签而非新标签页
