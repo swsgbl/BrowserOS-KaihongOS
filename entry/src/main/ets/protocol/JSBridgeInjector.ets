@@ -308,7 +308,7 @@ const BCP_BRIDGE_SCRIPT = `
     }
   };
 
-  console.log('[BCP] Bridge script injected successfully');
+  console.info('[BCP] Bridge script injected successfully');
 })();
 `
 
@@ -317,7 +317,7 @@ const HTML2CANVAS_LOADER = `
   if (typeof html2canvas !== 'undefined') return;
   var script = document.createElement('script');
   script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-  script.onload = function() { console.log('[BCP] html2canvas loaded'); };
+  script.onload = function() { console.info('[BCP] html2canvas loaded'); };
   script.onerror = function() { console.error('[BCP] html2canvas load failed'); };
   document.head.appendChild(script);
 })();
