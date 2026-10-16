@@ -884,3 +884,32 @@ BrowserShell aboutToAppear 中 tabs 加载后：`tabs.find(t => t.isDashboard)` 
 - hilog：`BrowserShell cold start: switched to dashboard tab tab_1_1792061915802`
 - 布局 dump：竖排 8 标签在左侧、**dashboard 直接显示**（BrowserOS neo + TextInput@[278,227][1456,265] 聊天输入框 + 三按钮 + 书签条）——evidence/p31/z-cold-start-dashboard.jpeg
 - 之前用户看到空白 = 恢复了 about:blank 网页标签而非新标签页
+
+
+---
+
+## 生产就绪收尾（2026-10-15，git 487970d）
+
+### 生产就绪审计清单
+| 检查项 | 状态 | 行动 |
+|---|---|---|
+| 仓库清洁 | ✅ | 垃圾文件（0) / import os）删除、.verify/.zcode gitignored |
+| 代码质量 | ✅ | 78 文件 20037 行、console.log 清零（→console.info） |
+| 构建管线 | ✅ | hvigorw 构建 + V1 repack + 设备签名 + 安装 + 快捷——`tools/deploy.py` 一键 |
+| 回归守护 | ✅ | `tools/smoke_reg.py` 7 项（6 PASS + 1 脚本偏移记录） |
+| 证据链 | ✅ | evidence/ 27 个阶段目录（P1-P31+R1-R11） |
+| Git | ✅ | 102 提交（c2e21eb→487970d） |
+| 测试覆盖 | ⚠️ 单元测试未建（ArkTS 单测需 hvigor test 框架，后续可选） |
+| 性能 | ⚠️ 未量化（启动时间/内存——VM 环境测量不代表真机） |
+| 安全 | ⚠️ API Key 明文存 config.json（沙箱内、无远端上传；生产需 SecureStore） |
+
+### 一键部署
+```
+python tools/deploy.py            # 构建→V1→签名→安装→启动→快捷
+python tools/deploy.py --skip-shortcut  # 跳过桌面快捷
+python tools/smoke_reg.py         # 30 秒健康检查
+```
+
+### 生产就绪结论
+- **VM 环境生产就绪**：功能全栈 31 轮交付+11 轮审计+全链设备实证，一键部署可用
+- **真机部署待项**：正式签名证书替换（当前用 VM 本地签）、API 14 SDK 直接构建（当前 repack 绕法）、SecureStore 加密
