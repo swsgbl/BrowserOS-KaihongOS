@@ -957,3 +957,61 @@ python tools/smoke_reg.py         # 30 秒健康检查
 ### P32 终态
 - 报告 12 项矩阵：9 项已实现、2 项本轮补齐（书签导入/许可+文档+CI+测试）、1 项平台不可行（Chrome 扩展，已架构替代+文档明示）
 - git：66c1426 → P32 提交；evidence/p32 22+ 文件
+
+
+---
+
+## P33：聊天上下文四件套（2026-10-17，上游 selection/ChatMode/attached-tabs/changelog 第四层对标；hmh 通道B 双任务并行 + Zodex 接管验收）
+
+### 派发与执行纪实
+- 上游规格源码先拉齐（.zcode/up_*.ts(x) 8 文件：chat-types/ChatModeToggle/ChatAttachedTabs/changelog-notifier/selectedTextStorage/UltrafastBanner/Skills/skills.data）
+- **daemon 0.23.35 busySessions 复数语义：P33/P34 两任务并行执行**（文件白名单隔离奏效，但 main_pages.json/ChromeWidgets 曾互相覆盖由 P34 重合并；P33 后期僵尸化——jsonl 停写 3.6h 而 busy=true，/api/interrupt 清除后 Zodex 接管）
+- P33 会话死因：双会话抢设备（P34 切 Skills 页打断 P33 的 UI 验证）→ 转 hilog 取证 → 切换网页标签重试时停摆
+
+### P33-A 选中文本捕获（对标 selection.content.ts + selectedTextStorage）
+- JSBridgeInjector 新增 SEL_CAPTURE_SCRIPT（照 BCP/glow 注入先例）：mouseup 监听 → `window.__bcp_sel`（≤5000 字+url/title/ts）
+- AgentSidePanel 发送前 runJavaScript 取回，输入区「已选 N 字」chip 可丢弃；dashboard 跳过
+- 证据：hilog `[BCP][P33] selection capture installed`（evidence/p33/abc_hilog_evidence.txt）
+
+### P33-B ChatMode 切换（对标 chat-types + ChatModeToggle）
+- `chatMode: 'chat'|'agent'`（Preferences `chat_mode` 持久化，侧栏 sidepanel_prefs 域）；pill 钮「Chat/Agent Mode ON」
+- **chat 模式=LLMClient 单轮直答**（无工具循环/无 glow/不挂 tab，答案侧栏气泡）；agent 模式零改动
+- **Zodex E2E 铁证**（evidence/p33/chat_e2e.py + c*.json）：`chat mode loaded: agent → toggled: chat → saved: chat → chat single-turn start: task="用一句话介绍你自己" ctxLen=0`
+
+### P33-C 附加标签页 chip（对标 ChatAttachedTabs + autoAttachActiveTab）
+- 侧栏打开/切活动网页标签自动附加（X 移除后 suppress 直到切换标签）；chip=favicon 框+标题截断+X；发送上下文含 title/url
+- 证据：hilog `[P33] tab auto-attached: Example Domain (https://www.example.com/)`（v6_hilog.txt）
+
+### P33-D 更新日志通知（对标 changelog-notifier）
+- EntryAbility 启动比对 bundleManager 版本 vs Preferences → 不同 5s 后弹「更新内容」对话框（ChangelogOverlay 新组件）→ 关闭标记
+- 证据：hilog `overlay dialog shown for v1.1.0`（三连装机）；d_dialog_final.jpeg；重放验证「知道了」后重启不再弹
+
+### P33 附带修复（Zodex）
+- **smoke raw() 缺 `-t` 真凶**：tconn 的 TCP 目标无默认设备 → file recv 全静默失败 → 第 4 步常年吃过期布局假 PASS、第 7 步 menu 空——补 `-t` 后 7/7 为**真 7/7**
+- smoke 第 7 步韧性：先关「更新内容」弹窗再点菜单；菜单未渲染重抓一次
+- hvigor UP-TO-DATE 假命中：僵尸期缓存被复用装出旧 hero——清 entry/build 强制重编后恢复（教训：装机验证前必查 hero 探针）
+
+---
+
+## P34：驾驶舱 hero 1:1 + UltrafastBanner + Skills 屏（2026-10-17，上游 claw-app 对标；hmh 通道B 完成 6/6 + Zodex 新标签页补齐）
+
+### E1 hero 三段式（对标 CockpitHero.tsx）
+- `What are your agents **working on** right now?`（working on 粗斜体蓝 #7CB1FF/#1A73E8，26fp extrabold 字距收紧）+ 产品名降级 12fp 角标
+- hmh 落于 NeoDashboardPanel（驾驶舱）6/6 验证；**Zodex 补 BrowserShell 新标签页本页**（DashboardContent 旧 hero 替换）——上游 cockpit 即新标签页，双落点齐
+- 证据：evidence/p33/acc_newtab.json 全要素命中（What are/right now?/badge）+ hmh neo_panel.jpeg
+
+### E2 UltrafastBanner（对标 UltrafastBanner.tsx）
+- ⚡ic_zap +「**Ultrafast** mode」+ Faster browser tasks. 10× fewer tokens + Request early access → + X 永久关闭；Preferences `ultrafast_store`（joined/dismissed 任一隐藏）
+- hmh：驾驶舱 6/6（可见→CTA→toast→重开隐藏）；Zodex：新标签页 CTA 点击→隐藏→重启保持（final_e2e.py b0-b2）
+- ic_zap 新 SVG 走三步同步（v1tmp+final_ids 57 条+重打包）
+
+### F Skills 屏（对标 Skills.tsx 台账）
+- pages/SkillsPage 新路由：大标题+副标题+New skill 钮、表格（Skill mono 命令+desc/Runs/Tokens saved 或 not measured/Run+Delete）、行点详情、新建表单（/ 前缀）、删除二次确认
+- `skills_store:skills_v1` 种子 3 条（/summarize-page /watch-price /fill-form）；Run=createAgent(ONCE)+runCount+1+开侧栏
+- 入口：⋮ 菜单第 11 项 Skills + 驾驶舱磁贴
+- 证据：hmh skills_final3/menu_skills/run_smoke/skills_runs1.jpeg（runCount 持久化）；Zodex 合并版复查 5/5 要素（acc_skills.json）
+
+### P33/P34 终态
+- 终局回归：**static 15/15（80 文件）+ smoke 7/7（a11y ×36）**（Quickemu VM 15566 最终集成构建）
+- 上游第四层可选清单收口：selection✓ ChatMode✓ attached-tabs✓ changelog✓ hero✓ ultrafast✓ skills✓；jtbd 调查弹窗/agent-command 仍为记录项（营销向）
+- 设备证据：evidence/p33（66+ 文件）/ evidence/p34（7 文件）

@@ -61,6 +61,9 @@ export default class EntryAbility extends UIAbility {
     ScheduleManager.init().catch((e: BusinessError) => {
       console.error('EntryAbility ScheduleManager init error: ' + e.message)
     })
+    // P33-D: 更新日志通知由 ChangelogOverlay 组件自治(BrowserShell 根 Stack 常驻):
+    // 版本比对+5s 延迟+落盘标记全在组件内完成(EntryAbility 侧 AppStorage 写入
+    // 实测无法驱动页面 @StorageProp 刷新,故不在此触发)
   }
 
   onDestroy(): void {

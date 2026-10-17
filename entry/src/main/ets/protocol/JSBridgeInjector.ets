@@ -312,6 +312,33 @@ const BCP_BRIDGE_SCRIPT = `
 })();
 `
 
+/** P33-A: 选中文本捕获脚本(对标上游 selectedTextStorage) — mouseup 取 window.getSelection,
+ * 截 5000 字,连同 pageUrl/pageTitle/timestamp 存 window.__bcp_sel(JSON 字符串);
+ * 选区清空时同步清除,侧栏发送前读取拼进聊天上下文 */
+const SEL_CAPTURE_SCRIPT = `
+(function() {
+  if (window.__bcp_sel_installed) return;
+  window.__bcp_sel_installed = true;
+  document.addEventListener('mouseup', function() {
+    try {
+      var sel = window.getSelection ? window.getSelection().toString() : '';
+      sel = (sel || '').trim();
+      if (sel.length > 0) {
+        window.__bcp_sel = JSON.stringify({
+          text: sel.slice(0, 5000),
+          pageUrl: location.href,
+          pageTitle: document.title || '',
+          timestamp: Date.now()
+        });
+      } else {
+        window.__bcp_sel = null;
+      }
+    } catch (e) { }
+  });
+  console.info('[BCP][P33] selection capture installed');
+})();
+`
+
 const HTML2CANVAS_LOADER = `
 (function() {
   if (typeof html2canvas !== 'undefined') return;
@@ -337,6 +364,7 @@ class JSBridgeInjectorImpl {
     try {
       webviewController.runJavaScript(BCP_BRIDGE_SCRIPT)
       webviewController.runJavaScript(HTML2CANVAS_LOADER)
+      webviewController.runJavaScript(SEL_CAPTURE_SCRIPT)
     } catch (e) {
       ErrorHandler.handle(new AppError(ErrorCodes.BCP_001, `Bridge injection failed: ${e}`))
     }
@@ -388,6 +416,11 @@ class JSBridgeInjectorImpl {
   /** P24a: 停止标记查询脚本(runJavaScript 求值 true/false) */
   glowStopRequested(): string {
     return 'window.__bcp_glow_stop_requested === true'
+  }
+
+  /** P33-A: 读取页面选中文本(JSON 字符串或 null),runJavaScript 表达式求值 */
+  readSelection(): string {
+    return 'JSON.stringify(window.__bcp_sel || null)'
   }
 }
 

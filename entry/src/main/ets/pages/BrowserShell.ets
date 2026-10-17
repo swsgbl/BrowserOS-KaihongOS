@@ -13,6 +13,7 @@ import { EventBus, EventBusEvents } from '../infra/EventBus'
 import { TabStatus, SensitiveOperationType } from '../common/Types'
 import { TabInfo } from '../model/TabInfo'
 import { ConfirmDialog } from '../components/ConfirmDialog'
+import { ChangelogOverlay } from '../components/ChangelogOverlay'
 import { NeoDashboardPanel } from '../components/NeoDashboardPanel'
 import { webview } from '@kit.ArkWeb'
 import { router } from '@kit.ArkUI'
@@ -30,6 +31,7 @@ import { Palette } from '../common/Palette'
 import { DownloadManager, DownloadItem, DownloadStatus } from '../service/DownloadManager'
 import { AgentEngine } from '../service/AgentEngine'
 import { RunStrategy } from '../common/Types'
+import { preferences } from '@kit.ArkData'
 
 interface PageLoadErrorData {
   tabId: string
@@ -96,6 +98,9 @@ struct BrowserShell {
   @State bookmarkBubbleExisting: boolean = false
   // P9-B: Agent 侧栏
   @State showAgentPanel: boolean = false
+  // P34-F: Skills Run 请求信号（SkillsPage 写 AppStorage 计数，@Watch 触发开侧栏；
+  // SkillsPage 是 router 压栈页，BrowserShell 被隐藏时 EventBus 监听已解绑，故用 AppStorage）
+  @StorageLink('p34_skills_run_signal') @Watch('onSkillsRunSignal') skillsRunSignal: number = 0
   // P6: NeoDashboard 内嵌覆盖层（不再 router.pushUrl，规避覆盖态不渲染）
   @State showNeo: boolean = false
   // 每个 Tab 独立的 WebviewController（key=tabId）
@@ -158,6 +163,7 @@ struct BrowserShell {
 
   aboutToAppear(): void {
     console.info('BrowserShell aboutToAppear start')
+    this.initUltrafastPrefs()
     // P14b: 书签变更订阅驱动刷新
     EventBus.on(EventBusEvents.BOOKMARKS_CHANGED, this.onBookmarksChanged)
     EventBus.on(EventBusEvents.HISTORY_CHANGED, this.onHistoryChanged)
@@ -204,6 +210,14 @@ struct BrowserShell {
       console.info('BrowserShell aboutToAppear done')
     } catch (e) {
       console.error('BrowserShell aboutToAppear error: ' + e)
+    }
+  }
+
+  /** P34-F: Skills Run 信号 → 开侧栏（与现有磁贴行为一致） */
+  private onSkillsRunSignal(): void {
+    if (this.skillsRunSignal > 0) {
+      this.showAgentPanel = true
+      console.info('[P34] skills run signal -> agent panel opened, signal=' + this.skillsRunSignal)
     }
   }
 
@@ -549,6 +563,8 @@ struct BrowserShell {
         .backgroundColor(this.pal().surface)
         .alignItems(HorizontalAlign.Center)
       }
+      // P33-D: 更新日志弹层(版本变化后 5s 弹出;声明在 Stack 末位 = 渲染最上层,拦截点击)
+      ChangelogOverlay()
     }
     .width('100%')
     .height('100%')
@@ -1137,30 +1153,160 @@ struct BrowserShell {
     AgentEngine.createAgent('newtab-chat', 'https://example.com', text, RunStrategy.ONCE)
   }
 
+  // P34b: 新标签页 UltrafastBanner 状态（与 NeoDashboardPanel 共用 ultrafast_store Preferences）
+  @State ultrafastHidden: boolean = false
+  @State ultrafastToast: string = ''
+  private ultraPrefs: preferences.Preferences | null = null
+
+  private initUltrafastPrefs(): void {
+    const ctx = this.getUIContext().getHostContext()
+    if (!ctx) {
+      return
+    }
+    preferences.getPreferences(ctx, 'ultrafast_store').then((p: preferences.Preferences) => {
+      this.ultraPrefs = p
+      const joined = p.getSync('ultrafast_joined', false) as boolean
+      const dismissed = p.getSync('ultrafast_dismissed', false) as boolean
+      this.ultrafastHidden = joined || dismissed
+      console.info('[P34b] newtab banner state: hidden=' + this.ultrafastHidden)
+    }).catch((e: Object) => {
+      console.error('[P34b] ultrafast prefs init fail: ' + e)
+    })
+  }
+
+  private joinUltrafast(): void {
+    this.ultrafastHidden = true
+    this.ultrafastToast = '已加入 Ultrafast 等待列表'
+    setTimeout(() => { this.ultrafastToast = '' }, 2000)
+    const p = this.ultraPrefs
+    if (p !== null) {
+      p.put('ultrafast_joined', true).then(() => { p.flush() }).catch((e: Object) => {
+        console.error('[P34b] ultrafast join persist fail: ' + e)
+      })
+    }
+  }
+
+  private dismissUltrafast(): void {
+    this.ultrafastHidden = true
+    const p = this.ultraPrefs
+    if (p !== null) {
+      p.put('ultrafast_dismissed', true).then(() => { p.flush() }).catch((e: Object) => {
+        console.error('[P34b] ultrafast dismiss persist fail: ' + e)
+      })
+    }
+  }
+
   @Builder
   DashboardContent(): void {
-    // P8 C1 空态：产品名 + 副标题 + 入口（查看代理/导入登录态/书签历史），对齐官网 neo 新标签页
+    // P34b: hero 1:1 对标上游 CockpitHero——三段式主标题(working on 粗斜体浅蓝) + 产品名角标
     Column() {
-      Column() {
-        Text('BrowserOS neo')
+      Stack({ alignContent: Alignment.TopStart }) {
+        Column() {
+          Text() {
+            Span('What are your agents ')
+              .fontColor('#FFFFFF')
+            Span('working on')
+              .fontColor('#CFE4FF')
+              .fontWeight(FontWeight.Bold)
+              .fontStyle(FontStyle.Italic)
+            Span(' right now?')
+              .fontColor('#FFFFFF')
+          }
           .fontSize(26)
           .fontWeight(FontWeight.Bold)
-          .fontColor('#FFFFFF')
-          .margin({ top: 24 })
+          .letterSpacing(-0.6)
+          .textAlign(TextAlign.Center)
+          .margin({ top: 30, bottom: 26 })
+        }
+        .width('100%')
 
-        Text('给 AI 代理用的浏览器 —— 实时驾驶舱')
-          .fontSize(13)
-          .fontColor('#E8EAF6')
-          .margin({ top: 8, bottom: 24 })
+        Text('BrowserOS neo')
+          .fontSize(12)
+          .fontColor('#FFFFFFCC')
+          .margin({ top: 10, left: 14 })
       }
       .width('86%')
       .borderRadius(20)
-      .alignItems(HorizontalAlign.Center)
       .linearGradient({
         angle: 135,
         colors: [['#2E6FE8', 0.0], ['#8B5CF6', 1.0]]
       })
       .margin({ top: 40 })
+
+      // P34b: UltrafastBanner（对标上游 cockpit UltrafastBanner.tsx；与驾驶舱共用 ultrafast_store）
+      if (!this.ultrafastHidden) {
+        Stack({ alignContent: Alignment.TopEnd }) {
+          Row() {
+            Image($r('app.media.ic_zap'))
+              .width(16).height(16)
+              .fillColor('#7CB1FF')
+              .draggable(false)
+            Text() {
+              Span('Ultrafast')
+                .fontColor(this.darkMode ? '#7CB1FF' : '#1A73E8')
+                .fontWeight(FontWeight.Bold)
+                .fontStyle(FontStyle.Italic)
+              Span(' mode')
+                .fontColor(this.pal().text)
+                .fontWeight(FontWeight.Bold)
+            }
+            .fontSize(15)
+            .margin({ left: 8 })
+
+            Text('Faster browser tasks. 10× fewer tokens from your main agent.')
+              .fontSize(12)
+              .fontColor(this.pal().text2)
+              .layoutWeight(1)
+              .maxLines(2)
+              .textOverflow({ overflow: TextOverflow.Ellipsis })
+              .margin({ left: 14 })
+              .padding({ left: 14 })
+              .border({ width: { left: 1 }, color: this.pal().border })
+
+            Text('Request early access →')
+              .fontSize(12)
+              .fontWeight(FontWeight.Medium)
+              .fontColor(this.darkMode ? '#7CB1FF' : '#1A73E8')
+              .margin({ left: 14 })
+              .onClick(() => {
+                this.joinUltrafast()
+              })
+          }
+          .width('100%')
+          .constraintSize({ minHeight: 48 })
+          .padding({ left: 18, right: 44, top: 10, bottom: 10 })
+          .alignItems(VerticalAlign.Center)
+
+          Button({ type: ButtonType.Normal }) {
+            Image($r('app.media.ic_close'))
+              .width(14).height(14)
+              .fillColor(this.pal().text)
+              .draggable(false)
+          }
+          .width(28)
+          .height(28)
+          .backgroundColor(Color.Transparent)
+          .margin({ top: 6, right: 6 })
+          .accessibilityText('关闭横幅')
+          .onClick(() => {
+            this.dismissUltrafast()
+          })
+        }
+        .width('86%')
+        .borderRadius(10)
+        .backgroundColor(this.darkMode ? '#39445766' : '#E8F0FE99')
+        .border({ width: 1, color: this.pal().border })
+        .margin({ top: 10 })
+      }
+      if (this.ultrafastToast.length > 0) {
+        Text(this.ultrafastToast)
+          .fontSize(12)
+          .fontColor('#FFFFFF')
+          .backgroundColor('#CC1F1F22')
+          .borderRadius(16)
+          .padding({ left: 14, right: 14, top: 8, bottom: 8 })
+          .margin({ top: 8 })
+      }
 
       // P29: 聊天输入框（对标上游新标签页 ConversationInput——大圆角搜索/提问框+发送）
       Row() {
@@ -1907,6 +2053,10 @@ struct BrowserShell {
         break
       case 'scheduled_tasks':
         router.pushUrl({ url: 'pages/ScheduledTasksPage' })
+        break
+      case 'skills':
+        // P34-F: Skills 台账屏入口
+        router.pushUrl({ url: 'pages/SkillsPage' })
         break
       case 'settings':
         router.pushUrl({ url: 'pages/SettingsPage' })

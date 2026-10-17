@@ -10,6 +10,8 @@ import { MCPServer } from '../service/MCPServer'
 import { SessionManager } from '../service/SessionManager'
 import { SessionRecord } from '../model/SessionRecord'
 import { pasteboard } from '@kit.BasicServicesKit'
+import { preferences } from '@kit.ArkData'
+import { router } from '@kit.ArkUI'
 import { Palette } from '../common/Palette'
 /**
  * P8: 官网 UI 一比一复刻 —— NeoDashboardPanel 全面重排。
@@ -98,6 +100,10 @@ export struct NeoDashboardPanel {
   @State heroCopiedHint: string = ''
   @State sessionsRefreshTick: number = 0
   @State agentFormHint: string = ''
+  // P34-E2: UltrafastBanner 状态（Preferences ultrafast_store: ultrafast_joined / ultrafast_dismissed）
+  @State ultrafastHidden: boolean = false
+  @State ultrafastToast: string = ''
+  private ultraPrefs: preferences.Preferences | null = null
   private cockpitScroller: Scroller = new Scroller()
   shellBack: () => void = () => {}
   shellOpenReplay: (sessionId: string) => void = () => {}
@@ -120,7 +126,53 @@ export struct NeoDashboardPanel {
     this.sessions = SessionManager.getSessionList()
     EventBus.on(EventBusEvents.AGENT_STATUS_CHANGE, this.onAgentStatusChange)
     EventBus.on(EventBusEvents.AGENT_HEARTBEAT, this.onAgentStatusChange)
+    // P34-E2: banner 持久化状态加载（joined/dismissed 任一 true 即永久隐藏）
+    this.initUltrafastPrefs()
     console.info('NeoDashboardPanel mounted (P8 cockpit, sessions=' + this.sessions.length + ')')
+  }
+
+  /** P34-E2: ultrafast_store Preferences 初始化 + 已隐藏态读取 */
+  private initUltrafastPrefs(): void {
+    const ctx = this.getUIContext().getHostContext()
+    if (!ctx) {
+      console.error('[P34] ultrafast prefs init: no host context')
+      return
+    }
+    preferences.getPreferences(ctx, 'ultrafast_store').then((p: preferences.Preferences) => {
+      this.ultraPrefs = p
+      const joined = p.getSync('ultrafast_joined', false) as boolean
+      const dismissed = p.getSync('ultrafast_dismissed', false) as boolean
+      this.ultrafastHidden = joined || dismissed
+      console.info('[P34] ultrafast banner state: joined=' + joined + ' dismissed=' + dismissed + ' hidden=' + this.ultrafastHidden)
+    }).catch((e: Object) => {
+      console.error('[P34] ultrafast prefs init fail: ' + e)
+    })
+  }
+
+  /** P34-E2: Request early access → joined=true + toast + 永久隐藏 */
+  private joinUltrafast(): void {
+    console.info('[P34] ultrafast join clicked')
+    this.ultrafastHidden = true
+    this.ultrafastToast = '已加入 Ultrafast 等待列表'
+    setTimeout(() => { this.ultrafastToast = '' }, 2000)
+    const p = this.ultraPrefs
+    if (p !== null) {
+      p.put('ultrafast_joined', true).then(() => { p.flush() }).catch((e: Object) => {
+        console.error('[P34] ultrafast join persist fail: ' + e)
+      })
+    }
+  }
+
+  /** P34-E2: X 关闭 → dismissed=true + 永久隐藏 */
+  private dismissUltrafast(): void {
+    console.info('[P34] ultrafast banner dismissed')
+    this.ultrafastHidden = true
+    const p = this.ultraPrefs
+    if (p !== null) {
+      p.put('ultrafast_dismissed', true).then(() => { p.flush() }).catch((e: Object) => {
+        console.error('[P34] ultrafast dismiss persist fail: ' + e)
+      })
+    }
   }
 
   aboutToDisappear(): void {
@@ -255,6 +307,7 @@ export struct NeoDashboardPanel {
       Scroll() {
         Column() {
           this.TileGrid()
+          this.UltrafastBanner()
           this.RecentSessionsCard()
           this.AgentSetupCard()
         }
@@ -276,6 +329,9 @@ export struct NeoDashboardPanel {
       GridCol({ span: 2 }) {
         this.HeroCard()
       }
+      GridCol() {
+        this.SkillsTile()
+      }
       if (this.agentStatuses.length === 0) {
         GridCol() {
           this.EmptyStateTile()
@@ -292,22 +348,39 @@ export struct NeoDashboardPanel {
     .margin({ top: 8 })
   }
 
-  /** hero 渐变卡（2x 宽）：产品名 + 副标题 + 快速入口 */
+  /** hero 渐变卡（2x 宽）：P34-E1 上游 CockpitHero 三段式 1:1 + 快速入口 */
   @Builder
   HeroCard(): void {
     Column() {
+      // P34-E1: 产品名降级为左上小角标（12fp 半透明），原中文副标题删除（1:1）
       Text('BrowserOS neo')
-        .fontSize(22)
-        .fontWeight(FontWeight.Bold)
-        .fontColor('#FFFFFF')
-        .margin({ top: 14 })
-
-      Text('给 AI 代理用的浏览器 —— 实时驾驶舱')
-        .fontSize(11)
-        .fontColor('#E8EAF6')
-        .margin({ top: 6 })
+        .fontSize(12)
+        .fontColor('#FFFFFFB3')
+        .margin({ top: 10 })
+        .alignSelf(ItemAlign.Start)
 
       Blank()
+
+      // P34-E1: 上游原文三段式 lead + working on(粗斜体蓝) + tail，extrabold 26fp 字距收紧
+      Text() {
+        Span('What are your agents ')
+          .fontColor('#FFFFFF')
+          .fontWeight(FontWeight.Bold)
+          .fontSize(26)
+        Span('working on')
+          .fontColor(this.darkMode ? '#7CB1FF' : '#1A73E8')
+          .fontWeight(FontWeight.Bold)
+          .fontStyle(FontStyle.Italic)
+          .fontSize(26)
+        Span(' right now?')
+          .fontColor('#FFFFFF')
+          .fontWeight(FontWeight.Bold)
+          .fontSize(26)
+      }
+      .lineHeight(32)
+      .letterSpacing(-0.3)
+      .maxLines(2)
+      .alignSelf(ItemAlign.Start)
 
       Row() {
         Button('查看代理')
@@ -329,7 +402,7 @@ export struct NeoDashboardPanel {
           .fontSize(10)
           .fontColor('#FFFFFFCC')
       }
-      .margin({ bottom: 12 })
+      .margin({ top: 8, bottom: 12 })
     }
     .width('100%')
     .height(150)
@@ -340,6 +413,117 @@ export struct NeoDashboardPanel {
       colors: [['#2E6FE8', 0], ['#8B5CF6', 1]]
     })
     .alignItems(HorizontalAlign.Start)
+  }
+
+  /** P34-F: Skills 入口磁贴（驾驶舱网格第一行右侧）→ pages/SkillsPage */
+  @Builder
+  SkillsTile(): void {
+    Column() {
+      Image($r('app.media.ic_robot'))
+        .width(22).height(22)
+        .fillColor('#2E6FE8')
+        .draggable(false)
+      Text('Skills')
+        .fontSize(13)
+        .fontWeight(FontWeight.Medium)
+        .fontColor(this.pal().text)
+        .margin({ top: 8 })
+      Text('命令式技能台账')
+        .fontSize(10)
+        .fontColor(this.pal().text2)
+        .margin({ top: 2 })
+    }
+    .width('100%')
+    .height(150)
+    .borderRadius(14)
+    .backgroundColor(this.pal().surfaceInput)
+    .justifyContent(FlexAlign.Center)
+    .alignItems(HorizontalAlign.Center)
+    .onClick(() => {
+      console.info('[P34] skills tile clicked -> pages/SkillsPage')
+      router.pushUrl({ url: 'pages/SkillsPage' })
+    })
+  }
+
+  /** P34-E2: UltrafastBanner —— hero 网格正下方（对标 up_ultra.tsx 布局语义） */
+  @Builder
+  UltrafastBanner(): void {
+    if (!this.ultrafastHidden) {
+      Stack({ alignContent: Alignment.TopEnd }) {
+        Row() {
+          Image($r('app.media.ic_zap'))
+            .width(16).height(16)
+            .fillColor(this.darkMode ? '#7CB1FF' : '#1A73E8')
+            .draggable(false)
+          Text() {
+            Span('Ultrafast')
+              .fontColor(this.darkMode ? '#7CB1FF' : '#1A73E8')
+              .fontWeight(FontWeight.Bold)
+              .fontStyle(FontStyle.Italic)
+            Span(' mode')
+              .fontColor(this.pal().text)
+              .fontWeight(FontWeight.Bold)
+          }
+          .fontSize(15)
+          .margin({ left: 8 })
+
+          Text('Faster browser tasks. 10× fewer tokens from your main agent.')
+            .fontSize(12)
+            .fontColor(this.pal().text2)
+            .layoutWeight(1)
+            .maxLines(2)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+            .margin({ left: 14 })
+            .padding({ left: 14 })
+            .border({ width: { left: 1 }, color: this.pal().border })
+
+          Text('Request early access →')
+            .fontSize(12)
+            .fontWeight(FontWeight.Medium)
+            .fontColor(this.darkMode ? '#7CB1FF' : '#1A73E8')
+            .margin({ left: 14 })
+            .onClick(() => {
+              this.joinUltrafast()
+            })
+        }
+        .width('100%')
+        .constraintSize({ minHeight: 48 })
+        .padding({ left: 18, right: 44, top: 10, bottom: 10 })
+        .alignItems(VerticalAlign.Center)
+
+        // X 关闭钮（右上角）
+        Button({ type: ButtonType.Normal }) {
+          Image($r('app.media.ic_close'))
+            .width(14).height(14)
+            .fillColor(this.pal().text)
+            .draggable(false)
+        }
+        .width(28)
+        .height(28)
+        .backgroundColor(Color.Transparent)
+        .margin({ top: 6, right: 6 })
+        .accessibilityText('关闭横幅')
+        .onClick(() => {
+          this.dismissUltrafast()
+        })
+      }
+      .width('100%')
+      .borderRadius(10)
+      .backgroundColor(this.darkMode ? '#39445766' : '#E8F0FE99')
+      .border({ width: 1, color: this.pal().border })
+      .margin({ top: 10 })
+    }
+    // P34-E2: join toast（底部居中）
+    if (this.ultrafastToast.length > 0) {
+      Text(this.ultrafastToast)
+        .fontSize(12)
+        .fontColor('#FFFFFF')
+        .backgroundColor('#CC1F1F22')
+        .borderRadius(16)
+        .padding({ left: 14, right: 14, top: 8, bottom: 8 })
+        .position({ x: '50%', y: '88%' })
+        .translate({ x: -60 })
+    }
   }
 
   /** 空态磁贴（无代理时占位一块） */

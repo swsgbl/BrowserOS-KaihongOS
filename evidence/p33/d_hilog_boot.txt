@@ -1,0 +1,4 @@
+10-17 18:43:01.750 30988 30988 I A03d00/JSAPP: [P33] current version: 1.1.0 code=1010000
+10-17 18:43:02.008 30988 30988 I A03d00/JSAPP: [P33] changelog pending: last= current=1.1.0 (dialog in 5s)
+10-17 18:43:02.206 30988 30988 I A01194/ARKWEB-CONSOLE: [CONSOLE:21] "[BCP][P33] selection capture installed", source:  (21)
+10-17 18:43:07.011 30988 30988 I A03d00/JSAPP: [P33] changelog dialog shown for v1.1.0

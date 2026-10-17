@@ -9,6 +9,7 @@
     "pages/DownloadsPage",
     "pages/ViewSourcePage",
     "pages/ScheduledTasksPage",
-    "pages/LlmHubPage"
+    "pages/LlmHubPage",
+    "pages/SkillsPage"
   ]
 }

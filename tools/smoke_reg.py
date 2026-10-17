@@ -58,6 +58,8 @@ class Hdc:
         return run(c, timeout=timeout)
 
     def raw(self, args, timeout=60):
+        if self.target:
+            return run('%s -t %s %s' % (self.hdc, self.target, args), timeout=timeout)
         return run('%s %s' % (self.hdc, args), timeout=timeout)
 
 
@@ -163,6 +165,26 @@ def _find_node(lay_text, needle, exact=False):
 
 
 def check_bm_search(hdc, lay):
+    # P33 起启动 +5s 可能弹「更新内容」覆盖层——现抓新 dump,先关掉它再点菜单
+    hdc.sh('uitest dumpLayout -p /data/local/tmp/smoke_s7.json', 40)
+    hdc.raw('file recv /data/local/tmp/smoke_s7.json smoke_s7_layout.json', 30)
+    try:
+        with open('smoke_s7_layout.json', encoding='utf-8', errors='replace') as f:
+            lay = f.read()
+    except Exception:
+        pass
+    ob = _find_node(lay, '知道了', exact=True)
+    if ob:
+        xs = [int(v) for v in re.findall(r'\d+', ob)]
+        hdc.sh('uitest uiInput click %d %d' % ((xs[0] + xs[2]) // 2, (xs[1] + xs[3]) // 2), 20)
+        time.sleep(1.5)
+        hdc.sh('uitest dumpLayout -p /data/local/tmp/smoke_s7.json', 40)
+        hdc.raw('file recv /data/local/tmp/smoke_s7.json smoke_s7_layout.json', 30)
+        try:
+            with open('smoke_s7_layout.json', encoding='utf-8', errors='replace') as f:
+                lay = f.read()
+        except Exception:
+            pass
     # ⋮ 菜单(工具栏最右 Button,窗口化模式跳过 Enhance 窗口钮) → 书签 菜单项
     mb = None
     try:
@@ -187,7 +209,7 @@ def check_bm_search(hdc, lay):
         return
     cx, cy = (int(mb[0]) + int(mb[2])) // 2, (int(mb[1]) + int(mb[3])) // 2
     hdc.sh('uitest uiInput click %d %d' % (cx, cy), 20)
-    time.sleep(1.5)
+    time.sleep(2.5)
     hdc.sh('uitest dumpLayout -p /data/local/tmp/smoke_menu.json', 40)
     hdc.raw('file recv /data/local/tmp/smoke_menu.json smoke_menu_layout.json', 30)
     try:
@@ -195,6 +217,16 @@ def check_bm_search(hdc, lay):
             menu = f.read()
     except Exception:
         menu = ''
+    if not _find_node(menu, '书签', exact=True):
+        # 菜单可能尚未渲染完——再等一拍重抓一次
+        time.sleep(2.0)
+        hdc.sh('uitest dumpLayout -p /data/local/tmp/smoke_menu.json', 40)
+        hdc.raw('file recv /data/local/tmp/smoke_menu.json smoke_menu_layout.json', 30)
+        try:
+            with open('smoke_menu_layout.json', encoding='utf-8', errors='replace') as f:
+                menu = f.read()
+        except Exception:
+            menu = ''
     ib = _find_node(menu, '书签', exact=True)
     if not ib:
         record('7.bookmarks search box', False, '菜单项 书签 未找到')
