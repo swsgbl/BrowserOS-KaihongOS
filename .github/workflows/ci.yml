@@ -1,0 +1,22 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  static:
+    name: Static checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Run offline static test suite
+        run: python tools/static_checks.py
+
+  # HAP assembly (hvigorw + V1 repack + device signing) requires the local
+  # OpenHarmony SDK, restool 5.0.1.011 and a target device; it is intentionally
+  # not part of cloud CI. Use `python tools/deploy.py` on a provisioned host,
+  # then `python tools/smoke_reg.py` for the on-device 7-step regression.

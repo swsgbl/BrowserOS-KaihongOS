@@ -1,0 +1,257 @@
+> hvigor [32mUP-TO-DATE :entry:default@PreBuild...  [39m
+> hvigor [32mFinished :entry:default@CreateModuleInfo... after 1 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@GenerateMetadata...  [39m
+> hvigor [32mFinished :entry:default@ConfigureCmake... after 1 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@MergeProfile...  [39m
+> hvigor [32mUP-TO-DATE :entry:default@CreateBuildProfile...  [39m
+> hvigor [32mFinished :entry:default@PreCheckSyscap... after 1 ms [39m
+> hvigor [32mFinished :entry:default@GeneratePkgContextInfo... after 4 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@GeneratePkgSdkInfo...  [39m
+> hvigor [32mFinished :entry:default@ProcessIntegratedHsp... after 1 ms [39m
+> hvigor [32mFinished :entry:default@BuildNativeWithCmake... after 1 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@MakePackInfo...  [39m
+> hvigor [32mFinished :entry:default@SyscapTransform... after 7 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@ProcessProfile...  [39m
+> hvigor [32mUP-TO-DATE :entry:default@ProcessRouterMap...  [39m
+> hvigor [32mUP-TO-DATE :entry:default@ProcessShareConfig...  [39m
+> hvigor [32mFinished :entry:default@ProcessStartupConfig... after 1 ms [39m
+> hvigor [32mFinished :entry:default@BuildNativeWithNinja... after 1 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@ProcessResource...  [39m
+> hvigor [32mUP-TO-DATE :entry:default@GenerateLoaderJson...  [39m
+> hvigor [32mUP-TO-DATE :entry:default@ProcessLibs...  [39m
+> hvigor [32mUP-TO-DATE :entry:default@CompileResource...  [39m
+> hvigor [32mUP-TO-DATE :entry:default@DoNativeStrip...  [39m
+> hvigor [32mFinished :entry:default@BuildJS... after 1 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@CacheNativeLibs...  [39m
+> hvigor [33mWARN: [33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/storage/StorageManager.ets:51:22
+ 'decodeWithStream' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/service/LLMClient.ets:304:29
+ 'decodeWithStream' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/service/HttpMcpTransport.ets:361:45
+ 'decodeWithStream' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/service/WsMcpTransport.ets:252:34
+ The system capacity of this api 'createMd' is not supported on all devices
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/service/WsMcpTransport.ets:504:45
+ 'decodeWithStream' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/storage/HistoryDb.ets:291:10
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/service/LoginStateManager.ets:185:53
+ 'decodeWithStream' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/protocol/WebViewAdapter.ets:20:28
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/protocol/WebViewAdapter.ets:24:21
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/protocol/WebViewAdapter.ets:28:21
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/protocol/WebViewAdapter.ets:32:21
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/protocol/WebViewAdapter.ets:36:21
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/protocol/WebViewAdapter.ets:40:21
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/protocol/WebViewAdapter.ets:44:28
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/protocol/WebViewAdapter.ets:48:28
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/protocol/WebViewAdapter.ets:52:28
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/components/AgentSidePanel.ets:150:19
+ 'getContext' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/components/AgentSidePanel.ets:183:19
+ 'getContext' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/components/AgentSidePanel.ets:346:12
+ 'pushUrl' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/components/AgentSidePanel.ets:346:12
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/components/AgentSidePanel.ets:397:22
+ 'pushUrl' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/components/BookmarkBar.ets:89:16
+ 'pushUrl' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:367:22
+ 'pushUrl' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:417:20
+ 'pushUrl' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:702:16
+ 'pushUrl' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:956:16
+ 'pushUrl' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:956:16
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:964:16
+ 'pushUrl' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:964:16
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:1073:31
+ 'pushUrl' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:1119:38
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:1125:12
+ 'pushUrl' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:1125:12
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:1686:46
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:1742:16
+ 'pushUrl' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:1742:16
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:1745:16
+ 'pushUrl' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:1745:16
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:1748:16
+ 'pushUrl' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:1748:16
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:1751:16
+ 'pushUrl' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:1751:16
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:1900:16
+ 'pushUrl' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:1900:16
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:1903:16
+ 'pushUrl' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:1903:16
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:1906:16
+ 'pushUrl' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:1906:16
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:1909:16
+ 'pushUrl' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:1909:16
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:1912:16
+ 'pushUrl' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:1912:16
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:1923:75
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/SessionPlayerPage.ets:32:22
+ 'getParams' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/OnboardingPage.ets:337:18
+ 'replaceUrl' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/SettingsPage.ets:117:23
+ 'getParams' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/SettingsPage.ets:161:20
+ 'back' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/SettingsPage.ets:444:16
+ 'pushUrl' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/SettingsPage.ets:716:18
+ 'back' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/HistoryPage.ets:122:20
+ 'back' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/HistoryPage.ets:222:28
+ 'pushUrl' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:74:53
+ 'decodeWithStream' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:78:20
+ 'showToast' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:87:20
+ 'showToast' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:87:20
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:145:20
+ 'back' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/DownloadsPage.ets:68:38
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/DownloadsPage.ets:86:20
+ 'back' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/ViewSourcePage.ets:21:27
+ 'getParams' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/ViewSourcePage.ets:79:20
+ 'back' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/ViewSourcePage.ets:95:22
+ 'back' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/ScheduledTasksPage.ets:129:20
+ 'back' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/LlmHubPage.ets:171:20
+ 'back' has been deprecated.
+[39m[39m
+[39m
+> hvigor [32mFinished :entry:default@CompileArkTS... after 3 s 111 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@GeneratePkgModuleJson...  [39m
+> hvigor [32mFinished :entry:default@ProcessCompiledResources... after 1 ms [39m
+> hvigor [32mFinished :entry:default@PackageHap... after 359 ms [39m
+> hvigor [32mFinished :entry:default@PackingCheck... after 5 ms [39m
+> hvigor [33mWARN: No signingConfig found for product default[39m
+> hvigor [32mFinished :entry:default@SignHap... after 1 ms [39m
+> hvigor [32mFinished :entry:default@CollectDebugSymbol... after 1 ms [39m
+> hvigor [32mFinished :entry:assembleHap... after 1 ms [39m
+> hvigor [32mBUILD SUCCESSFUL in 5 s 866 ms [39m
+
+33 tasks in total: 17 executed, 16 up-to-date

@@ -913,3 +913,47 @@ python tools/smoke_reg.py         # 30 秒健康检查
 ### 生产就绪结论
 - **VM 环境生产就绪**：功能全栈 31 轮交付+11 轮审计+全链设备实证，一键部署可用
 - **真机部署待项**：正式签名证书替换（当前用 VM 本地签）、API 14 SDK 直接构建（当前 repack 绕法）、SecureStore 加密
+
+
+---
+
+## P32：外部研究报告核对 + 合规/导入收官（2026-10-17，用户指令"根据 deep-research-report.md + 执行摘要.docx 全面核对并继续推进"）
+
+### 报告核对（报告基于早期空仓库快照，12 项矩阵逐项对现状）
+| 报告模块 | 报告判定 | 实际现状（P31 后） | 本轮处置 |
+|---|---|---|---|
+| UI 界面 | 未实现 | ✅ P1-P31 全量（竖排标签/侧栏/仪表盘/主题） | 无需动作 |
+| 浏览器内核 | 未实现 | ✅ ArkWeb（API14 平台等价物） | 无需动作 |
+| AI 聊天/智能助手 | 未实现 | ✅ AgentEngine 15 步循环+SSE+侧栏 | 无需动作 |
+| 扩展/插件市场 | 未实现 | ⛔ ArkWeb 无扩展框架（平台不可行） | 架构替代已落地（46 连接器 MCP 目录），README 明示 |
+| 同步/账户 | 未实现 | ❌ 缺书签导入 | **P32-A 落地**（Chrome 书签 HTML 导入） |
+| 数据存储/索引 | 未实现 | ✅ Preferences+RDB+会话/截图/审计 | 无需动作 |
+| 模型集成/推理 | 未实现 | ✅ LLM Hub 多端点/Key（含 Ollama 兼容） | 无需动作 |
+| 前端构建/打包 | 未指定 | ✅ hvigorw+V1 repack+deploy.py 一键 | 无需动作 |
+| CI/CD | 未指定 | ❌ 缺 | **P32-B 落地**（.github/workflows/ci.yml） |
+| 测试 | 未指定 | ⚠️ 仅设备 smoke | **P32-B 落地**（tools/static_checks.py 离线 15 项） |
+| 文档 | 未指定 | ⚠️ 仅 DEVPLAN | **P32-B 落地**（README.md + docs/ARCHITECTURE.md） |
+| 许可 | 未指定 | ❌ 无 LICENSE | **P32-B 落地**（AGPL-3.0 官方全文，随上游） |
+
+### P32-A：Chrome 书签 HTML 导入（hmh 通道B 开发 + Zodex VM 验收）
+- **改动**（严格 2 文件）：`BookmarkManager.ets` +44 行（ImportEntry/ImportResult 接口、importBookmarks 批量导入：http/https 过滤+URL 精确去重+批内去重+title 兜底+单次 persist/广播）；`BookmarksPage.ets` +82 行（顶栏「导入」钮、DocumentViewPicker.select(fileSuffixFilters=['html','htm'],maxSelectNumber=1)、fs 读取+TextDecoder 解码、Netscape `<A HREF>` 正则解析（大小写/单引号/HTML 实体）、toast「导入 N 条，跳过 M 条重复」、取消静默）
+- **API 防幻觉**：hmh 逐项查本地 SDK d.ts 落实（修正简报笔误：实际方法为 `select()` 非 documentSelect）
+- **设备纠正记录**：hmh 误装 5555 模拟器（无 root，E2E 卡在样例文件注入）；用户点名目标=Quickemu VM 桌面快捷方式 → 重装 15566（root）完成全链
+- **E2E 实证（Quickemu VM，evidence/p32/）**：⋮菜单→书签→导入→拾取器 文档→选中 bookmarks_sample.html→打开(O) → **书签 3→9 条**；hilog `[BookmarkManager] import: added=6 skipped=2`（样例 8 条：javascript: 过滤 1+批内重复 1，与预期完全一致）；单引号+&amp; 实体正确解码入库；沙盒 tabs/bookmarks.json 持久化核对；脚本 evidence/p32/p32_e2e.py+p32_finish.py 可复跑
+
+### P32-B：许可/文档/CI/测试四件套（Zodex 直接交付）
+- **LICENSE**：AGPL-3.0 官方全文（GNU SPDX 源，34020B）
+- **README.md**：功能栈表、与上游的架构级替代表（Chromium→ArkWeb / 扩展→MCP 连接器 / 登录导入→书签导入）、构建部署命令、目录结构、平台限制
+- **docs/ARCHITECTURE.md**：模块职责表（pages/components/service/protocol/storage/infra）、关键链路（构建/Agent/MCP/主题/书签导入）、平台约束备忘
+- **CI**：.github/workflows/ci.yml（static checks job；HAP 组装需本地 SDK+设备，注释明示走 deploy.py）
+- **tools/static_checks.py**：离线 15 项（py_compile×8/console.log 禁用/module.json5 能力/必备文件×4/SVG≥30）——本机全 PASS
+- **.gitignore**：补 __pycache__/
+
+### P32-C：工具链修复——smoke 第 7 步历史首次 7/7
+- **根因**：VM 上 `uinput -T -c` 注入点击无效（历年"坐标偏移"误判的真凶）；且 dumpLayout 属性顺序不定，"text 后紧跟 bounds"正则不可靠
+- **修复**：点击改 `uitest uiInput click`；查找改 JSON 树遍历（节点自身 bounds）；书签入口改走 ⋮ 菜单→书签（ContainerModal 窗口化模式取工具栏最右 Button、跳过 Enhance 窗口钮）
+- **结果**：smoke_reg 7/7 PASS（1 设备/2 安装/3 冷启/4 前台/5 a11y×30/6 MCP HTTP/7 书签搜索框）
+
+### P32 终态
+- 报告 12 项矩阵：9 项已实现、2 项本轮补齐（书签导入/许可+文档+CI+测试）、1 项平台不可行（Chrome 扩展，已架构替代+文档明示）
+- git：66c1426 → P32 提交；evidence/p32 22+ 文件

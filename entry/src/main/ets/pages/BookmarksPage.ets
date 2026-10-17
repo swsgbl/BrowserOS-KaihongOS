@@ -1,10 +1,12 @@
 /**
  * P9-C3: 书签管理页 —— 列表（favicon+标题+URL+编辑/删除）
  */
-import { BookmarkManager } from '../service/BookmarkManager'
+import { BookmarkManager, ImportEntry } from '../service/BookmarkManager'
 import { EventBus, EventBusEvents } from '../infra/EventBus'
-import { router } from '@kit.ArkUI'
+import { router, promptAction } from '@kit.ArkUI'
 import { Palette } from '../common/Palette'
+import { picker, fileIo as fs } from '@kit.CoreFileKit'
+import { util } from '@kit.ArkTS'
 
 interface BookmarkRow {
   id: string
@@ -39,6 +41,74 @@ struct BookmarksPage {
       const t = b.title.length > 0 ? b.title : b.url
       return t.toLowerCase().indexOf(kw) >= 0 || b.url.toLowerCase().indexOf(kw) >= 0
     })
+  }
+
+  /** P32-A: Chrome 书签导入 —— 拾取器选 html → 读取 → Netscape 解析 → 批量导入 */
+  private startImport(): void {
+    // SDK 推荐带 context 构造（无参构造标注潜在失败风险）; getHostContext since 12
+    const hostCtx = this.getUIContext().getHostContext()
+    const docPicker = hostCtx !== undefined ? new picker.DocumentViewPicker(hostCtx) : new picker.DocumentViewPicker()
+    const opts = new picker.DocumentSelectOptions()
+    opts.fileSuffixFilters = ['html', 'htm']
+    opts.maxSelectNumber = 1
+    docPicker.select(opts).then((uris: Array<string>) => {
+      if (uris.length === 0) {
+        return
+      }
+      this.readAndImport(uris[0])
+    }).catch((e: Object) => {
+      // 用户取消拾取器 —— 静默（不提示不崩溃）
+      console.info('BookmarksPage import picker dismissed: ' + e)
+    })
+  }
+
+  private readAndImport(uri: string): void {
+    let file: fs.File | null = null
+    try {
+      file = fs.openSync(uri, fs.OpenMode.READ_ONLY)
+      const stat = fs.statSync(file.fd)
+      const buffer = new ArrayBuffer(stat.size)
+      fs.readSync(file.fd, buffer)
+      fs.closeSync(file)
+      file = null
+      const text = util.TextDecoder.create('utf-8').decodeWithStream(new Uint8Array(buffer))
+      const entries = this.parseNetscapeBookmarks(text)
+      const result = BookmarkManager.importBookmarks(entries)
+      this.reload()
+      promptAction.showToast({ message: `导入 ${result.added} 条，跳过 ${result.skipped} 条重复`, duration: 2500 })
+    } catch (e) {
+      if (file !== null) {
+        try {
+          fs.closeSync(file)
+        } catch (err) {
+        }
+      }
+      console.error('BookmarksPage import read failed: ' + e)
+      promptAction.showToast({ message: '导入失败：无法读取文件' })
+    }
+  }
+
+  /** Netscape 书签格式: <A HREF="url" ...>title</A> —— 大小写不敏感,兼容单引号 */
+  private parseNetscapeBookmarks(html: string): Array<ImportEntry> {
+    const entries: Array<ImportEntry> = []
+    const regex = /<a\s+href=(["'])(.*?)\1[^>]*>(.*?)<\/a>/gi
+    let m: RegExpExecArray | null = regex.exec(html)
+    while (m !== null) {
+      const entry: ImportEntry = { url: this.decodeHtmlEntities(m[2]), title: this.decodeHtmlEntities(m[3]) }
+      entries.push(entry)
+      m = regex.exec(html)
+    }
+    console.info('BookmarksPage parseNetscapeBookmarks: entries=' + entries.length)
+    return entries
+  }
+
+  /** 常见 HTML 实体解码（&amp; 最后,避免双重解码） */
+  private decodeHtmlEntities(s: string): string {
+    return s.replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&amp;/g, '&')
   }
 
   /** P14b: 书签订阅——列表页停留期间其它入口（星标气泡等）改动即时同步 */
@@ -79,6 +149,14 @@ struct BookmarksPage {
           .fontWeight(FontWeight.Bold)
           .fontColor(this.pal().text)
           .layoutWeight(1)
+        Text('导入')
+          .fontSize(12)
+          .fontColor('#1A73E8')
+          .padding({ left: 8, right: 4 })
+          .accessibilityText('导入书签')
+          .onClick(() => {
+            this.startImport()
+          })
         Text(`${this.filtered().length} 条`)
           .fontSize(11)
           .fontColor(this.pal().text2)

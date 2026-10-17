@@ -21,6 +21,18 @@ interface BookmarkData {
   createdAt: number
 }
 
+/** P32-A: Chrome 书签导入 —— 单条输入（url+title） */
+export interface ImportEntry {
+  url: string
+  title: string
+}
+
+/** P32-A: 导入结果（added=新增数, skipped=跳过数,含重复与无效） */
+export interface ImportResult {
+  added: number
+  skipped: number
+}
+
 class BookmarkManagerImpl {
   private bookmarks: Map<string, Bookmark> = new Map()
   private bookmarkCounter: number = 0
@@ -139,6 +151,38 @@ class BookmarkManagerImpl {
   private notifyChanged(action: string): void {
     const data: BookmarksChangedData = { count: this.bookmarks.size, action: action }
     EventBus.emit(EventBusEvents.BOOKMARKS_CHANGED, data)
+  }
+
+  /** P32-A: 批量导入（Chrome Netscape HTML 解析结果）——单次 persist + 单次广播,不循环 addBookmark */
+  importBookmarks(entries: Array<ImportEntry>): ImportResult {
+    let added: number = 0
+    let skipped: number = 0
+    for (const entry of entries) {
+      const url = entry.url.trim()
+      const lowerUrl = url.toLowerCase()
+      const validProto = lowerUrl.startsWith('http://') || lowerUrl.startsWith('https://')
+      if (!validProto || url.length === 0) {
+        skipped++
+        continue
+      }
+      // 去重: 与现有库按 url 精确匹配（同 addBookmark 语义）
+      if (this.isBookmarked(url)) {
+        skipped++
+        continue
+      }
+      const title = entry.title.trim().length > 0 ? entry.title.trim() : url
+      const id = `bm_${++this.bookmarkCounter}_${Date.now()}`
+      const bookmark: Bookmark = { id, url, title, createdAt: Date.now() }
+      this.bookmarks.set(id, bookmark)
+      added++
+    }
+    if (added > 0) {
+      this.persist()
+      this.notifyChanged('import')
+      console.info(`[BookmarkManager] import: added=${added} skipped=${skipped}`)
+    }
+    const result: ImportResult = { added, skipped }
+    return result
   }
 
   getBookmarkCount(): number {

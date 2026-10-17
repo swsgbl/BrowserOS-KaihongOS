@@ -1,0 +1,902 @@
+> hvigor [32mUP-TO-DATE :entry:default@PreBuild...  [39m
+> hvigor [32mFinished :entry:default@CreateModuleInfo... after 1 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@GenerateMetadata...  [39m
+> hvigor [32mFinished :entry:default@ConfigureCmake... after 1 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@MergeProfile...  [39m
+> hvigor [32mUP-TO-DATE :entry:default@CreateBuildProfile...  [39m
+> hvigor [32mFinished :entry:default@PreCheckSyscap... after 1 ms [39m
+> hvigor [32mFinished :entry:default@GeneratePkgContextInfo... after 5 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@GeneratePkgSdkInfo...  [39m
+> hvigor [32mFinished :entry:default@ProcessIntegratedHsp... after 1 ms [39m
+> hvigor [32mFinished :entry:default@BuildNativeWithCmake... after 1 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@MakePackInfo...  [39m
+> hvigor [32mFinished :entry:default@SyscapTransform... after 7 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@ProcessProfile...  [39m
+> hvigor [32mUP-TO-DATE :entry:default@ProcessRouterMap...  [39m
+> hvigor [32mUP-TO-DATE :entry:default@ProcessShareConfig...  [39m
+> hvigor [32mFinished :entry:default@ProcessStartupConfig... after 1 ms [39m
+> hvigor [32mFinished :entry:default@BuildNativeWithNinja... after 1 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@ProcessResource...  [39m
+> hvigor [32mUP-TO-DATE :entry:default@GenerateLoaderJson...  [39m
+> hvigor [32mUP-TO-DATE :entry:default@ProcessLibs...  [39m
+> hvigor [32mUP-TO-DATE :entry:default@CompileResource...  [39m
+> hvigor [32mUP-TO-DATE :entry:default@DoNativeStrip...  [39m
+> hvigor [32mFinished :entry:default@BuildJS... after 2 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@CacheNativeLibs...  [39m
+> hvigor [91mERROR: Failed :entry:default@CompileArkTS... [39m
+> hvigor [33mWARN: 
+[33m1 WARN: [33m[33mArkTS:WARN: For details about ArkTS syntax errors, see FAQs[39m[39m
+[33m2 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/storage/StorageManager.ets:51:22
+ 'decodeWithStream' has been deprecated.
+[39m[39m
+[33m3 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/service/LLMClient.ets:304:29
+ 'decodeWithStream' has been deprecated.
+[39m[39m
+[33m4 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/service/HttpMcpTransport.ets:361:45
+ 'decodeWithStream' has been deprecated.
+[39m[39m
+[33m5 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/service/WsMcpTransport.ets:252:34
+ The system capacity of this api 'createMd' is not supported on all devices
+[39m[39m
+[33m6 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/service/WsMcpTransport.ets:504:45
+ 'decodeWithStream' has been deprecated.
+[39m[39m
+[33m7 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/storage/HistoryDb.ets:291:10
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33m8 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/service/LoginStateManager.ets:185:53
+ 'decodeWithStream' has been deprecated.
+[39m[39m
+[33m9 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/protocol/WebViewAdapter.ets:20:28
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33m10 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/protocol/WebViewAdapter.ets:24:21
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33m11 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/protocol/WebViewAdapter.ets:28:21
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33m12 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/protocol/WebViewAdapter.ets:32:21
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33m13 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/protocol/WebViewAdapter.ets:36:21
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33m14 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/protocol/WebViewAdapter.ets:40:21
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33m15 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/protocol/WebViewAdapter.ets:44:28
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33m16 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/protocol/WebViewAdapter.ets:48:28
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33m17 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/protocol/WebViewAdapter.ets:52:28
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33m18 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/components/AgentSidePanel.ets:150:19
+ 'getContext' has been deprecated.
+[39m[39m
+[33m19 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/components/AgentSidePanel.ets:183:19
+ 'getContext' has been deprecated.
+[39m[39m
+[33m20 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/components/AgentSidePanel.ets:346:12
+ 'pushUrl' has been deprecated.
+[39m[39m
+[33m21 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/components/AgentSidePanel.ets:346:12
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33m22 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/components/AgentSidePanel.ets:397:22
+ 'pushUrl' has been deprecated.
+[39m[39m
+[33m23 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/components/BookmarkBar.ets:89:16
+ 'pushUrl' has been deprecated.
+[39m[39m
+[33m24 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:367:22
+ 'pushUrl' has been deprecated.
+[39m[39m
+[33m25 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:417:20
+ 'pushUrl' has been deprecated.
+[39m[39m
+[33m26 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:702:16
+ 'pushUrl' has been deprecated.
+[39m[39m
+[33m27 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:956:16
+ 'pushUrl' has been deprecated.
+[39m[39m
+[33m28 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:956:16
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33m29 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:964:16
+ 'pushUrl' has been deprecated.
+[39m[39m
+[33m30 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:964:16
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33m31 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:1073:31
+ 'pushUrl' has been deprecated.
+[39m[39m
+[33m32 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:1119:38
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33m33 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:1125:12
+ 'pushUrl' has been deprecated.
+[39m[39m
+[33m34 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:1125:12
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33m35 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:1686:46
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33m36 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:1742:16
+ 'pushUrl' has been deprecated.
+[39m[39m
+[33m37 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:1742:16
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33m38 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:1745:16
+ 'pushUrl' has been deprecated.
+[39m[39m
+[33m39 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:1745:16
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33m40 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:1748:16
+ 'pushUrl' has been deprecated.
+[39m[39m
+[33m41 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:1748:16
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33m42 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:1751:16
+ 'pushUrl' has been deprecated.
+[39m[39m
+[33m43 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:1751:16
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33m44 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:1900:16
+ 'pushUrl' has been deprecated.
+[39m[39m
+[33m45 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:1900:16
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33m46 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:1903:16
+ 'pushUrl' has been deprecated.
+[39m[39m
+[33m47 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:1903:16
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33m48 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:1906:16
+ 'pushUrl' has been deprecated.
+[39m[39m
+[33m49 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:1906:16
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33m50 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:1909:16
+ 'pushUrl' has been deprecated.
+[39m[39m
+[33m51 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:1909:16
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33m52 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:1912:16
+ 'pushUrl' has been deprecated.
+[39m[39m
+[33m53 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:1912:16
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33m54 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BrowserShell.ets:1923:75
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33m55 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/SessionPlayerPage.ets:32:22
+ 'getParams' has been deprecated.
+[39m[39m
+[33m56 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/OnboardingPage.ets:337:18
+ 'replaceUrl' has been deprecated.
+[39m[39m
+[33m57 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/SettingsPage.ets:117:23
+ 'getParams' has been deprecated.
+[39m[39m
+[33m58 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/SettingsPage.ets:161:20
+ 'back' has been deprecated.
+[39m[39m
+[33m59 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/SettingsPage.ets:444:16
+ 'pushUrl' has been deprecated.
+[39m[39m
+[33m60 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/SettingsPage.ets:716:18
+ 'back' has been deprecated.
+[39m[39m
+[33m61 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/HistoryPage.ets:122:20
+ 'back' has been deprecated.
+[39m[39m
+[33m62 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/HistoryPage.ets:222:28
+ 'pushUrl' has been deprecated.
+[39m[39m
+[33m63 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:30:53
+ 'decodeWithStream' has been deprecated.
+[39m[39m
+[33m64 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:43:20
+ 'showToast' has been deprecated.
+[39m[39m
+[33m65 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:43:20
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33m66 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:145:20
+ 'back' has been deprecated.
+[39m[39m
+[33m67 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/DownloadsPage.ets:68:38
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33m68 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/DownloadsPage.ets:86:20
+ 'back' has been deprecated.
+[39m[39m
+[33m69 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/ViewSourcePage.ets:21:27
+ 'getParams' has been deprecated.
+[39m[39m
+[33m70 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/ViewSourcePage.ets:79:20
+ 'back' has been deprecated.
+[39m[39m
+[33m71 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/ViewSourcePage.ets:95:22
+ 'back' has been deprecated.
+[39m[39m
+[33m72 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/ScheduledTasksPage.ets:129:20
+ 'back' has been deprecated.
+[39m[39m
+[33m73 WARN: [33m[33mArkTS:WARN File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/LlmHubPage.ets:171:20
+ 'back' has been deprecated.
+[39m[39m[39m
+> hvigor [91mERROR: 00305015 Rollup Error
+Error Message: Unexpected token (Note that you need plugins to import files that are not JavaScript)
+. At file: D:\BrowserOS - KaihongOS\entry\src\main\ets\pages\BookmarksPage.ets:8
+[31m1 ERROR: [31m10605038 ArkTS Compiler Error
+[31mError Message: Object literal must correspond to some explicitly declared class or interface (arkts-no-untyped-obj-literals) At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:3:31
+[31m[39m
+[39m
+[31m2 ERROR: [31m10605093 ArkTS Compiler Error
+[31mError Message: Using "this" inside stand-alone functions is not supported (arkts-no-standalone-this) At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:14:7
+[31m[39m
+[39m
+[31m3 ERROR: [31m10605038 ArkTS Compiler Error
+[31mError Message: Object literal must correspond to some explicitly declared class or interface (arkts-no-untyped-obj-literals) At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:21:44
+[31m[39m
+[39m
+[31m4 ERROR: [31m10605038 ArkTS Compiler Error
+[31mError Message: Object literal must correspond to some explicitly declared class or interface (arkts-no-untyped-obj-literals) At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:23:9
+[31m[39m
+[39m
+[31m5 ERROR: [31m10605008 ArkTS Compiler Error
+[31mError Message: Use explicit types instead of "any", "unknown" (arkts-no-any-unknown) At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:35:14
+[31m[39m
+[39m
+[31m6 ERROR: [31m10605038 ArkTS Compiler Error
+[31mError Message: Object literal must correspond to some explicitly declared class or interface (arkts-no-untyped-obj-literals) At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:48:68
+[31m[39m
+[39m
+[31m7 ERROR: [31m10605090 ArkTS Compiler Error
+[31mError Message: Function return type inference is limited (arkts-no-implicit-return-types) At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:49:20
+[31m[39m
+[39m
+[31m8 ERROR: [31m10605001 ArkTS Compiler Error
+[31mError Message: Objects with property names that are not identifiers are not supported (arkts-identifiers-as-prop-names) At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:49:41
+[31m[39m
+[39m
+[31m9 ERROR: [31m10605090 ArkTS Compiler Error
+[31mError Message: Function return type inference is limited (arkts-no-implicit-return-types) At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:52:5
+[31m[39m
+[39m
+[31m10 ERROR: [31m10605008 ArkTS Compiler Error
+[31mError Message: Use explicit types instead of "any", "unknown" (arkts-no-any-unknown) At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:52:12
+[31m[39m
+[39m
+[31m11 ERROR: [31m10605150 ArkTS Compiler Error
+[31mError Message: "import" statements after other statements are not allowed (arkts-no-misplaced-imports) At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:72:1
+[31m[39m
+[39m
+[31m12 ERROR: [31m10605150 ArkTS Compiler Error
+[31mError Message: "import" statements after other statements are not allowed (arkts-no-misplaced-imports) At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:73:1
+[31m[39m
+[39m
+[31m13 ERROR: [31m10605150 ArkTS Compiler Error
+[31mError Message: "import" statements after other statements are not allowed (arkts-no-misplaced-imports) At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:74:1
+[31m[39m
+[39m
+[31m14 ERROR: [31m10605150 ArkTS Compiler Error
+[31mError Message: "import" statements after other statements are not allowed (arkts-no-misplaced-imports) At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:75:1
+[31m[39m
+[39m
+[31m15 ERROR: [31m10605150 ArkTS Compiler Error
+[31mError Message: "import" statements after other statements are not allowed (arkts-no-misplaced-imports) At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:76:1
+[31m[39m
+[39m
+[31m16 ERROR: [31m10605150 ArkTS Compiler Error
+[31mError Message: "import" statements after other statements are not allowed (arkts-no-misplaced-imports) At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:77:1
+[31m[39m
+[39m
+[31m17 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Declaration or statement expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:3:3
+[31m[39m
+[39m
+[31m18 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ';' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:3:24
+[31m[39m
+[39m
+[31m19 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ':' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:5:11
+[31m[39m
+[39m
+[31m20 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ',' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:6:5
+[31m[39m
+[39m
+[31m21 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ':' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:6:11
+[31m[39m
+[39m
+[31m22 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ',' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:7:5
+[31m[39m
+[39m
+[31m23 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ':' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:7:11
+[31m[39m
+[39m
+[31m24 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ',' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:8:5
+[31m[39m
+[39m
+[31m25 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ',' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:8:9
+[31m[39m
+[39m
+[31m26 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ',' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:9:5
+[31m[39m
+[39m
+[31m27 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ',' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:9:9
+[31m[39m
+[39m
+[31m28 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ',' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:10:5
+[31m[39m
+[39m
+[31m29 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ',' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:10:14
+[31m[39m
+[39m
+[31m30 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Declaration or statement expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:21:3
+[31m[39m
+[39m
+[31m31 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ',' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:21:28
+[31m[39m
+[39m
+[31m32 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ';' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:21:37
+[31m[39m
+[39m
+[31m33 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ',' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:22:9
+[31m[39m
+[39m
+[31m34 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ',' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:22:30
+[31m[39m
+[39m
+[31m35 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ':' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:23:5
+[31m[39m
+[39m
+[31m36 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ':' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:23:9
+[31m[39m
+[39m
+[31m37 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ',' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:25:7
+[31m[39m
+[39m
+[31m38 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ':' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:25:13
+[31m[39m
+[39m
+[31m39 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ',' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:26:7
+[31m[39m
+[39m
+[31m40 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ':' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:26:13
+[31m[39m
+[39m
+[31m41 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ',' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:27:7
+[31m[39m
+[39m
+[31m42 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ',' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:27:9
+[31m[39m
+[39m
+[31m43 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ',' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:28:7
+[31m[39m
+[39m
+[31m44 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ',' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:28:9
+[31m[39m
+[39m
+[31m45 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ',' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:29:7
+[31m[39m
+[39m
+[31m46 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ',' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:30:7
+[31m[39m
+[39m
+[31m47 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ':' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:30:13
+[31m[39m
+[39m
+[31m48 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ',' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:31:7
+[31m[39m
+[39m
+[31m49 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ':' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:31:13
+[31m[39m
+[39m
+[31m50 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ',' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:32:7
+[31m[39m
+[39m
+[31m51 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ':' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:32:13
+[31m[39m
+[39m
+[31m52 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ',' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:33:7
+[31m[39m
+[39m
+[31m53 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ':' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:33:11
+[31m[39m
+[39m
+[31m54 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ',' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:34:7
+[31m[39m
+[39m
+[31m55 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ',' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:34:19
+[31m[39m
+[39m
+[31m56 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ',' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:35:7
+[31m[39m
+[39m
+[31m57 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Declaration or statement expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:48:3
+[31m[39m
+[39m
+[31m58 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ',' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:48:38
+[31m[39m
+[39m
+[31m59 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ';' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:48:47
+[31m[39m
+[39m
+[31m60 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ':' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:49:11
+[31m[39m
+[39m
+[31m61 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ',' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:49:18
+[31m[39m
+[39m
+[31m62 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: '(' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:49:39
+[31m[39m
+[39m
+[31m63 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Expression expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:49:42
+[31m[39m
+[39m
+[31m64 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ':' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:50:5
+[31m[39m
+[39m
+[31m65 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ':' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:50:11
+[31m[39m
+[39m
+[31m66 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ',' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:51:5
+[31m[39m
+[39m
+[31m67 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ',' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:51:9
+[31m[39m
+[39m
+[31m68 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ',' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:51:35
+[31m[39m
+[39m
+[31m69 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ',' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:51:42
+[31m[39m
+[39m
+[31m70 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ',' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:52:5
+[31m[39m
+[39m
+[31m71 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ',' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:52:14
+[31m[39m
+[39m
+[31m72 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ';' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:52:22
+[31m[39m
+[39m
+[31m73 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Declaration or statement expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:59:3
+[31m[39m
+[39m
+[31m74 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Declaration or statement expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:62:3
+[31m[39m
+[39m
+[31m75 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ',' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:62:31
+[31m[39m
+[39m
+[31m76 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ';' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:62:40
+[31m[39m
+[39m
+[31m77 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Unexpected keyword or identifier. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:62:42
+[31m[39m
+[39m
+[31m78 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Expression expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:70:46
+[31m[39m
+[39m
+[31m79 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: ';' expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:70:53
+[31m[39m
+[39m
+[31m80 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Invalid character. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:70:61
+[31m[39m
+[39m
+[31m81 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Invalid character. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:70:62
+[31m[39m
+[39m
+[31m82 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Invalid character. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:70:66
+[31m[39m
+[39m
+[31m83 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Invalid character. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:70:87
+[31m[39m
+[39m
+[31m84 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Expression expected. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:71:2
+[31m[39m
+[39m
+[31m85 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Unterminated regular expression literal. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:71:4
+[31m[39m
+[39m
+[31m86 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name 'startImport'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:3:11
+[31m[39m
+[39m
+[31m87 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name 'hostCtx'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:5:11
+[31m[39m
+[39m
+[31m88 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Object is possibly 'undefined'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:5:21
+[31m[39m
+[39m
+[31m89 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name 'docPicker'. Did you mean 'picker'? At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:6:11
+[31m[39m
+[39m
+[31m90 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name 'hostCtx'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:6:23
+[31m[39m
+[39m
+[31m91 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name 'hostCtx'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:6:77
+[31m[39m
+[39m
+[31m92 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name 'opts'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:7:11
+[31m[39m
+[39m
+[31m93 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: No value exists in scope for the shorthand property 'opts'. Either declare one or provide an initializer. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:8:5
+[31m[39m
+[39m
+[31m94 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: No value exists in scope for the shorthand property 'opts'. Either declare one or provide an initializer. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:9:5
+[31m[39m
+[39m
+[31m95 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name 'docPicker'. Did you mean 'picker'? At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:10:5
+[31m[39m
+[39m
+[31m96 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name 'opts'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:10:22
+[31m[39m
+[39m
+[31m97 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Object is possibly 'undefined'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:14:7
+[31m[39m
+[39m
+[31m98 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name 'readAndImport'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:21:11
+[31m[39m
+[39m
+[31m99 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name 'uri'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:21:25
+[31m[39m
+[39m
+[31m100 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: 'string' only refers to a type, but is being used as a value here. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:21:30
+[31m[39m
+[39m
+[31m101 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: No value exists in scope for the shorthand property 'let'. Either declare one or provide an initializer. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:22:5
+[31m[39m
+[39m
+[31m102 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Property 'File' does not exist on type 'typeof fileIo'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:22:18
+[31m[39m
+[39m
+[31m103 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: The value 'null' cannot be used here. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:22:25
+[31m[39m
+[39m
+[31m104 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name 'uri'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:24:26
+[31m[39m
+[39m
+[31m105 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name 'stat'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:25:13
+[31m[39m
+[39m
+[31m106 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name 'file'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:25:32
+[31m[39m
+[39m
+[31m107 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name 'buffer'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:26:13
+[31m[39m
+[39m
+[31m108 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name 'stat'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:26:38
+[31m[39m
+[39m
+[31m109 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name 'file'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:27:19
+[31m[39m
+[39m
+[31m110 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name 'buffer'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:27:28
+[31m[39m
+[39m
+[31m111 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name 'file'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:28:20
+[31m[39m
+[39m
+[31m112 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name 'text'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:30:13
+[31m[39m
+[39m
+[31m113 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name 'buffer'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:30:85
+[31m[39m
+[39m
+[31m114 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name 'entries'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:31:13
+[31m[39m
+[39m
+[31m115 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Object is possibly 'undefined'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:31:23
+[31m[39m
+[39m
+[31m116 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name 'text'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:31:51
+[31m[39m
+[39m
+[31m117 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name 'result'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:32:13
+[31m[39m
+[39m
+[31m118 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name 'entries'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:32:54
+[31m[39m
+[39m
+[31m119 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name 'result'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:34:47
+[31m[39m
+[39m
+[31m120 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name 'result'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:34:68
+[31m[39m
+[39m
+[31m121 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name 'file'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:36:11
+[31m[39m
+[39m
+[31m122 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name 'file'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:38:24
+[31m[39m
+[39m
+[31m123 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name 'parseNetscapeBookmarks'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:48:11
+[31m[39m
+[39m
+[31m124 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name 'html'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:48:34
+[31m[39m
+[39m
+[31m125 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: 'string' only refers to a type, but is being used as a value here. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:48:40
+[31m[39m
+[39m
+[31m126 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Operator '>' cannot be applied to types 'boolean' and '{ [x: number]: any; const: RegExp; Array<ImportEntry>(): any; let: any; m: number; regex: any; "": any; while(m: any): any; }'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:48:49
+[31m[39m
+[39m
+[31m127 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: 'ImportEntry' only refers to a type, but is being used as a value here. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:48:55
+[31m[39m
+[39m
+[31m128 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name 'entries'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:49:11
+[31m[39m
+[39m
+[31m129 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name 'regex'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:50:11
+[31m[39m
+[39m
+[31m130 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: No value exists in scope for the shorthand property 'let'. Either declare one or provide an initializer. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:51:5
+[31m[39m
+[39m
+[31m131 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: 'RegExpExecArray' only refers to a type, but is being used as a value here. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:51:12
+[31m[39m
+[39m
+[31m132 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: The value 'null' cannot be used here. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:51:30
+[31m[39m
+[39m
+[31m133 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: No value exists in scope for the shorthand property 'regex'. Either declare one or provide an initializer. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:51:37
+[31m[39m
+[39m
+[31m134 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name 'html'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:51:48
+[31m[39m
+[39m
+[31m135 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Object is possibly 'undefined'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:53:41
+[31m[39m
+[39m
+[31m136 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name 'm'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:53:65
+[31m[39m
+[39m
+[31m137 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Object is possibly 'undefined'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:53:79
+[31m[39m
+[39m
+[31m138 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name 'm'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:53:103
+[31m[39m
+[39m
+[31m139 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name 'entries'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:54:7
+[31m[39m
+[39m
+[31m140 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name 'm'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:55:7
+[31m[39m
+[39m
+[31m141 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name 'regex'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:55:11
+[31m[39m
+[39m
+[31m142 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name 'html'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:55:22
+[31m[39m
+[39m
+[31m143 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name 'entries'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:57:69
+[31m[39m
+[39m
+[31m144 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name 'decodeHtmlEntities'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:62:11
+[31m[39m
+[39m
+[31m145 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name 's'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:62:30
+[31m[39m
+[39m
+[31m146 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: 'string' only refers to a type, but is being used as a value here. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:62:33
+[31m[39m
+[39m
+[31m147 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: 'string' only refers to a type, but is being used as a value here. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:62:42
+[31m[39m
+[39m
+[31m148 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name 'P9'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:70:48
+[31m[39m
+[39m
+[31m149 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name 'C3'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:70:51
+[31m[39m
+[39m
+[31m150 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name '书签管理页'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:70:55
+[31m[39m
+[39m
+[31m151 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name '列表'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:70:64
+[31m[39m
+[39m
+[31m152 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name 'favicon'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:70:67
+[31m[39m
+[39m
+[31m153 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name '标题'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:70:75
+[31m[39m
+[39m
+[31m154 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name 'URL'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:70:78
+[31m[39m
+[39m
+[31m155 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name '编辑'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:70:82
+[31m[39m
+[39m
+[31m156 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Cannot find name '删除'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:70:85
+[31m[39m
+[39m
+[31m157 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:71:3
+[31m[39m
+[39m
+[31m158 ERROR: [31m10505001 ArkTS Compiler Error
+[31mError Message: Property 'startImport' does not exist on type 'BookmarksPage'. At File: D:/BrowserOS - KaihongOS/entry/src/main/ets/pages/BookmarksPage.ets:158:18
+[31m[39m
+[39m
+[31mCOMPILE RESULT:FAIL {ERROR:159 WARN:73}[39m
+
+[31m* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --debug option to get more log output.
+[39m
+[31m
+FAILURE: Build completed with 1 failure.[31m[39m
+[31m
+1: Task failed with an exception.
+-----------
+* What went wrong:
+Execution failed for task 'default@CompileArkTS'.
+  > Compilation error. See log for more details
+
+[31m* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --debug option to get more log output.
+[31m[39m
+[31m================================================================================[31m[39m
+> hvigor [91mERROR: BUILD FAILED in 6 s 314 ms [39m
+
+25 tasks in total: 10 executed, 15 up-to-date

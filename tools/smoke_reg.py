@@ -135,22 +135,77 @@ def check_mcp_http(hdc):
         record('6.MCP HTTP initialize', False, str(e)[:80])
 
 
+def _walk(node):
+    if isinstance(node, dict):
+        attrs = node.get('attributes')
+        if isinstance(attrs, dict):
+            yield attrs
+        for ch in (node.get('children') or []):
+            yield from _walk(ch)
+    elif isinstance(node, list):
+        for ch in node:
+            yield from _walk(ch)
+
+
+def _find_node(lay_text, needle, exact=False):
+    """JSON-tree lookup: node whose own text matches, return its bounds."""
+    try:
+        data = json.loads(lay_text)
+    except json.JSONDecodeError:
+        return None
+    for attrs in _walk(data):
+        t = attrs.get('text') or ''
+        if (exact and t == needle) or (not exact and needle in t):
+            b = str(attrs.get('bounds', ''))
+            if re.match(r'^\[\d+,\d+\]\[\d+,\d+\]$', b):
+                return b
+    return None
+
+
 def check_bm_search(hdc, lay):
-    # 从布局找 全部书签 入口 bounds
-    m = re.search(r'"text":"全部书签[^"]*","bounds":"(\[[\d,\]\[]+\])"', lay) or \
-        re.search(r'全部书签[^<]{0,80}?(\[\d+,\d+\]\[\d+,\d+\])', lay)
-    if not m:
-        record('7.bookmarks search box', False, '入口未找到(可能非新标签页)')
+    # ⋮ 菜单(工具栏最右 Button,窗口化模式跳过 Enhance 窗口钮) → 书签 菜单项
+    mb = None
+    try:
+        data = json.loads(lay)
+    except json.JSONDecodeError:
+        data = None
+    if data is not None:
+        best_x = -1
+        for attrs in _walk(data):
+            if attrs.get('type') != 'Button':
+                continue
+            m = re.match(r'^\[(\d+),(\d+)\]\[(\d+),(\d+)\]$', str(attrs.get('bounds', '')))
+            if not m:
+                continue
+            x1, y1, x2, y2 = map(int, m.groups())
+            if y1 < 60 or y1 > 400 or x1 < 1000 or 'Enhance' in str(attrs.get('id', '')):
+                continue
+            if x2 > best_x:
+                best_x, mb = x2, m.groups()
+    if not mb:
+        record('7.bookmarks search box', False, '⋮ 菜单按钮未找到')
         return
-    b = m.group(1)
-    xs = [int(v) for v in re.findall(r'\d+', b)]
-    cx, cy = (xs[0] + xs[2]) // 2, (xs[1] + xs[3]) // 2
-    hdc.sh('"uinput -T -c %d %d"' % (cx, cy), 20)
+    cx, cy = (int(mb[0]) + int(mb[2])) // 2, (int(mb[1]) + int(mb[3])) // 2
+    hdc.sh('uitest uiInput click %d %d' % (cx, cy), 20)
+    time.sleep(1.5)
+    hdc.sh('uitest dumpLayout -p /data/local/tmp/smoke_menu.json', 40)
+    hdc.raw('file recv /data/local/tmp/smoke_menu.json smoke_menu_layout.json', 30)
+    try:
+        with open('smoke_menu_layout.json', encoding='utf-8', errors='replace') as f:
+            menu = f.read()
+    except Exception:
+        menu = ''
+    ib = _find_node(menu, '书签', exact=True)
+    if not ib:
+        record('7.bookmarks search box', False, '菜单项 书签 未找到')
+        return
+    xs = [int(v) for v in re.findall(r'\d+', ib)]
+    hdc.sh('uitest uiInput click %d %d' % ((xs[0] + xs[2]) // 2, (xs[1] + xs[3]) // 2), 20)
     time.sleep(2)
     hdc.sh('uitest dumpLayout -p /data/local/tmp/smoke_bm.json', 40)
     hdc.raw('file recv /data/local/tmp/smoke_bm.json smoke_bm_layout.json', 30)
     try:
-        with open('smoke_bm_layout.json', encoding='utf-8') as f:
+        with open('smoke_bm_layout.json', encoding='utf-8', errors='replace') as f:
             p = f.read()
         ok = '搜索书签' in p
         record('7.bookmarks search box', ok, 'placeholder 搜索书签 ' + ('found' if ok else 'MISSING'))
