@@ -46,6 +46,14 @@ export interface AppConfigUpdate {
   searchEngineId?: string
 }
 
+/** P35/P36: llmProviders 预设条目（[{name,baseUrl,apiKey,model}]） */
+interface LlmProviderItem {
+  name: string
+  baseUrl: string
+  apiKey: string
+  model: string
+}
+
 export class AppConfig {
   mcpPort: number = 9222
   wsPort: number = 8765
@@ -73,7 +81,17 @@ export class AppConfig {
   /** p23b: LLM 供应商预设列表 JSON（[{name,baseUrl,apiKey,model}]），空串=无预设 */
   llmProviders: string = ''
 
+  /** P36: 脱敏出口 —— 密钥不落盘（llmApiKey 空 + providers keys 脱空），asset 持真值 */
   toJSON(): AppConfigJSON {
+    return this.buildJSON(false)
+  }
+
+  /** P36: 明文出口 —— 仅 ConfigManager 降级模式（asset 不可用）落盘使用 */
+  toJSONPlain(): AppConfigJSON {
+    return this.buildJSON(true)
+  }
+
+  private buildJSON(keepSecrets: boolean): AppConfigJSON {
     const result: AppConfigJSON = {
       mcpPort: this.mcpPort,
       wsPort: this.wsPort,
@@ -95,12 +113,42 @@ export class AppConfig {
       darkMode: this.darkMode,
       sensitiveConfirm: this.sensitiveConfirm,
       llmBaseUrl: this.llmBaseUrl,
-      llmApiKey: this.llmApiKey,
+      llmApiKey: keepSecrets ? this.llmApiKey : '',
       llmModel: this.llmModel,
       searchEngineId: this.searchEngineId,
-      llmProviders: this.llmProviders
+      llmProviders: keepSecrets ? this.llmProviders : this.sanitizedProvidersForDisk()
     }
     return result
+  }
+
+  /** P36: 密钥指纹（前4后4，中段***）——写日志/比对用，永不回传全值 */
+  static keyFingerprint(key: string): string {
+    if (key.length === 0) {
+      return '(empty)'
+    }
+    if (key.length <= 8) {
+      return key.length + 'chars***'
+    }
+    return key.substring(0, 4) + '***' + key.substring(key.length - 4) + ' (' + key.length + 'ch)'
+  }
+
+  /** P36: llmProviders JSON 内每项 apiKey 脱空后序列化（异常原样返回） */
+  private sanitizedProvidersForDisk(): string {
+    if (this.llmProviders.length === 0) {
+      return this.llmProviders
+    }
+    try {
+      const arr = JSON.parse(this.llmProviders) as LlmProviderItem[]
+      if (!Array.isArray(arr)) {
+        return this.llmProviders
+      }
+      for (const it of arr) {
+        it.apiKey = ''
+      }
+      return JSON.stringify(arr)
+    } catch (e) {
+      return this.llmProviders
+    }
   }
 
   static fromJSON(json: Record<string, Object>): AppConfig {

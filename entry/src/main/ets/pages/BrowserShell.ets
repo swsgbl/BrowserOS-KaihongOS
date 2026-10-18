@@ -18,6 +18,7 @@ import { ChangelogOverlay } from '../components/ChangelogOverlay'
 import { NeoDashboardPanel } from '../components/NeoDashboardPanel'
 import { webview } from '@kit.ArkWeb'
 import { router } from '@kit.ArkUI'
+import EntryAbility from '../entryability/EntryAbility'
 import { LoginStateManager } from '../service/LoginStateManager'
 import { ThreeDotMenu, OmniboxSuggestions, BookmarkBubble, SuggestItem } from '../components/ChromeWidgets'
 import { AgentSidePanel } from '../components/AgentSidePanel'
@@ -328,6 +329,8 @@ struct BrowserShell {
         console.info('BrowserShell active tab: ' + this.activeTabId)
       }
       EventBus.on(EventBusEvents.TAB_STATUS_CHANGE, this.onTabStatusChange)
+      // P36-B: 冷启动收口点 —— BrowserShell UI 组件树首帧装配完成（含 tabs/dashboard 初始化）
+      console.info(`[P36] cold_start_ms=${Date.now() - EntryAbility.coldStartT0}`)
       console.info('BrowserShell aboutToAppear done')
     } catch (e) {
       console.error('BrowserShell aboutToAppear error: ' + e)

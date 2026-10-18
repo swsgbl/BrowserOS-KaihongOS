@@ -257,13 +257,13 @@ class LoginStateManagerImpl {
     if (!ok) {
       console.warn('[LoginStateManager] prefs persist failed, fallback to legacy file: ' + state.domain)
     }
-    // 兼容链: 加密可用时同步落一份加密 JSON 文件（旧读取方/导出仍可用）
-    const filePath = `login_state/${state.domain}.json`
+    // P36: asset 真加密可用时不再落文件副本（Preferences 载体已唯一真源；
+    // 旧 XOR 伪加密文件通道关闭）。asset 不可用的降级环境保留明文文件兜底。
     if (SecureStorageAdapter.isSecureStorageAvailable()) {
-      await SecureStorageAdapter.encryptStoreJSON(filePath, state.toJSON())
-    } else {
-      await StorageManager.saveJSON(filePath, state.toJSON())
+      return ok
     }
+    const filePath = `login_state/${state.domain}.json`
+    await StorageManager.saveJSON(filePath, state.toJSON())
     return ok
   }
 
@@ -381,7 +381,7 @@ class LoginStateManagerImpl {
     if (migrated > 0) {
       const agg: LoginSessionAgg = { domains: aggDomains }
       await PrefsStore.putString('login_state', 'session_info', JSON.stringify(agg))
-      console.info('[LoginStateManager] legacy login_state migrated to Preferences: ' + migrated + ' domains')
+      console.info('[LoginStateManager] legacy login_state migrated to Preferences: ' + migrated + ' domains (P36: legacy decrypt path retained read-only)')
     }
   }
 

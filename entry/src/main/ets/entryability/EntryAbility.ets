@@ -3,6 +3,8 @@ import { window } from '@kit.ArkUI'
 import { BusinessError } from '@kit.BasicServicesKit'
 import { StorageManager } from '../storage/StorageManager'
 import { ConfigManager } from '../storage/ConfigManager'
+import { SecureStorageAdapter } from '../storage/SecureStorageAdapter'
+import { AppConfig } from '../model/AppConfig'
 import { MCPServer } from '../service/MCPServer'
 import { HistoryManager } from '../service/HistoryManager'
 import { LoginStateManager } from '../service/LoginStateManager'
@@ -12,6 +14,12 @@ import { TabManager } from '../service/TabManager'
 import { ScheduleManager } from '../service/ScheduleManager'
 
 export default class EntryAbility extends UIAbility {
+  /** P36-B: 冷启动计时锚点（onCreate 首行），BrowserShell aboutToAppear 收口算 cold_start_ms */
+  static readonly coldStartT0: number = Date.now()
+
+  /** P36-fix: ConfigManager.load() 的 promise（入口页判定前必须 await） */
+  private configReady: Promise<AppConfig> | null = null
+
   onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
     console.info('BrowserOS KaihongOS EntryAbility onCreate')
     // 初始化链：存储基路径指向应用沙箱 filesDir → 加载配置
@@ -41,8 +49,12 @@ export default class EntryAbility extends UIAbility {
     }).catch((e: BusinessError) => {
       console.error('EntryAbility session reconcile error: ' + e.message)
     })
-    ConfigManager.load().then((config) => {
-      console.info('EntryAbility ConfigManager loaded, mcpPort=' + config.mcpPort)
+    // P36: 配置装载链 —— asset 探活(计时) → config.json 读取 → 明文密钥一次性迁移 asset → asset 真值回灌
+    const p36T0 = Date.now()
+    // P36-fix: 持有 load promise，onWindowStageCreate 的入口页判定必须等它完成
+    // （asset 探测是真实异步 IPC，冷启 ~1.3s；不等会读到默认配置误入 OnboardingPage）
+    this.configReady = ConfigManager.load().then((config) => {
+      console.info(`EntryAbility ConfigManager loaded, mcpPort=${config.mcpPort} [P36] secure=${SecureStorageAdapter.isSecureStorageAvailable()} load_ms=${Date.now() - p36T0}`)
       // P3: 启动 MCP 网络层（HTTP transport 监听 0.0.0.0:{mcpPort}，token 每次启动新生成）
       const token = MCPServer.generateAuthToken()
       MCPServer.start(config.mcpPort, token, config.wsPort).then((ok) => {
@@ -54,8 +66,10 @@ export default class EntryAbility extends UIAbility {
       }).catch((e: BusinessError) => {
         console.error('EntryAbility MCPServer start error: ' + e.code + '/' + e.message)
       })
+      return config
     }).catch((e: BusinessError) => {
       console.error('EntryAbility ConfigManager load error: ' + e.message)
+      return ConfigManager.get()
     })
     // P23a: 定时任务调度器（config 就绪后启动 1 分钟 tick）
     ScheduleManager.init().catch((e: BusinessError) => {
@@ -76,7 +90,7 @@ export default class EntryAbility extends UIAbility {
     ScheduleManager.stop()
   }
 
-  onWindowStageCreate(windowStage: window.WindowStage): void {
+  async onWindowStageCreate(windowStage: window.WindowStage): Promise<void> {
     console.info('BrowserOS KaihongOS EntryAbility onWindowStageCreate')
     // P5: 首启动 Onboarding —— 未完成配置则进入引导页
     // p10a: dark dispatch via AppStorage
@@ -96,6 +110,8 @@ export default class EntryAbility extends UIAbility {
     } catch (e) {
       console.error('EntryAbility restoreTabs error: ' + e)
     }
+    // P36-fix: 等配置就绪再判定入口页（asset 探测异步 IPC 耗时不可忽略）
+    await this.configReady
     const entryPage = ConfigManager.isOnboardingCompleted() ? 'pages/BrowserShell' : 'pages/OnboardingPage'
     console.info('EntryAbility entry page: ' + entryPage + ' (onboardingCompleted=' + ConfigManager.isOnboardingCompleted() + ')')
     windowStage.loadContent(entryPage, (err: BusinessError) => {

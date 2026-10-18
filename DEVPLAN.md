@@ -1047,3 +1047,32 @@ python tools/smoke_reg.py         # 30 秒健康检查
 - 终局回归：**static 15/15（82 文件）+ smoke 7/7（a11y ×37）**（Quickemu VM 15566 最终构建）
 - 设备证据：evidence/p35（40+ 文件，含 jtbd_e2e.py/accept*.py 可复跑）
 - 设备级自动化限制新增记录：uitest inputText 无法注入 '@' 后字符（hdc 转义毁坏）
+
+
+---
+
+## P36：安全升级（Asset Store 真加密）+ 性能量化 + smoke 8 步（2026-10-18，用户令"继续全面核对推进"；hmh 单棒干净交付 + Zodex 验收）
+
+### 前置核对
+- 两报告文件未变（同尺寸同日期）；上游仓库零漂移（tree 4092 不变，最新提交 2026-10-16 早于我方全量对标）——P32-P35 结论有效
+- 本轮按报告"加密敏感数据/性能评估"优先级+生产就绪审计三待项之二/三推进
+
+### A 真·安全存储迁移（替换 XOR 假加密，6 文件）
+- **SecureStorageAdapter 重写**：`@ohos.security.asset`（AssetStoreKit，API12+）——init 探活（query 探针）/putSecret（add→update）/getSecret/removeSecret；query 与 attrs Map 分离（实测 401 参数错修复）；旧 XOR 降为 legacy 只读兼容；asset 不可用明文降级+warn
+- **ConfigManager 重写**：load=探活→读盘→一次性幂等迁移（明文→asset→脱敏重写 config.json，指纹留痕）→asset 回灌内存；save=syncKeysToAsset+脱敏落盘；AppConfig.toJSON 恒脱敏（llmApiKey/providers keys 置空）+toJSONPlain 降级用+keyFingerprint
+- LoginStateManager：asset 可用时 Preferences 为唯一真源；EntryAbility：coldStartT0 锚点+**自修回归**（入口页判定 await configReady——asset 探活 1.3s 异步不等会误入 Onboarding）
+- **Zodex 验收铁证**：设备 config.json `llmApiKey:""` 且全文 0 处 `sk-`；**chat 单轮 `answer: 29 chars`**（磁盘无 key、真值在 asset、内存注水后 LLM 照常）；hmh 证据：迁移幂等（复启无重复）+asset 探活热路径 7-8ms
+- **KaihongOS API14 VM asset 服务可用性=可用**（首查 24000002 服务活）——生产就绪审计"SecureStore 加密"待项就此闭合
+- 边界如实记录：UI 全环 update 路径代码级核验（`bm install -r` 会清 asset 数据=系统行为）
+
+### B 性能量化（生产就绪审计"未量化"待项闭合）
+- docs/PERFORMANCE.md：**冷启动 55-60ms**（onCreate→BrowserShell aboutToAppear done，2 tab 恢复）/ConfigManager.load 11-12ms（含探活+迁移检查+回灌）/asset 探活冷 1315ms·热 7-8ms/**PSS 161MB**（hidumper，运行态，Swap 0）——VM 纵向基线 caveat 明示
+- 采样脚本 perf_probe.py 未产出（小憾：打点已在 hilog，可随时补采）
+
+### C smoke 扩至 8 步（Zodex）
+- 第 8 步：P34/P35 新屏注册静态检查（main_pages 13 页）+ ⋮ 菜单 Skills 入口（复用第 7 步菜单 dump）
+
+### P36 终态
+- 终局：**static 15/15 + smoke 8/8**（Quickemu VM 15566，hmh 最终构建+Zodex 复验）
+- 生产就绪三待项闭合进度：~~SecureStore~~（本轮）/正式签名证书（仍待真机发布场景）/API14 SDK 直接构建（repack 绕法仍用）
+- 证据 evidence/p36（EVIDENCE.md+三轮 hilog+hidumper+截图+llm_probe.py）

@@ -245,6 +245,32 @@ def check_bm_search(hdc, lay):
         record('7.bookmarks search box', False, str(e)[:80])
 
 
+def check_new_pages(hdc):
+    """8. P34/P35 新屏注册与入口：main_pages 13 页 + ⋮ 菜单含 Skills 项（复用第 7 步菜单 dump）"""
+    ok_pages = True
+    detail = ''
+    try:
+        with open(os.path.join(SRC, '..', 'resources', 'base', 'profile', 'main_pages.json'),
+                  encoding='utf-8') as f:
+            prof = f.read()
+        need = ['SkillsPage', 'JtbdSurveyPage', 'UltrafastWaitlistPage']
+        missing = [n for n in need if n not in prof]
+        ok_pages = not missing
+        detail = 'main_pages ok' if ok_pages else 'missing: ' + ','.join(missing)
+    except Exception as e:
+        ok_pages = False
+        detail = str(e)[:60]
+    menu_ok = False
+    try:
+        with open('smoke_menu_layout.json', encoding='utf-8', errors='replace') as f:
+            menu = f.read()
+        menu_ok = '"Skills"' in menu.replace('”', '"') or 'Skills' in menu
+    except Exception:
+        menu_ok = False
+    record('8.p34/p35 screens registered', ok_pages and menu_ok,
+           detail + ('; menu Skills found' if menu_ok else '; menu Skills MISSING'))
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--hdc', default=r'C:\Program Files\Huawei\DevEco Studio\sdk\default\openharmony\toolchains\hdc.exe')
@@ -265,6 +291,7 @@ def main():
     check_a11y_static()
     check_mcp_http(hdc)
     check_bm_search(hdc, lay)
+    check_new_pages(hdc)
     return _summary()
 
 
