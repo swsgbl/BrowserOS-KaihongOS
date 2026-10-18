@@ -11,7 +11,7 @@ Verified facts (hmh, 2026-10-07):
   Output module.json keeps symbolic refs, so we digitize ourselves with the
   fixed id map that matches the compiled index.
 """
-import json, os, shutil, subprocess, zipfile
+import json, os, shutil, subprocess, sys, zipfile
 
 PROJ = r"D:\BrowserOS - KaihongOS"
 RESTOOL = r"D:\OHOS-QEMU\sdk-5.0.2\14\toolchains\restool.exe"
@@ -19,6 +19,14 @@ V1 = r"D:\v1tmp"
 SRC_HAP = os.path.join(PROJ, "entry", "build", "default", "outputs", "default", "entry-default-unsigned.hap")
 OUT_HAP = os.path.join(PROJ, "entry-p8-v1-unsigned.hap")
 WORK = os.path.join(V1, "p8final")
+
+# ---------- 0. P37: sync final_ids.json from hvigor's authoritative id map ----------
+# Clean rebuilds reassign hvigor resource ids (alphabetical); the V1 pack must pin
+# EXACTLY those, else $r() lookups in modules.abc miss and every icon renders blank.
+GEN = os.path.join(PROJ, "tools", "gen_final_ids.py")
+rg = subprocess.run([sys.executable, GEN], capture_output=True, text=True)
+print("gen_final_ids:", (rg.stdout or rg.stderr).strip()[:120])
+assert os.path.exists(os.path.join(V1, "final_ids.json")), "final_ids.json missing"
 
 # ---------- 1. restool V1 compile (resources -> index) ----------
 IN = os.path.join(V1, "final")          # built by build_final_v1.py (resources/base + module.json)
@@ -32,15 +40,13 @@ v1_index = open(os.path.join(OUTRESTOOL, "resources.index"), "rb").read()
 assert v1_index[:8] == b"Restool ", v1_index[:20]
 print("V1 index:", len(v1_index), "B head:", v1_index[:17])
 
-# id map (must match final_ids.json / the compiled index)
-ID = {
-    "app_name": 0x01000001, "EntryAbility_label": 0x01000002,
-    "EntryAbility_desc": 0x01000003, "module_desc": 0x01000004,
-    "internet_permission_reason": 0x01000005, "file_access_permission_reason": 0x01000006,
-    "storage_permission_reason": 0x01000007, "start_window_background": 0x01000008,
-    "app_icon": 0x01000009, "app_icon_48": 0x0100000a, "app_icon_96": 0x0100000b,
-    "app_icon_192": 0x0100000c, "app_icon_216": 0x0100000d,
-}
+# id map (P37: read from the generated final_ids.json so module.json digitization
+# always matches the compiled index)
+_fids = json.load(open(os.path.join(V1, "final_ids.json"), encoding="utf-8"))
+ID = {rec["name"]: int(rec["id"], 16) for rec in _fids["record"]}
+for _need in ("app_name", "EntryAbility_label", "EntryAbility_desc", "module_desc",
+              "internet_permission_reason", "start_window_background", "app_icon"):
+    assert _need in ID, "final_ids missing %s" % _need
 # NOTE: the old (device-verified) hap keeps SYMBOLIC refs in module.json with the
 # numeric *Id fields as parallel cache; BMS 9568342 "parse profile prop type error"
 # happens when refs are replaced by ints (app.icon must stay "$media:...").

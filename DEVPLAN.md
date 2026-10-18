@@ -1076,3 +1076,33 @@ python tools/smoke_reg.py         # 30 秒健康检查
 - 终局：**static 15/15 + smoke 8/8**（Quickemu VM 15566，hmh 最终构建+Zodex 复验）
 - 生产就绪三待项闭合进度：~~SecureStore~~（本轮）/正式签名证书（仍待真机发布场景）/API14 SDK 直接构建（repack 绕法仍用）
 - 证据 evidence/p36（EVIDENCE.md+三轮 hilog+hidumper+截图+llm_probe.py）
+
+
+---
+
+## P37：全应用图标空白回退修复——"+" 不见/× 不显示的真凶（2026-10-18，用户点名"左侧标签页没有加号、叉关不了"；Zodex 直接攻坚）
+
+### 现象与定性
+- 用户报告 + 消失、× 关不了——**P30 修复代码零改动**（git 证），点击链路其实一直通（hilog E2E managerTabs 1→2→1）
+- 像素级取证：× 区域 94% 空白、+ 区域 90% 空白、favicon 区 40% 覆盖对照——**图标本体未渲染**（按钮在、图标空）；同启动原子探针（dump→定位→截图→就地探针）证实 Image 节点在位而像素空白
+
+### 根因（三层洋葱）
+1. **真凶**：P34b 起为防 hvigor UP-TO-DATE 假命中而 `rmdir entry\build` 清理重编——hvigor 重新分配资源 id（字母序），而 V1 打包钉的 final_ids.json 还是 P8 期插入序 id → modules.abc（按新 id 找）与 V1 index（按旧 id 摆）错位 → **全应用 $r('app.media.ic_*') 解析失败渲染空白**
+2. **假表陷阱**：hvigor 的 `ResourceTable.txt` 与 `ids_map/id_defined.json` 的编号与 abc 实际引用**不一致**（第一次修复照此表同步→无效）；**权威真值在 hvigor 自带 RestoolV2 resources.index 二进制里**（记录格式 `<namelen><name><id><meta>`，如 ic_add=0x01000018）
+3. **验证陷阱**：ContainerModal 窗口偏移逐启动漂移——旧坐标探针四轮拍到同一块背景（数据逐位相同才识破），一切图标验证必须同启动原子化
+
+### 修复（三件）
+1. **tools/gen_final_ids.py（新）**：解析 V2 index 二进制出 ic_* 真值 id → 合并 P8 期稳定 13 项基础 id（module.json 用，字符串区 V2 记录结构不同不解析）→ 重生成 final_ids.json（43+13=56 条）
+2. **tools/build_v1_hap.py**：打包前自动跑 gen_final_ids（sys.executable 防裸 python 存根）+ ID 字典改读生成文件（不再硬编码）——**管线自此自愈，任何 id 重排自动同步**
+3. **TabStrip 图标切 $rawfile**（ic_add/ic_close/ic_globe/ic_robot/ic_tab_search 五枚入 resources/rawfile/，按文件名加载完全绕开 id 体系）——用户点名的标签条从此免疫 id 漂移
+
+### 验收
+- 像素：favicon 区 40% 覆盖、菜单 ic 图标（$r 体系）30% 覆盖——**两套图标体系双双渲染**；ASCII 全景条上多行标签 favicon/×/底部+/搜索点阵可见（evidence/p37/atomic.jpeg+ascii）
+- 功能：+/× 点击 E2E 此前同代码 hilog 实证（1→2→1）；本轮 dump 计数确认关闭钮在位（dashboard 标签不可关为既定设计）
+- 终局：**static 15/15 + smoke 8/8**
+- 证据 evidence/p37（repro/atomic/e2e 系列+ascii 渲染）
+
+### 教训入册
+- hvigor 三张"资源 id 表"只有 V2 index 二进制是真的；ResourceTable/id_defined 是烟雾弹
+- entry\build 清理重编=资源 id 全量重排，任何外挂资源管线必须随之同步（已自动化）
+- 截图取证必须与 dump 同启动原子化（ContainerModal 漂移会让跨启动坐标全部失效）

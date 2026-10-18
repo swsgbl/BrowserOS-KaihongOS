@@ -67,7 +67,7 @@ export struct TabStrip {
             Stack() {
               Row() {
                 Stack() {
-                  Image(tab.agentId ? $r('app.media.ic_robot') : $r('app.media.ic_globe'))
+                  Image(tab.agentId ? $rawfile('ic_robot.svg') : $rawfile('ic_globe.svg'))
                     .width(12).height(12)
                     .fillColor(tab.agentId ? '#8AB4F8' : (tab.tabId === this.activeTabId ? '#5F6368' : '#80868B'))
                     .draggable(false)
@@ -85,7 +85,7 @@ export struct TabStrip {
                   .fontColor(tab.tabId === this.activeTabId ? this.pal().text : this.pal().text2)
 
                 Button({ type: ButtonType.Normal }) {
-                  Image($r('app.media.ic_close'))
+                  Image($rawfile('ic_close.svg'))
                     .width(16).height(16)
                     .fillColor(this.pal().text2)
                     .draggable(false)
@@ -135,7 +135,7 @@ export struct TabStrip {
       // P28-C: tab-search 入口移到竖排条底部(与 ic_add 并排)
       Row({ space: 4 }) {
         Button({ type: ButtonType.Normal }) {
-          Image($r('app.media.ic_add'))
+          Image($rawfile('ic_add.svg'))
             .width(16).height(16)
             .fillColor(this.pal().text2)
             .draggable(false)
@@ -150,7 +150,7 @@ export struct TabStrip {
         })
 
         Button({ type: ButtonType.Normal }) {
-          Image($r('app.media.ic_tab_search'))
+          Image($rawfile('ic_tab_search.svg'))
             .width(16).height(16)
             .fillColor(this.pal().text2)
             .draggable(false)
@@ -182,7 +182,7 @@ export struct TabStrip {
           Row() {
             // favicon 方块(18x18 圆角小瓦片,内嵌 12px SVG)
             Stack() {
-              Image(tab.agentId ? $r('app.media.ic_robot') : $r('app.media.ic_globe'))
+              Image(tab.agentId ? $rawfile('ic_robot.svg') : $rawfile('ic_globe.svg'))
                 .width(12).height(12)
                 .fillColor(tab.agentId ? '#8AB4F8' : (tab.tabId === this.activeTabId ? '#5F6368' : '#80868B'))
                 .draggable(false)
@@ -200,7 +200,7 @@ export struct TabStrip {
               .fontColor(tab.tabId === this.activeTabId ? this.pal().text : this.pal().text2)
 
             Button({ type: ButtonType.Normal }) {
-              Image($r('app.media.ic_close'))
+              Image($rawfile('ic_close.svg'))
                 .width(14).height(14)
                 .fillColor(this.pal().text2)
                 .draggable(false)
@@ -239,7 +239,7 @@ export struct TabStrip {
 
       // 新标签按钮
       Button({ type: ButtonType.Normal }) {
-        Image($r('app.media.ic_add'))
+        Image($rawfile('ic_add.svg'))
           .width(16).height(16)
           .fillColor(this.pal().text2)
           .draggable(false)
@@ -257,7 +257,7 @@ export struct TabStrip {
 
       // tab-search 按钮(打开的标签页面板)
       Button({ type: ButtonType.Normal }) {
-        Image($r('app.media.ic_tab_search'))
+        Image($rawfile('ic_tab_search.svg'))
           .width(16).height(16)
           .fillColor(this.pal().text2)
           .draggable(false)
@@ -315,7 +315,7 @@ export struct TabSearchPanel {
           Column() {
             ForEach(this.tabs, (tab: TabInfo) => {
               Row() {
-                Image(tab.agentId ? $r('app.media.ic_robot') : $r('app.media.ic_globe'))
+                Image(tab.agentId ? $rawfile('ic_robot.svg') : $rawfile('ic_globe.svg'))
                   .width(16).height(16)
                   .fillColor(tab.agentId ? '#8AB4F8' : this.pal().text2)
                   .margin({ right: 8 })
@@ -327,7 +327,7 @@ export struct TabSearchPanel {
                   .textOverflow({ overflow: TextOverflow.Ellipsis })
                   .layoutWeight(1)
                 Button({ type: ButtonType.Normal }) {
-                  Image($r('app.media.ic_close'))
+                  Image($rawfile('ic_close.svg'))
                     .width(16).height(16)
                     .fillColor(this.pal().text2)
                     .draggable(false)
@@ -357,7 +357,7 @@ export struct TabSearchPanel {
         Divider().color(this.pal().border).margin({ top: 4, bottom: 4 })
 
         Row() {
-          Image($r('app.media.ic_add'))
+          Image($rawfile('ic_add.svg'))
             .width(16).height(16)
             .fillColor(this.pal().text2)
             .margin({ right: 8 })
