@@ -9,6 +9,7 @@ import { JSBridgeInjector } from '../protocol/JSBridgeInjector'
 import { Constants } from '../common/Constants'
 import { getEngineById } from '../common/SearchEngines'
 import { ConfigManager } from '../storage/ConfigManager'
+import { AppConfigUpdate } from '../model/AppConfig'
 import { EventBus, EventBusEvents } from '../infra/EventBus'
 import { TabStatus, SensitiveOperationType } from '../common/Types'
 import { TabInfo } from '../model/TabInfo'
@@ -32,6 +33,7 @@ import { DownloadManager, DownloadItem, DownloadStatus } from '../service/Downlo
 import { AgentEngine } from '../service/AgentEngine'
 import { RunStrategy } from '../common/Types'
 import { preferences } from '@kit.ArkData'
+import { ScheduleManager, ScheduleTask } from '../service/ScheduleManager'
 
 interface PageLoadErrorData {
   tabId: string
@@ -50,6 +52,20 @@ interface BarItem {
   title: string
 }
 
+/** P35-C: LLM provider 预设（与 LlmHubPage 同构，[{name,baseUrl,apiKey,model}]） */
+interface DashProvider {
+  name: string
+  baseUrl: string
+  apiKey: string
+  model: string
+}
+
+/** P35-C: RecentSites 条目（历史 top 域名 favicon 圆框 + 域名小字） */
+interface RecentSite {
+  domain: string
+  url: string
+}
+
 @Entry
 @Component
 struct BrowserShell {
@@ -58,9 +74,110 @@ struct BrowserShell {
   @StorageProp('darkMode') @Watch('onThemeFlip') darkMode: boolean = false
   @State themeVersion: number = 0
 
+  /** P35-C: 新标签页 agent-command 形态状态 */
+  @State dashProviders: DashProvider[] = []
+  @State dashProviderOpen: boolean = false
+  @State dashCurProviderName: string = ''
+  @State recentSites: RecentSite[] = []
+  @State schedResults: ScheduleTask[] = []
+
+  /** P35-C: 载入 LLM providers + 当前选中名 */
+  private loadDashProviders(): void {
+    const raw = ConfigManager.get().llmProviders
+    const list: DashProvider[] = []
+    if (raw !== null && raw.length > 0) {
+      try {
+        const arr = JSON.parse(raw) as DashProvider[]
+        if (Array.isArray(arr)) {
+          for (const it of arr) {
+            list.push(it)
+          }
+        }
+      } catch (e) {
+        console.warn('[P35] dash providers parse fail: ' + e)
+      }
+    }
+    this.dashProviders = list
+    const cur = ConfigManager.get()
+    let name = ''
+    for (const p of list) {
+      if (p.baseUrl.length > 0 && p.baseUrl === cur.llmBaseUrl) {
+        name = p.name
+        break
+      }
+    }
+    if (name.length === 0 && cur.llmBaseUrl.length > 0) {
+      name = cur.llmModel.length > 0 ? cur.llmModel : '自定义'
+    }
+    this.dashCurProviderName = name
+    console.info('[P35] dash providers loaded: ' + list.length + ' cur=' + name)
+  }
+
+  /** P35-C: 选中 provider 写回 AppConfig 三字段（LlmHubPage applyProvider 同款逻辑） */
+  private selectDashProvider(p: DashProvider): void {
+    this.dashProviderOpen = false
+    ConfigManager.update({
+      llmBaseUrl: p.baseUrl,
+      llmApiKey: p.apiKey,
+      llmModel: p.model
+    } as AppConfigUpdate).then((ok: boolean) => {
+      if (ok) {
+        this.dashCurProviderName = p.name
+        console.info('[P35] provider applied: ' + p.name + ' -> ' + p.baseUrl)
+      } else {
+        console.warn('[P35] provider apply failed (invalid endpoint): ' + p.name)
+      }
+    })
+  }
+
+  /** P35-C: 历史 top 域名 top6（按访问次数聚合去重） */
+  private loadRecentSites(): void {
+    const his = HistoryManager.getAllHistory(200)
+    const counts = new Map<string, RecentSite>()
+    for (const e of his) {
+      if (!e.url.startsWith('http')) {
+        continue
+      }
+      let domain = e.url
+      const m = e.url.match(/^https?:\/\/([^\/?#]+)/)
+      if (m !== null && m.length > 1) {
+        domain = m[1]
+      }
+      if (domain.length === 0) {
+        continue
+      }
+      if (!counts.has(domain)) {
+        counts.set(domain, { domain: domain, url: e.url } as RecentSite)
+      }
+      if (counts.size >= 6) {
+        break
+      }
+    }
+    const sites: RecentSite[] = []
+    counts.forEach((v: RecentSite) => {
+      sites.push(v)
+    })
+    this.recentSites = sites
+    console.info('[P35] recent sites: ' + sites.length)
+  }
+
+  /** P35-C: 定时任务最近执行结果（lastRunAt>0 的前 3 条） */
+  private loadSchedResults(): void {
+    const all = ScheduleManager.getTasks().filter((t: ScheduleTask): boolean => t.lastRunAt > 0)
+    all.sort((a: ScheduleTask, b: ScheduleTask): number => b.lastRunAt - a.lastRunAt)
+    this.schedResults = all.slice(0, 3)
+    console.info('[P35] sched results: ' + this.schedResults.length)
+  }
+
   onThemeFlip(): void {
     this.themeVersion++
     console.info('BrowserShell theme flipped: darkMode=' + this.darkMode + ' v=' + this.themeVersion)
+    // P35-C: 主题翻转时刷新新标签页数据（providers 可能在设置页变动）
+    if (this.showDashboard) {
+      this.loadDashProviders()
+      this.loadRecentSites()
+      this.loadSchedResults()
+    }
   }
 
   private pal(): Palette {
@@ -164,6 +281,10 @@ struct BrowserShell {
   aboutToAppear(): void {
     console.info('BrowserShell aboutToAppear start')
     this.initUltrafastPrefs()
+    // P35-C: 新标签页 agent-command 数据装载
+    this.loadDashProviders()
+    this.loadRecentSites()
+    this.loadSchedResults()
     // P14b: 书签变更订阅驱动刷新
     EventBus.on(EventBusEvents.BOOKMARKS_CHANGED, this.onBookmarksChanged)
     EventBus.on(EventBusEvents.HISTORY_CHANGED, this.onHistoryChanged)
@@ -798,6 +919,8 @@ struct BrowserShell {
   @State historyCount: number = 0
   private onHistoryChanged = (data: Object): void => {
     this.refreshCounts()
+    // P35-C: 历史就绪/更新时重取 RecentSites（aboutToAppear 时 RDB 可能未加载完）
+    this.loadRecentSites()
   }
   @State importPath: string = ''
   @State importResult: string = ''
@@ -1158,8 +1281,7 @@ struct BrowserShell {
   @State ultrafastToast: string = ''
   private ultraPrefs: preferences.Preferences | null = null
 
-  private initUltrafastPrefs(): void {
-    const ctx = this.getUIContext().getHostContext()
+  private initUltrafastPrefs(): void {    const ctx = this.getUIContext().getHostContext()
     if (!ctx) {
       return
     }
@@ -1203,13 +1325,13 @@ struct BrowserShell {
       Stack({ alignContent: Alignment.TopStart }) {
         Column() {
           Text() {
-            Span('What are your agents ')
+            Span('What should your agent ')
               .fontColor('#FFFFFF')
-            Span('working on')
-              .fontColor('#CFE4FF')
-              .fontWeight(FontWeight.Bold)
+            Span('work on')
+              .fontColor('#F0983F')
+              .fontWeight(FontWeight.Medium)
               .fontStyle(FontStyle.Italic)
-            Span(' right now?')
+            Span(' next?')
               .fontColor('#FFFFFF')
           }
           .fontSize(26)
@@ -1217,6 +1339,11 @@ struct BrowserShell {
           .letterSpacing(-0.6)
           .textAlign(TextAlign.Center)
           .margin({ top: 30, bottom: 26 })
+          Text('Pick any provider or agent you have connected, then start a task, all without leaving this tab.')
+            .fontSize(13)
+            .fontColor('#FFFFFFCC')
+            .textAlign(TextAlign.Center)
+            .margin({ left: 30, right: 30, bottom: 30 })
         }
         .width('100%')
 
@@ -1269,7 +1396,9 @@ struct BrowserShell {
               .fontColor(this.darkMode ? '#7CB1FF' : '#1A73E8')
               .margin({ left: 14 })
               .onClick(() => {
-                this.joinUltrafast()
+                // P35-B: CTA 改跳 Ultrafast 等待页（不再 toast 直接加入）
+                console.info('[P35] banner CTA -> UltrafastWaitlistPage')
+                router.pushUrl({ url: 'pages/UltrafastWaitlistPage' })
               })
           }
           .width('100%')
@@ -1306,6 +1435,131 @@ struct BrowserShell {
           .borderRadius(16)
           .padding({ left: 14, right: 14, top: 8, bottom: 8 })
           .margin({ top: 8 })
+      }
+
+      // P35-C: provider 选择器（对标上游 ConversationInput 下拉——名称+当前标记，选中写回 config）
+      Column() {
+        Row() {
+          Image($r('app.media.ic_robot'))
+            .width(13).height(13)
+            .fillColor('#7CB1FF')
+            .draggable(false)
+          Text(this.dashProviders.length > 0 || this.dashCurProviderName.length > 0
+            ? (this.dashCurProviderName.length > 0 ? this.dashCurProviderName : '选择模型')
+            : '未配置模型')
+            .fontSize(11)
+            .fontColor(this.dashProviders.length > 0 || this.dashCurProviderName.length > 0 ? (this.darkMode ? '#7CB1FF' : '#1A73E8') : '#F0983F')
+            .maxLines(1)
+            .constraintSize({ maxWidth: 150 })
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+            .margin({ left: 6 })
+          Image($r('app.media.ic_arrow_down'))
+            .width(10).height(10)
+            .fillColor(this.pal().text2)
+            .draggable(false)
+            .margin({ left: 5 })
+        }
+        .padding({ left: 12, right: 12, top: 6, bottom: 6 })
+        .borderRadius(14)
+        .backgroundColor(this.darkMode ? '#1E2A3E' : '#E8F0FE')
+        .border({ width: 1, color: this.pal().border })
+        .alignItems(VerticalAlign.Center)
+        .onClick(() => {
+          this.dashProviderOpen = !this.dashProviderOpen
+          console.info('[P35] provider dropdown toggled: ' + this.dashProviderOpen)
+        })
+
+        if (this.dashProviderOpen) {
+          Column() {
+            if (this.dashProviders.length === 0) {
+              // 无 providers：引导去 LLM Hub
+              Text('未配置模型 — 去配置')
+                .fontSize(11)
+                .fontColor('#F0983F')
+                .padding({ left: 12, right: 12, top: 9, bottom: 9 })
+                .onClick(() => {
+                  this.dashProviderOpen = false
+                  console.info('[P35] no providers -> LlmHubPage')
+                  router.pushUrl({ url: 'pages/LlmHubPage' })
+                })
+            } else {
+              ForEach(this.dashProviders, (p: DashProvider, index: number) => {
+                Row() {
+                  Text(p.name)
+                    .fontSize(11)
+                    .fontColor(this.pal().text)
+                    .layoutWeight(1)
+                    .maxLines(1)
+                  if (p.baseUrl.length > 0 && p.baseUrl === ConfigManager.get().llmBaseUrl) {
+                    Image($r('app.media.ic_check'))
+                      .width(12).height(12)
+                      .fillColor('#22C55E')
+                      .draggable(false)
+                  }
+                }
+                .width('100%')
+                .padding({ left: 12, right: 12, top: 8, bottom: 8 })
+                .borderRadius(8)
+                .backgroundColor(this.darkMode ? '#1E2A3E' : '#F5F8FF')
+                .margin({ top: index === 0 ? 0 : 4 })
+                .alignItems(VerticalAlign.Center)
+                .onClick(() => {
+                  this.selectDashProvider(p)
+                })
+              }, (p: DashProvider, index: number) => 'dp_' + index + '_' + p.name)
+            }
+          }
+          .width('100%')
+          .padding(6)
+          .borderRadius(10)
+          .backgroundColor(this.pal().surface)
+          .border({ width: 1, color: this.pal().border })
+          .margin({ top: 6 })
+        }
+      }
+      .width('86%')
+      .alignItems(HorizontalAlign.Start)
+      .margin({ top: 14 })
+
+      // P35-C: RecentSites 行（历史 top6 域名 favicon 圆框 + 域名小字，点击=当前 tab 打开）
+      if (this.recentSites.length > 0) {
+        Row() {
+          ForEach(this.recentSites, (s: RecentSite, index: number) => {
+            Column() {
+              Column() {
+                Text(s.domain.substring(0, 1).toUpperCase())
+                  .fontSize(16)
+                  .fontWeight(FontWeight.Bold)
+                  .fontColor(this.pal().text2)
+              }
+              .width(36)
+              .height(36)
+              .borderRadius(18)
+              .backgroundColor(this.darkMode ? '#1E2A3E' : '#E8F0FE')
+              .border({ width: 1, color: this.pal().border })
+              .justifyContent(FlexAlign.Center)
+              .alignItems(HorizontalAlign.Center)
+
+              Text(s.domain)
+                .fontSize(9)
+                .fontColor(this.pal().text2)
+                .maxLines(1)
+                .constraintSize({ maxWidth: 58 })
+                .textOverflow({ overflow: TextOverflow.Ellipsis })
+                .margin({ top: 4 })
+            }
+            .alignItems(HorizontalAlign.Center)
+            .margin({ left: index === 0 ? 0 : 10 })
+            .onClick(() => {
+              console.info('[P35] recent site clicked: ' + s.domain)
+              this.navigate(s.url)
+            })
+          }, (s: RecentSite, index: number) => 'rs_' + index + '_' + s.domain)
+        }
+        .width('86%')
+        .justifyContent(FlexAlign.Start)
+        .alignItems(VerticalAlign.Top)
+        .margin({ top: 16 })
       }
 
       // P29: 聊天输入框（对标上游新标签页 ConversationInput——大圆角搜索/提问框+发送）
@@ -1345,6 +1599,51 @@ struct BrowserShell {
       }
       .width('86%')
       .margin({ top: 16 })
+
+      // P35-C: ScheduleResults 卡（定时任务最近 3 条执行结果；无数据整卡不显示）
+      if (this.schedResults.length > 0) {
+        Column() {
+          Text('定时任务执行结果')
+            .fontSize(12)
+            .fontWeight(FontWeight.Bold)
+            .fontColor(this.pal().text)
+          ForEach(this.schedResults, (t: ScheduleTask, index: number) => {
+            Row() {
+              Column() {
+                Text(t.name)
+                  .fontSize(11)
+                  .fontColor(this.pal().text)
+                  .maxLines(1)
+                  .constraintSize({ maxWidth: 240 })
+                  .textOverflow({ overflow: TextOverflow.Ellipsis })
+                Text(t.lastResult.length > 0 ? t.lastResult : '(无结果)')
+                  .fontSize(10)
+                  .fontColor(this.pal().text2)
+                  .maxLines(2)
+                  .constraintSize({ maxWidth: 240 })
+                  .textOverflow({ overflow: TextOverflow.Ellipsis })
+                  .margin({ top: 2 })
+              }
+              .alignItems(HorizontalAlign.Start)
+              .layoutWeight(1)
+              Text(this.schedTimeLabel(t.lastRunAt))
+                .fontSize(9)
+                .fontColor(this.pal().text2)
+                .margin({ left: 8 })
+            }
+            .width('100%')
+            .alignItems(VerticalAlign.Top)
+            .margin({ top: index === 0 ? 10 : 8 })
+          }, (t: ScheduleTask, index: number) => 'sr_' + index + '_' + t.id)
+        }
+        .width('86%')
+        .borderRadius(12)
+        .backgroundColor(this.darkMode ? '#161B22' : '#FFFFFF')
+        .border({ width: 1, color: this.pal().border })
+        .padding({ left: 16, right: 16, top: 14, bottom: 14 })
+        .alignItems(HorizontalAlign.Start)
+        .margin({ top: 18 })
+      }
 
       Row() {
         Button('新建标签页')
@@ -2077,6 +2376,23 @@ struct BrowserShell {
     }
   }
 
+  /** P35-C: 定时结果时间标签（今天 HH:mm / MM-DD / YYYY-MM-DD） */
+  private schedTimeLabel(t: number): string {
+    if (t <= 0) {
+      return ''
+    }
+    const d = new Date(t)
+    const now = new Date()
+    const pad = (n: number): string => (n < 10 ? '0' + n : '' + n)
+    if (d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate()) {
+      return `今天 ${pad(d.getHours())}:${pad(d.getMinutes())}`
+    }
+    if (d.getFullYear() === now.getFullYear()) {
+      return `${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+    }
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+  }
+
   /** 新建空白标签页（切到 dashboard 态） */
   private createNewTab(): void {
     const newTab = TabManager.createTab(true)
@@ -2085,6 +2401,10 @@ struct BrowserShell {
     this.showDashboard = true
     this.urlInput = ''
     this.currentUrl = ''
+    // P35-C: 每次进新标签页刷新 agent-command 数据
+    this.loadDashProviders()
+    this.loadRecentSites()
+    this.loadSchedResults()
     console.info('BrowserShell new tab created: ' + newTab.tabId)
   }
 }

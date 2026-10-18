@@ -16,6 +16,7 @@ import { BusinessError } from '@kit.BasicServicesKit'
 import { TabManager } from '../service/TabManager'
 import { LLMClient, LLMChatMessage, LLMRequestOptions } from '../service/LLMClient'
 import { JSBridgeInjector } from '../protocol/JSBridgeInjector'
+import { JtbdStore } from '../pages/JtbdSurveyPage'
 
 interface ChatMessage {
   role: string // 'user' | 'agent' | 'hint'
@@ -98,6 +99,18 @@ export struct AgentSidePanel {
   @State suppressAutoAttach: boolean = false
   /** P33-B: chat 模式请求进行中(发送钮转态) */
   @State chatBusy: boolean = false
+  /** P35-A: jtbd 弹窗状态。shownCount=已弹次数; dontShow=勾选不再显示; surveyTaken=已答 */
+  @State jtbdShownCount: number = 0
+  @State jtbdDontShow: boolean = false
+  @State jtbdSurveyTaken: boolean = false
+  @State jtbdPopupVisible: boolean = false
+  @State jtbdCheckboxChecked: boolean = false
+  /** P35-A: 本次会话是否已弹过（防重复） */
+  private jtbdFiredThisSession: boolean = false
+  /** P35-A: 上游 MESSAGE_THRESHOLD=10（user+agent 消息计数） */
+  private readonly JTBD_MESSAGE_THRESHOLD: number = 10
+  /** P35-A: 上游 DONT_SHOW_AGAIN_AFTER=2（shownCount≥2 起显示复选框） */
+  private readonly JTBD_DONT_SHOW_AFTER: number = 2
   onClose: () => void = () => {}
   /** P19a: 已回流过终态的 agent（去重，避免轮询重复推气泡） */
   private settledAgents: Set<string> = new Set()
@@ -124,6 +137,74 @@ export struct AgentSidePanel {
     this.startSettlePolling()
     this.loadChatMode()
     this.startCtxPolling()
+    this.loadJtbdState()
+  }
+
+  /** P35-A: 载入 jtbd_store（shownCount/dontShow/surveyTaken） */
+  private loadJtbdState(): void {
+    const ctx = getContext(this)
+    JtbdStore.read(ctx).then((state: Record<string, Object>) => {
+      this.jtbdShownCount = state['shownCount'] !== undefined ? state['shownCount'] as number : 0
+      this.jtbdDontShow = state['dontShow'] === true
+      this.jtbdSurveyTaken = state['surveyTaken'] === true
+      console.info('[P35] jtbd state loaded: shownCount=' + this.jtbdShownCount + ' dontShow=' + this.jtbdDontShow + ' taken=' + this.jtbdSurveyTaken)
+    })
+  }
+
+  /** P35-A: 消息计数达标后触发弹窗（user+agent 角色计入,hint 不计） */
+  private maybeFireJtbdPopup(): void {
+    if (this.jtbdFiredThisSession || this.jtbdPopupVisible) {
+      return
+    }
+    if (this.jtbdDontShow || this.jtbdSurveyTaken) {
+      return
+    }
+    let count = 0
+    for (const m of this.messages) {
+      if (m.role === 'user' || m.role === 'agent') {
+        count++
+      }
+    }
+    if (count < this.JTBD_MESSAGE_THRESHOLD) {
+      return
+    }
+    this.jtbdFiredThisSession = true
+    this.jtbdPopupVisible = true
+    this.jtbdCheckboxChecked = false
+    console.info('[P35] jtbd popup fired at message count=' + count + ' shownCount=' + this.jtbdShownCount)
+  }
+
+  /** P35-A: Maybe Later/X 关闭——shownCount+1 持久化; 勾选则 dontShow=true */
+  private dismissJtbd(dontShowAgain: boolean): void {
+    this.jtbdPopupVisible = false
+    const nextCount = this.jtbdShownCount + 1
+    this.jtbdShownCount = nextCount
+    const patch: Record<string, Object> = { 'shownCount': nextCount }
+    if (dontShowAgain) {
+      this.jtbdDontShow = true
+      patch['dontShow'] = true
+    }
+    console.info('[P35] jtbd dismissed: shownCount->' + nextCount + ' dontShowAgain=' + dontShowAgain)
+    const ctx = getContext(this)
+    JtbdStore.write(ctx, patch).then(() => {
+      // dontShow=false 时重置本会话标记,下个阈值周期(再+10条)可再弹
+      if (!dontShowAgain) {
+        this.jtbdFiredThisSession = false
+      }
+    })
+  }
+
+  /** P35-A: Take Survey——(可选带上 dontShowAgain)跳调查页 */
+  private takeSurveyJtbd(): void {
+    const dontShowAgain = this.jtbdCheckboxChecked
+    this.jtbdPopupVisible = false
+    if (dontShowAgain) {
+      this.jtbdDontShow = true
+      const ctx = getContext(this)
+      JtbdStore.write(ctx, { 'dontShow': true } as Record<string, Object>)
+    }
+    console.info('[P35] jtbd Take Survey clicked, dontShowAgain=' + dontShowAgain)
+    router.pushUrl({ url: 'pages/JtbdSurveyPage' })
   }
 
   aboutToDisappear(): void {
@@ -317,6 +398,8 @@ export struct AgentSidePanel {
       console.warn('[P33] chat single-turn exception: ' + e)
     } finally {
       this.chatBusy = false
+      // P35-A: chat 单轮消息同样计入 jtbd 阈值（与 agent 回流路径同款触发）
+      this.maybeFireJtbdPopup()
       setTimeout(() => {
         this.scroller.scrollEdge(Edge.Bottom)
       }, 50)
@@ -359,6 +442,7 @@ export struct AgentSidePanel {
     }
     if (changed) {
       this.agents = AgentEngine.getAllAgentStatus()
+      this.maybeFireJtbdPopup()
       // 新气泡推入后滚到底部（下一帧执行，确保布局已更新）
       setTimeout(() => {
         this.scroller.scrollEdge(Edge.Bottom)
@@ -814,6 +898,95 @@ export struct AgentSidePanel {
             }
             .padding({ top: 4, bottom: 4 })
           }, (msg: ChatMessage, index: number) => index + '_' + msg.text)
+          // P35-A: jtbd 调查弹窗（对标上游 JtbdPopup: assistant 消息内卡片）
+          if (this.jtbdPopupVisible) {
+            ListItem() {
+              Column() {
+                Stack({ alignContent: Alignment.TopEnd }) {
+                  Row() {
+                    Image($r('app.media.ic_sparkles'))
+                      .width(18).height(18)
+                      .fillColor('#F0983F')
+                      .draggable(false)
+                      .margin({ right: 10, top: 2 })
+                    Column() {
+                      Text('Help us improve BrowserOS!')
+                        .fontSize(13)
+                        .fontWeight(FontWeight.Medium)
+                        .fontColor(this.pal().text)
+                      Text('Take a quick 3-minute survey.')
+                        .fontSize(11)
+                        .fontColor(this.pal().text2)
+                        .margin({ top: 4 })
+                    }
+                    .alignItems(HorizontalAlign.Start)
+                  }
+                  .alignItems(VerticalAlign.Top)
+                  .padding({ right: 24 })
+
+                  Image($r('app.media.ic_close'))
+                    .width(13).height(13)
+                    .fillColor(this.pal().text2)
+                    .draggable(false)
+                    .accessibilityText('关闭调查弹窗')
+                    .onClick(() => {
+                      this.dismissJtbd(this.jtbdCheckboxChecked)
+                    })
+                }
+                .width('100%')
+
+                // shownCount≥2 起显示「不再显示」复选框（上游 DONT_SHOW_AGAIN_AFTER=2）
+                if (this.jtbdShownCount >= this.JTBD_DONT_SHOW_AFTER) {
+                  Row() {
+                    Checkbox()
+                      .select(this.jtbdCheckboxChecked)
+                      .selectedColor('#F0983F')
+                      .width(16)
+                      .height(16)
+                      .onChange((v: boolean) => {
+                        this.jtbdCheckboxChecked = v
+                      })
+                    Text('不再显示')
+                      .fontSize(11)
+                      .fontColor(this.pal().text2)
+                      .margin({ left: 6 })
+                  }
+                  .margin({ top: 10 })
+                  .alignItems(VerticalAlign.Center)
+                }
+
+                Row() {
+                  Button('Take Survey')
+                    .fontSize(12)
+                    .height(30)
+                    .padding({ left: 14, right: 14 })
+                    .backgroundColor('#F0983F')
+                    .fontColor('#FFFFFF')
+                    .borderRadius(15)
+                    .onClick(() => {
+                      this.takeSurveyJtbd()
+                    })
+                  Button('Maybe Later')
+                    .fontSize(12)
+                    .height(30)
+                    .padding({ left: 14, right: 14 })
+                    .backgroundColor(this.pal().surfaceAlt)
+                    .fontColor(this.pal().text2)
+                    .borderRadius(15)
+                    .border({ width: 1, color: this.pal().border })
+                    .margin({ left: 8 })
+                    .onClick(() => {
+                      this.dismissJtbd(this.jtbdCheckboxChecked)
+                    })
+                }
+                .margin({ top: 12 })
+              }
+              .padding(14)
+              .borderRadius(12)
+              .backgroundColor(this.pal().surface)
+              .border({ width: 1, color: this.pal().border })
+            }
+          }
         }
         .layoutWeight(1)
         .width('100%')

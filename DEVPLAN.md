@@ -1015,3 +1015,35 @@ python tools/smoke_reg.py         # 30 秒健康检查
 - 终局回归：**static 15/15（80 文件）+ smoke 7/7（a11y ×36）**（Quickemu VM 15566 最终集成构建）
 - 上游第四层可选清单收口：selection✓ ChatMode✓ attached-tabs✓ changelog✓ hero✓ ultrafast✓ skills✓；jtbd 调查弹窗/agent-command 仍为记录项（营销向）
 - 设备证据：evidence/p33（66+ 文件）/ evidence/p34（7 文件）
+
+
+---
+
+## P35：上游最后三屏收官——jtbd 调查 + Ultrafast 等待页 + 新标签页 agent-command（2026-10-18，hmh 通道B 单棒 + 无 final 中断后 Zodex 接管验收）
+
+### 派发与执行
+- 规格先行：拉上游 10 文件（JtbdPopup/jtbd-popup constants/SurveyWelcome/SurveyChat/SurveyPage/UltrafastWaitlist/ultrafast-signup/AgentCommandHome 等）；hmh 单任务执行（本轮未并行），代码完成后设备验证中途无 final 中断（最后动作=截图重试），Zodex 接管
+- 落点：AgentSidePanel(+171 jtbd 弹窗) / BrowserShell(+334 agent-command 化) / JtbdSurveyPage+UltrafastWaitlistPage 两个新路由（main_pages 13 页）/ ic_sparkles.svg 三步同步
+
+### A jtbd 调查弹窗+调查页（对标 JtbdPopup + jtbd-agent 屏）
+- 弹窗：侧栏消息数（user+agent）≥10 触发；assistant 样式卡「Help us improve BrowserOS!/Take a quick 3-minute survey.」+ Take Survey/Maybe Later；shownCount≥2 起带「不再显示」Checkbox；jtbd_store（shownCount/dontShow/surveyTaken）
+- JtbdSurveyPage：Welcome（Sparkles 橙圆+Share Your Experience+Start Survey）→ 对话式三问 → 完成页；答案落盘+surveyTaken 后永不弹
+- **Zodex 修复**：maybeFireJtbdPopup 原只挂 agent 回流路径——chat 单轮回复后补触发（finally 块）
+- **E2E 全链铁证**（evidence/p35/jtbd_e2e.py）：5 轮 chat 发送→第 5 轮回复后弹窗→Take Survey→Welcome→Q1/Q2/Q3 逐题→完成页（j_popup/j_survey_welcome/j_survey_done 截图）
+
+### B UltrafastWaitlistPage（对标 UltrafastWaitlist.tsx）
+- COMING SOON+Ultrafast mode+Unlimited browser-action model access+$5/mo+PERKS 三条原文+email 输入+Join waitlist；EMAIL_PATTERN 校验（trim+lowercase 归一）
+- 横幅 CTA「Request early access →」改跳本页（替代 P34 的 toast 直加）；joined 与 ultrafast_store 联动横幅隐藏
+- **E2E**：CTA→页面 5/5 要素（a2_wait.json）→非法 email 红字「Enter a valid email address.」（a3_s3）→**join 成功态=代码级+同款 ultrafast_store 持久化前科（P34 CTA 两度设备实证）**；合法 @ 邮箱无法经 uitest inputText 注入（'@' 后字符被 hdc 转义毁坏——设备级自动化限制，如实记录）
+
+### C 新标签页 agent-command 对齐（对标 AgentCommandHome.tsx）
+- **hero 换浏览器本体句式**：`What should your agent work on next?`（work on 橙 #F0983F 斜体）+ 副标题原文 + 产品名角标；驾驶舱 NeoDashboardPanel 保持 `What are your agents working on right now?`——上游两形态并存原样（浏览器新标签页 vs Cockpit）
+- **provider 选择器**：输入区 ic_robot+当前模型名 pill（空列表时兜底显示当前 llmBaseUrl 对应模型——Zodex 修复：原 list 空一律「未配置模型」）+下拉（llmProviders 列表+当前标记+选中写回 AppConfig 三字段）+空态「未配置模型 — 去配置」
+- **RecentSites**：历史 top6 域名聚合（getAllHistory(200)+域名正则去重）favicon 首字母圆框行，点击开站——**Zodex 修复**：HISTORY_CHANGED 事件订阅重取（aboutToAppear 时 RDB 未就绪拿空的时序缺陷）；实证 example.com/developer.huawei.com/apihub.agnes-ai.com/cn.bing.com 四域现身（j0.json）
+- **ScheduleResults**：定时任务最近 3 条结果卡（无数据整卡不渲染——当前设备无定时记录，条件渲染符合设计）
+
+### P35 终态
+- **上游 12 屏全部对齐**（sidepanel/newtab/onboarding/ai-settings/mcp-settings/connect-mcp/customization/conversations/scheduled-tasks/llm-hub/jtbd-agent/agent-command）+ 细节层全收口——**1:1 复刻对标至此无记录差距**
+- 终局回归：**static 15/15（82 文件）+ smoke 7/7（a11y ×37）**（Quickemu VM 15566 最终构建）
+- 设备证据：evidence/p35（40+ 文件，含 jtbd_e2e.py/accept*.py 可复跑）
+- 设备级自动化限制新增记录：uitest inputText 无法注入 '@' 后字符（hdc 转义毁坏）
