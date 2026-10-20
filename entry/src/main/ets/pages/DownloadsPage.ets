@@ -78,7 +78,7 @@ struct DownloadsPage {
   build(): void {
     Column() {
       Row() {
-        Image($r('app.media.ic_back'))
+        Image($rawfile('ic_back.svg'))
           .width(20).height(20)
           .fillColor(this.pal().text2)
           .draggable(false)
@@ -101,7 +101,7 @@ struct DownloadsPage {
 
       if (this.items.length === 0) {
         Column() {
-          Image($r('app.media.ic_download'))
+          Image($rawfile('ic_download.svg'))
             .width(40).height(40)
             .fillColor(this.pal().text2)
             .draggable(false)
@@ -141,7 +141,7 @@ struct DownloadsPage {
   DownloadRow(item: DownloadItem): void {
     Column() {
       Row() {
-        Image($r('app.media.ic_download'))
+        Image($rawfile('ic_download.svg'))
           .width(18).height(18)
           .fillColor(item.status === DownloadStatus.FAILED ? '#D93025' : this.pal().accent)
           .draggable(false)
@@ -159,7 +159,7 @@ struct DownloadsPage {
             .fontSize(11)
             .fontColor(this.pal().text2)
           Button({ type: ButtonType.Normal }) {
-            Image($r('app.media.ic_close'))
+            Image($rawfile('ic_close.svg'))
               .width(14).height(14)
               .fillColor(this.pal().text2)
               .draggable(false)

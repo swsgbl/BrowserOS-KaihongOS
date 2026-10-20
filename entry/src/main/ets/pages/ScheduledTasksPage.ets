@@ -120,7 +120,7 @@ struct ScheduledTasksPage {
     Column() {
       // 头部
       Row() {
-        Image($r('app.media.ic_back'))
+        Image($rawfile('ic_back.svg'))
           .width(20).height(20)
           .fillColor(this.pal().text2)
           .draggable(false)
@@ -290,7 +290,7 @@ struct ScheduledTasksPage {
       // 空态 / 列表
       if (this.tasks.length === 0) {
         Column() {
-          Image($r('app.media.ic_schedule'))
+          Image($rawfile('ic_schedule.svg'))
             .width(36).height(36)
             .fillColor('#DADCE0')
             .draggable(false)

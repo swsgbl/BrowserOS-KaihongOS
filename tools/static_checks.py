@@ -47,6 +47,7 @@ def main():
 
     # 2. console.log ban in ArkTS
     offenders = []
+    icon_offenders = []
     for ets in ETS.rglob("*.ets"):
         try:
             text = ets.read_text(encoding="utf-8", errors="replace")
@@ -56,8 +57,13 @@ def main():
         for i, line in enumerate(text.splitlines(), 1):
             if "console.log(" in line:
                 offenders.append(f"{ets.relative_to(ROOT)}:{i}")
+            # P38: icons must load via $rawfile (id-drift immune), never $r media
+            if "$r('app.media.ic_" in line:
+                icon_offenders.append(f"{ets.relative_to(ROOT)}:{i}")
     check("no console.log( in ArkTS (use console.info)", not offenders,
           "; ".join(offenders[:5]))
+    check("icons via $rawfile not $r media (P38)", not icon_offenders,
+          "; ".join(icon_offenders[:5]))
 
     # 3. module.json5 sanity
     mj = ROOT / "entry" / "src" / "main" / "module.json5"

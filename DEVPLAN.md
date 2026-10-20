@@ -1106,3 +1106,37 @@ python tools/smoke_reg.py         # 30 秒健康检查
 - hvigor 三张"资源 id 表"只有 V2 index 二进制是真的；ResourceTable/id_defined 是烟雾弹
 - entry\build 清理重编=资源 id 全量重排，任何外挂资源管线必须随之同步（已自动化）
 - 截图取证必须与 dump 同启动原子化（ContainerModal 漂移会让跨启动坐标全部失效）
+
+
+---
+
+## P38：图标体系永久免疫 + 回归门禁固化 + 签名自愈（2026-10-20，用户令"继续推进开发和优化并安装验证"；Zodex 直接实现）
+
+### A 全应用图标切 $rawfile（121 处/39 枚，17 文件）
+- 机械迁移：`$r('app.media.ic_X')` → `$rawfile('ic_X.svg')`（迁移脚本一次性完成，无动态拼接引用先查证）
+- 全部 45 枚 ic SVG 入 resources/rawfile/（按文件名加载，与资源 id 体系彻底解耦）——**图标空白这类回退从结构上不可能再发生**
+- $r 仅保留给 module.json 的 strings/color/app_icon（13 项稳定集，gen_final_ids 自动同步兜底）
+
+### B smoke 第 9 步：图标像素门禁（P37 教训固化）
+- 同启动 dump 定位标签条小 Image 节点 → snapshot → PIL 计算该区域非背景像素占比 ≥15% 判 PASS
+- 实测 37.0% 通过；今后任何图标渲染回退（id 错位/资源丢失/rawfile 漏文件）都会在此步被拦截
+
+### C static 第 16 项：禁止新代码用回 $r 图标
+- 检查 `"$r('app.media.ic_"` 出现即 FAIL——迁移成果防倒退
+
+### D 签名 profile 再生（VM 数据丢失自愈）
+- 事件：VM 重启+装机过程清空应用沙盒（书签/标签/会话/config 全没，onboarding 复位——"新装"语义非缺陷；root 推回 isOnboardingCompleted=true 恢复）
+- **browseros-profile-release.p7b 也丢了**：app1-profile 绑 oneaiterm 包名且过期不可用 → 按 P8 换包名配方重生成（模板 JSON 改 bundle-name/uuid/not-after+10 年 → VM 端 hap-sign-tool sign-profile，attic/browseros-profile.json 留档可复用）
+- 装机链恢复（INSTALL+LAUNCH OK）
+
+### E tools/perf_probe.py（P36 欠账）
+- 可复跑性能探针：冷启动 N 轮（hilog cold_start_ms）+ hidumper PSS（本机 PSS 解析待 hidumper 输出格式对齐，冷启动取数受 hilog 缓冲翻页影响需即时抓）
+
+### 验收
+- **static 16/16（含新图标规范项）+ smoke 9/9（含新像素门禁 37%）**，Quickemu VM 15566 装机实证（图标原子探针 32%/85% 覆盖）
+- 上游漂移检查：10-19 新增 tab group cleanup 小功能（3 commits）——记为可选对齐项
+- 证据 evidence/p38/
+
+### P38 终态
+- 图标体系：rawfile 全量（免疫）+ id 自动同步（兜底）+ 像素门禁（拦截）+ 静态规范（防倒退）四层防线
+- git：c5a3794 → P38 提交

@@ -32,20 +32,20 @@ export struct ThreeDotMenu {
   }
 
   private readonly group1: MenuEntry[] = [
-    { icon: $r('app.media.ic_add'), label: '新建标签页', action: 'new_tab' },
-    { icon: $r('app.media.ic_content_copy'), label: '新窗口', action: 'new_window' }
+    { icon: $rawfile('ic_add.svg'), label: '新建标签页', action: 'new_tab' },
+    { icon: $rawfile('ic_content_copy.svg'), label: '新窗口', action: 'new_window' }
   ]
   private readonly group2: MenuEntry[] = [
-    { icon: $r('app.media.ic_history'), label: '历史', action: 'history' },
-    { icon: $r('app.media.ic_star_outline'), label: '书签', action: 'bookmarks' },
-    { icon: $r('app.media.ic_download'), label: '下载', action: 'downloads' }
+    { icon: $rawfile('ic_history.svg'), label: '历史', action: 'history' },
+    { icon: $rawfile('ic_star_outline.svg'), label: '书签', action: 'bookmarks' },
+    { icon: $rawfile('ic_download.svg'), label: '下载', action: 'downloads' }
   ]
   private readonly group3: MenuEntry[] = [
-    { icon: $r('app.media.ic_schedule'), label: '定时任务', action: 'scheduled_tasks' },
-    { icon: $r('app.media.ic_robot'), label: 'Skills', action: 'skills' },
-    { icon: $r('app.media.ic_settings'), label: '设置', action: 'settings' },
-    { icon: $r('app.media.ic_find'), label: '查找', action: 'find' },
-    { icon: $r('app.media.ic_help'), label: '帮助', action: 'help' }
+    { icon: $rawfile('ic_schedule.svg'), label: '定时任务', action: 'scheduled_tasks' },
+    { icon: $rawfile('ic_robot.svg'), label: 'Skills', action: 'skills' },
+    { icon: $rawfile('ic_settings.svg'), label: '设置', action: 'settings' },
+    { icon: $rawfile('ic_find.svg'), label: '查找', action: 'find' },
+    { icon: $rawfile('ic_help.svg'), label: '帮助', action: 'help' }
   ]
 
   build(): void {
@@ -68,7 +68,7 @@ export struct ThreeDotMenu {
         this.MenuGroup(this.group3)
         Divider().color(this.pal().border).margin({ top: 4, bottom: 4 })
         Row() {
-          Image($r('app.media.ic_exit'))
+          Image($rawfile('ic_exit.svg'))
             .width(18).height(18)
             .fillColor('#C5221F')
             .draggable(false)
@@ -159,7 +159,7 @@ export struct OmniboxSuggestions {
             Row() {
               if (item.kind === 'search') {
                 // P11d: 首行搜索项 —— ic_search + 「搜索 kw」粗体
-                Image($r('app.media.ic_search'))
+                Image($rawfile('ic_search.svg'))
                   .width(16).height(16)
                   .fillColor(this.pal().text2)
                   .draggable(false)
@@ -172,7 +172,7 @@ export struct OmniboxSuggestions {
                   .textOverflow({ overflow: TextOverflow.Ellipsis })
                   .margin({ left: 0 })
               } else {
-                Image(item.kind === 'bookmark' ? $r('app.media.ic_star_filled') : $r('app.media.ic_history'))
+                Image(item.kind === 'bookmark' ? $rawfile('ic_star_filled.svg') : $rawfile('ic_history.svg'))
                   .width(16).height(16)
                   .fillColor(item.kind === 'bookmark' ? '#F9AB00' : '#5F6368')
                   .draggable(false)
@@ -205,7 +205,7 @@ export struct OmniboxSuggestions {
           // P18: 底部当前引擎标识 + 「切换」入口（跳设置页搜索节）
           Divider().color(this.pal().border).margin({ top: 4 })
           Row() {
-            Image($r('app.media.ic_search'))
+            Image($rawfile('ic_search.svg'))
               .width(12).height(12)
               .fillColor(this.pal().text2)
               .draggable(false)
@@ -304,7 +304,7 @@ export struct BookmarkBubble {
           .margin({ top: 10, bottom: 4 })
           .alignSelf(ItemAlign.Start)
         Row() {
-          Image($r('app.media.ic_folder'))
+          Image($rawfile('ic_folder.svg'))
             .width(16).height(16)
             .fillColor(this.pal().text2)
             .draggable(false)
@@ -313,7 +313,7 @@ export struct BookmarkBubble {
             .fontColor(this.pal().text)
             .margin({ left: 6 })
           Blank()
-          Image($r('app.media.ic_more_vert'))
+          Image($rawfile('ic_more_vert.svg'))
             .width(14).height(14)
             .fillColor(this.pal().text2)
             .opacity(0.4)

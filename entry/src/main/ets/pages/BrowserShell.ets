@@ -698,7 +698,7 @@ struct BrowserShell {
   AddressBar(): void {
     Row() {
       Button({ type: ButtonType.Normal }) {
-        Image($r('app.media.ic_back'))
+        Image($rawfile('ic_back.svg'))
           .width(20).height(20)
           .fillColor(this.pal().text2)
           .draggable(false)
@@ -719,7 +719,7 @@ struct BrowserShell {
       })
 
       Button({ type: ButtonType.Normal }) {
-        Image($r('app.media.ic_forward'))
+        Image($rawfile('ic_forward.svg'))
           .width(20).height(20)
           .fillColor(this.pal().text2)
           .draggable(false)
@@ -741,7 +741,7 @@ struct BrowserShell {
 
       // P11f: 加载中刷新钮变停止钮(点它即 stop)
       Button({ type: ButtonType.Normal }) {
-        Image(this.isLoading ? $r('app.media.ic_stop') : $r('app.media.ic_reload'))
+        Image(this.isLoading ? $rawfile('ic_stop.svg') : $rawfile('ic_reload.svg'))
           .width(20).height(20)
           .fillColor(this.isLoading ? '#1A73E8' : this.pal().text2)
           .draggable(false)
@@ -768,7 +768,7 @@ struct BrowserShell {
 
       // P9-A: omnibox —— 安全锁图标（https 绿锁 / 普通灰）+ 输入框胶囊
       Row() {
-        Image(this.currentUrl.startsWith('https://') ? $r('app.media.ic_lock') : $r('app.media.ic_info'))
+        Image(this.currentUrl.startsWith('https://') ? $rawfile('ic_lock.svg') : $rawfile('ic_info.svg'))
           .width(16).height(16)
           .fillColor(this.currentUrl.startsWith('https://') ? '#137333' : '#5F6368')
           .draggable(false)
@@ -814,7 +814,7 @@ struct BrowserShell {
 
       // P11a: 星标（SVG 双态染色）—— 点击弹 Bookmark 气泡（名称编辑+完成/删除）
       Button({ type: ButtonType.Normal }) {
-        Image(this.isBookmarked ? $r('app.media.ic_star_filled') : $r('app.media.ic_star_outline'))
+        Image(this.isBookmarked ? $rawfile('ic_star_filled.svg') : $rawfile('ic_star_outline.svg'))
           .width(20).height(20)
           .fillColor(this.isBookmarked ? '#F9AB00' : '#5F6368')
           .draggable(false)
@@ -828,7 +828,7 @@ struct BrowserShell {
       })
 
       Button({ type: ButtonType.Normal }) {
-        Image($r('app.media.ic_history'))
+        Image($rawfile('ic_history.svg'))
           .width(20).height(20)
           .fillColor(this.pal().text2)
           .draggable(false)
@@ -843,7 +843,7 @@ struct BrowserShell {
       })
 
       Button({ type: ButtonType.Normal }) {
-        Image($r('app.media.ic_home'))
+        Image($rawfile('ic_home.svg'))
           .width(20).height(20)
           .fillColor(this.pal().text2)
           .draggable(false)
@@ -858,7 +858,7 @@ struct BrowserShell {
 
       // P9-B: Agent 侧栏切换按钮
       Button({ type: ButtonType.Normal }) {
-        Image($r('app.media.ic_agent'))
+        Image($rawfile('ic_agent.svg'))
           .width(20).height(20)
           .fillColor(this.showAgentPanel ? '#1A73E8' : '#5F6368')
           .draggable(false)
@@ -874,7 +874,7 @@ struct BrowserShell {
 
       // P9-A: ⋮ 三点主菜单
       Button({ type: ButtonType.Normal }) {
-        Image($r('app.media.ic_more_vert'))
+        Image($rawfile('ic_more_vert.svg'))
           .width(20).height(20)
           .fillColor(this.pal().text2)
           .draggable(false)
@@ -1140,27 +1140,27 @@ struct BrowserShell {
     const pageUrl = linkUrl && linkUrl.length > 0 ? linkUrl : this.currentUrl
     const entries: CtxEntry[] = [
       {
-        icon: $r('app.media.ic_back'), label: '后退', shortcut: 'Alt+左箭头', enabled: canBack, divider: false,
+        icon: $rawfile('ic_back.svg'), label: '后退', shortcut: 'Alt+左箭头', enabled: canBack, divider: false,
         onTap: () => { this.getActiveController()?.backward() }
       },
       {
-        icon: $r('app.media.ic_forward'), label: '前进', shortcut: 'Alt+右箭头', enabled: canFwd, divider: false,
+        icon: $rawfile('ic_forward.svg'), label: '前进', shortcut: 'Alt+右箭头', enabled: canFwd, divider: false,
         onTap: () => { this.getActiveController()?.forward() }
       },
       {
-        icon: $r('app.media.ic_reload'), label: '重新加载', shortcut: 'Ctrl+R', enabled: true, divider: true,
+        icon: $rawfile('ic_reload.svg'), label: '重新加载', shortcut: 'Ctrl+R', enabled: true, divider: true,
         onTap: () => { this.getActiveController()?.refresh() }
       },
       {
-        icon: $r('app.media.ic_star_outline'), label: '将页面添加到书签', enabled: true, divider: true,
+        icon: $rawfile('ic_star_outline.svg'), label: '将页面添加到书签', enabled: true, divider: true,
         onTap: () => { this.addBookmarkSilently(pageUrl) }
       },
       {
-        icon: $r('app.media.ic_content_copy'), label: '复制网址', enabled: pageUrl.length > 0, divider: false,
+        icon: $rawfile('ic_content_copy.svg'), label: '复制网址', enabled: pageUrl.length > 0, divider: false,
         onTap: () => { this.copyUrl(pageUrl) }
       },
       {
-        icon: $r('app.media.ic_code'), label: '查看网页源码', enabled: pageUrl.startsWith('http'), divider: false,
+        icon: $rawfile('ic_code.svg'), label: '查看网页源码', enabled: pageUrl.startsWith('http'), divider: false,
         onTap: () => { this.openViewSource(pageUrl) }
       }
     ]
@@ -1175,24 +1175,24 @@ struct BrowserShell {
     const tab = TabManager.getTab(tabId)
     const entries: CtxEntry[] = [
       {
-        icon: $r('app.media.ic_add'), label: '向右新建标签页', enabled: true, divider: false,
+        icon: $rawfile('ic_add.svg'), label: '向右新建标签页', enabled: true, divider: false,
         onTap: () => { this.createNewTab() }
       },
       { label: '重新打开已关闭的标签页', enabled: false, divider: true },
       {
-        icon: $r('app.media.ic_content_copy'), label: '复制标签页网址', enabled: !!(tab && tab.currentUrl), divider: false,
+        icon: $rawfile('ic_content_copy.svg'), label: '复制标签页网址', enabled: !!(tab && tab.currentUrl), divider: false,
         onTap: () => { if (tab && tab.currentUrl) { this.copyUrl(tab.currentUrl) } }
       },
       {
-        icon: $r('app.media.ic_close'), label: '关闭', enabled: true, divider: true,
+        icon: $rawfile('ic_close.svg'), label: '关闭', enabled: true, divider: true,
         onTap: () => { this.closeTabById(tabId) }
       },
       {
-        icon: $r('app.media.ic_close'), label: '关闭其他标签页', enabled: hasOther, divider: false,
+        icon: $rawfile('ic_close.svg'), label: '关闭其他标签页', enabled: hasOther, divider: false,
         onTap: () => { this.closeOtherTabs(tabId) }
       },
       {
-        icon: $r('app.media.ic_close'), label: '关闭右侧标签页', enabled: hasRight, divider: false,
+        icon: $rawfile('ic_close.svg'), label: '关闭右侧标签页', enabled: hasRight, divider: false,
         onTap: () => { this.closeRightTabs(tabId) }
       }
     ]
@@ -1203,15 +1203,15 @@ struct BrowserShell {
   private buildDashboardCtxEntries(): CtxEntry[] {
     return [
       {
-        icon: $r('app.media.ic_reload'), label: '刷新', enabled: true, divider: false,
+        icon: $rawfile('ic_reload.svg'), label: '刷新', enabled: true, divider: false,
         onTap: () => { this.getActiveController()?.refresh() }
       },
       {
-        icon: $r('app.media.ic_back'), label: '后退', enabled: this.getActiveController() ? this.getActiveController()!.accessBackward() : false, divider: false,
+        icon: $rawfile('ic_back.svg'), label: '后退', enabled: this.getActiveController() ? this.getActiveController()!.accessBackward() : false, divider: false,
         onTap: () => { this.getActiveController()?.backward() }
       },
       {
-        icon: $r('app.media.ic_star_outline'), label: '书签管理', enabled: true, divider: true,
+        icon: $rawfile('ic_star_outline.svg'), label: '书签管理', enabled: true, divider: true,
         onTap: () => { router.pushUrl({ url: 'pages/BookmarksPage' }) }
       }
     ]
@@ -1367,7 +1367,7 @@ struct BrowserShell {
       if (!this.ultrafastHidden) {
         Stack({ alignContent: Alignment.TopEnd }) {
           Row() {
-            Image($r('app.media.ic_zap'))
+            Image($rawfile('ic_zap.svg'))
               .width(16).height(16)
               .fillColor('#7CB1FF')
               .draggable(false)
@@ -1410,7 +1410,7 @@ struct BrowserShell {
           .alignItems(VerticalAlign.Center)
 
           Button({ type: ButtonType.Normal }) {
-            Image($r('app.media.ic_close'))
+            Image($rawfile('ic_close.svg'))
               .width(14).height(14)
               .fillColor(this.pal().text)
               .draggable(false)
@@ -1443,7 +1443,7 @@ struct BrowserShell {
       // P35-C: provider 选择器（对标上游 ConversationInput 下拉——名称+当前标记，选中写回 config）
       Column() {
         Row() {
-          Image($r('app.media.ic_robot'))
+          Image($rawfile('ic_robot.svg'))
             .width(13).height(13)
             .fillColor('#7CB1FF')
             .draggable(false)
@@ -1456,7 +1456,7 @@ struct BrowserShell {
             .constraintSize({ maxWidth: 150 })
             .textOverflow({ overflow: TextOverflow.Ellipsis })
             .margin({ left: 6 })
-          Image($r('app.media.ic_arrow_down'))
+          Image($rawfile('ic_arrow_down.svg'))
             .width(10).height(10)
             .fillColor(this.pal().text2)
             .draggable(false)
@@ -1494,7 +1494,7 @@ struct BrowserShell {
                     .layoutWeight(1)
                     .maxLines(1)
                   if (p.baseUrl.length > 0 && p.baseUrl === ConfigManager.get().llmBaseUrl) {
-                    Image($r('app.media.ic_check'))
+                    Image($rawfile('ic_check.svg'))
                       .width(12).height(12)
                       .fillColor('#22C55E')
                       .draggable(false)
@@ -1585,7 +1585,7 @@ struct BrowserShell {
           })
 
         Button({ type: ButtonType.Normal }) {
-          Image($r('app.media.ic_add'))
+          Image($rawfile('ic_add.svg'))
             .width(18).height(18)
             .fillColor('#FFFFFF')
             .draggable(false)
@@ -1914,7 +1914,7 @@ struct BrowserShell {
   FindBar(): void {
     if (this.showFindBar && !this.showDashboard) {
       Row() {
-        Image($r('app.media.ic_find'))
+        Image($rawfile('ic_find.svg'))
           .width(16).height(16)
           .fillColor(this.pal().text2)
           .draggable(false)
@@ -1940,7 +1940,7 @@ struct BrowserShell {
             .margin({ left: 6 })
         }
         Button({ type: ButtonType.Normal }) {
-          Image($r('app.media.ic_arrow_up'))
+          Image($rawfile('ic_arrow_up.svg'))
             .width(16).height(16)
             .fillColor(this.pal().text2)
             .draggable(false)
@@ -1952,7 +1952,7 @@ struct BrowserShell {
         .accessibilityText('查找上一个')
         .onClick(() => { this.doFind('prev') })
         Button({ type: ButtonType.Normal }) {
-          Image($r('app.media.ic_arrow_down'))
+          Image($rawfile('ic_arrow_down.svg'))
             .width(16).height(16)
             .fillColor(this.pal().text2)
             .draggable(false)
@@ -1963,7 +1963,7 @@ struct BrowserShell {
         .accessibilityText('查找下一个')
         .onClick(() => { this.doFind('next') })
         Button({ type: ButtonType.Normal }) {
-          Image($r('app.media.ic_close'))
+          Image($rawfile('ic_close.svg'))
             .width(16).height(16)
             .fillColor(this.pal().text2)
             .draggable(false)
@@ -2055,7 +2055,7 @@ struct BrowserShell {
             }
           })
         Button({ type: ButtonType.Normal }) {
-          Image($r('app.media.ic_close'))
+          Image($rawfile('ic_close.svg'))
             .width(16).height(16)
             .fillColor('#FFFFFF')
             .draggable(false)

@@ -135,7 +135,7 @@ struct BookmarksPage {
   build(): void {
     Column() {
       Row() {
-        Image($r('app.media.ic_back'))
+        Image($rawfile('ic_back.svg'))
           .width(20).height(20)
           .fillColor(this.pal().text2)
           .draggable(false)
@@ -168,7 +168,7 @@ struct BookmarksPage {
 
       // P20-B: 搜索框（HistoryPage 同款: ic_search + TextInput + 清除钮）
       Row() {
-        Image($r('app.media.ic_search'))
+        Image($rawfile('ic_search.svg'))
           .width(16).height(16)
           .fillColor(this.pal().text2)
           .draggable(false)
@@ -186,7 +186,7 @@ struct BookmarksPage {
           })
         if (this.keyword.length > 0) {
           Button({ type: ButtonType.Normal }) {
-            Image($r('app.media.ic_close'))
+            Image($rawfile('ic_close.svg'))
               .width(14).height(14)
               .fillColor(this.pal().text2)
               .draggable(false)
@@ -209,7 +209,7 @@ struct BookmarksPage {
 
       if (this.items.length === 0) {
         Column() {
-          Image($r('app.media.ic_star_outline'))
+          Image($rawfile('ic_star_outline.svg'))
             .width(36).height(36)
             .fillColor('#DADCE0')
             .draggable(false)
@@ -235,7 +235,7 @@ struct BookmarksPage {
             ForEach(this.filtered(), (b: BookmarkRow) => {
               Column() {
                 Row() {
-                  Image($r('app.media.ic_star_filled'))
+                  Image($rawfile('ic_star_filled.svg'))
                     .width(14).height(14)
                     .fillColor('#F9AB00')
                     .draggable(false)

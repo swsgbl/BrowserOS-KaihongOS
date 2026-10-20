@@ -38,7 +38,7 @@ export struct BookmarkBar {
           }
           ForEach(this.bookmarks, (bm: BookmarkPill) => {
             Row() {
-              Image($r('app.media.ic_globe'))
+              Image($rawfile('ic_globe.svg'))
                 .width(14).height(14)
                 .fillColor(this.pal().text2)
                 .draggable(false)
@@ -71,7 +71,7 @@ export struct BookmarkBar {
 
       // 右端「全部书签」入口
       Row() {
-        Image($r('app.media.ic_folder'))
+        Image($rawfile('ic_folder.svg'))
           .width(14).height(14)
           .fillColor(this.pal().text2)
           .draggable(false)

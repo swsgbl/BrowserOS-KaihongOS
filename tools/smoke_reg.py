@@ -271,6 +271,56 @@ def check_new_pages(hdc):
            detail + ('; menu Skills found' if menu_ok else '; menu Skills MISSING'))
 
 
+def check_icon_render(hdc):
+    """9. 图标渲染像素门禁（P37 教训固化）：同启动 dump 定位标签条小 Image -> 截图 -> 该区域非背景像素 >= 15%
+    （防资源 id 错位导致的全应用图标空白回退）"""
+    try:
+        from PIL import Image
+    except ImportError:
+        record('9.icon pixel gate', False, 'PIL not installed')
+        return
+    hdc.sh('uitest dumpLayout -p /data/local/tmp/smoke_ic.json', 40)
+    hdc.raw('file recv /data/local/tmp/smoke_ic.json smoke_ic_layout.json', 30)
+    try:
+        with open('smoke_ic_layout.json', encoding='utf-8', errors='replace') as f:
+            lay = f.read()
+    except Exception as e:
+        record('9.icon pixel gate', False, str(e)[:60])
+        return
+    img_b = None
+    try:
+        data = json.loads(lay)
+        for a in _walk(data):
+            if a.get('type') != 'Image':
+                continue
+            b = str(a.get('bounds', ''))
+            m = re.match(r'^\[(\d+),(\d+)\]\[(\d+),(\d+)\]$', b)
+            if not m:
+                continue
+            x1, y1, x2, y2 = map(int, m.groups())
+            # 标签条区：屏幕左 1/4、非顶部窗口栏、小尺寸(<=30px)、窗口内
+            if x2 <= 450 and 120 < y1 and (y2 - y1) <= 30 and (x2 - x1) >= 8:
+                img_b = (x1, y1, x2, y2)
+                break
+    except Exception:
+        pass
+    if not img_b:
+        record('9.icon pixel gate', False, 'strip Image node not found')
+        return
+    hdc.sh('snapshot_display -f /data/local/tmp/smoke_ic.jpeg', 40)
+    hdc.raw('file recv /data/local/tmp/smoke_ic.jpeg smoke_ic_shot.jpeg', 30)
+    try:
+        im = Image.open('smoke_ic_shot.jpeg').convert('L').crop(img_b)
+        px = list(im.getdata())
+        total = len(px)
+        bg = max(set(px), key=px.count)
+        nonbg = sum(1 for v in px if abs(v - bg) > 25)
+        pct = 100.0 * nonbg / total if total else 0
+        record('9.icon pixel gate', pct >= 15.0, 'icon %s non-bg %.1f%% (>=15)' % (img_b, pct))
+    except Exception as e:
+        record('9.icon pixel gate', False, str(e)[:60])
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--hdc', default=r'C:\Program Files\Huawei\DevEco Studio\sdk\default\openharmony\toolchains\hdc.exe')
@@ -292,6 +342,7 @@ def main():
     check_mcp_http(hdc)
     check_bm_search(hdc, lay)
     check_new_pages(hdc)
+    check_icon_render(hdc)
     return _summary()
 
 

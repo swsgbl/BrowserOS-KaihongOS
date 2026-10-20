@@ -127,7 +127,7 @@ struct JtbdSurveyPage {
     Column() {
       // 顶栏
       Row() {
-        Image($r('app.media.ic_back'))
+        Image($rawfile('ic_back.svg'))
           .width(18).height(18)
           .fillColor(this.pal().text2)
           .draggable(false)
@@ -159,7 +159,7 @@ struct JtbdSurveyPage {
             // Welcome 卡（对标上游 Welcome：橙圆 Sparkles + 标题 + 副标题 + Start Survey）
             Column() {
               Column() {
-                Image($r('app.media.ic_sparkles'))
+                Image($rawfile('ic_sparkles.svg'))
                   .width(30).height(30)
                   .fillColor('#F0983F')
                   .draggable(false)
@@ -251,7 +251,7 @@ struct JtbdSurveyPage {
             // 完成卡（对标上游 ThankYou：绿圆 Check + 感谢 + 返回浏览器）
             Column() {
               Column() {
-                Image($r('app.media.ic_check'))
+                Image($rawfile('ic_check.svg'))
                   .width(30).height(30)
                   .fillColor('#22C55E')
                   .draggable(false)

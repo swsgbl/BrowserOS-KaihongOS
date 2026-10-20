@@ -114,24 +114,24 @@ struct SessionPlayerPage {
   /** P15: 操作类型 → 图标资源映射（navigate/click/type/scroll/snapshot/wait，其余用 check） */
   private opIcon(type: string): Resource {
     if (type === 'navigate' || type === 'back' || type === 'forward') {
-      return $r('app.media.ic_op_navigate')
+      return $rawfile('ic_op_navigate.svg')
     }
     if (type === 'click') {
-      return $r('app.media.ic_op_click')
+      return $rawfile('ic_op_click.svg')
     }
     if (type === 'type') {
-      return $r('app.media.ic_op_type')
+      return $rawfile('ic_op_type.svg')
     }
     if (type === 'scroll') {
-      return $r('app.media.ic_op_scroll')
+      return $rawfile('ic_op_scroll.svg')
     }
     if (type === 'snapshot') {
-      return $r('app.media.ic_op_snapshot')
+      return $rawfile('ic_op_snapshot.svg')
     }
     if (type === 'wait' || type === 'wait_for') {
-      return $r('app.media.ic_op_wait')
+      return $rawfile('ic_op_wait.svg')
     }
-    return $r('app.media.ic_check')
+    return $rawfile('ic_check.svg')
   }
 
   build(): void {

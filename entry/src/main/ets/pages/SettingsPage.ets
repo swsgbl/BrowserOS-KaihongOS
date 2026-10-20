@@ -65,12 +65,12 @@ struct SettingsPage {
   @State appVersion: string = ''
 
   private readonly navItems: NavItem[] = [
-    { key: 'search', icon: $r('app.media.ic_search'), label: '搜索' },
-    { key: 'ai', icon: $r('app.media.ic_robot'), label: 'AI 与 Agent' },
-    { key: 'appearance', icon: $r('app.media.ic_public'), label: '外观' },
-    { key: 'privacy', icon: $r('app.media.ic_lock'), label: '隐私与安全' },
-    { key: 'mcp', icon: $r('app.media.ic_info'), label: 'MCP' },
-    { key: 'about', icon: $r('app.media.ic_help'), label: '关于' }
+    { key: 'search', icon: $rawfile('ic_search.svg'), label: '搜索' },
+    { key: 'ai', icon: $rawfile('ic_robot.svg'), label: 'AI 与 Agent' },
+    { key: 'appearance', icon: $rawfile('ic_public.svg'), label: '外观' },
+    { key: 'privacy', icon: $rawfile('ic_lock.svg'), label: '隐私与安全' },
+    { key: 'mcp', icon: $rawfile('ic_info.svg'), label: 'MCP' },
+    { key: 'about', icon: $rawfile('ic_help.svg'), label: '关于' }
   ]
 
   /** P19b: 刷新各类数据计数 */
@@ -150,7 +150,7 @@ struct SettingsPage {
     Row() {
       // 左导航 240
       Column() {
-        Image($r('app.media.ic_back'))
+        Image($rawfile('ic_back.svg'))
           .width(20).height(20)
           .fillColor(this.pal().text2)
           .draggable(false)
@@ -293,7 +293,7 @@ struct SettingsPage {
             .layoutWeight(1)
 
             if (e.id === this.searchEngineId) {
-              Image($r('app.media.ic_check'))
+              Image($rawfile('ic_check.svg'))
                 .width(16).height(16)
                 .fillColor('#1A73E8')
                 .draggable(false)

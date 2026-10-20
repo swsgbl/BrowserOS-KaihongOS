@@ -282,7 +282,7 @@ export struct NeoDashboardPanel {
           })
 
         Row() {
-          Image($r('app.media.ic_close'))
+          Image($rawfile('ic_close.svg'))
             .width(14).height(14)
             .fillColor(this.pal().text)
             .draggable(false)
@@ -419,7 +419,7 @@ export struct NeoDashboardPanel {
   @Builder
   SkillsTile(): void {
     Column() {
-      Image($r('app.media.ic_robot'))
+      Image($rawfile('ic_robot.svg'))
         .width(22).height(22)
         .fillColor('#2E6FE8')
         .draggable(false)
@@ -451,7 +451,7 @@ export struct NeoDashboardPanel {
     if (!this.ultrafastHidden) {
       Stack({ alignContent: Alignment.TopEnd }) {
         Row() {
-          Image($r('app.media.ic_zap'))
+          Image($rawfile('ic_zap.svg'))
             .width(16).height(16)
             .fillColor(this.darkMode ? '#7CB1FF' : '#1A73E8')
             .draggable(false)
@@ -493,7 +493,7 @@ export struct NeoDashboardPanel {
 
         // X 关闭钮（右上角）
         Button({ type: ButtonType.Normal }) {
-          Image($r('app.media.ic_close'))
+          Image($rawfile('ic_close.svg'))
             .width(14).height(14)
             .fillColor(this.pal().text)
             .draggable(false)
@@ -947,7 +947,7 @@ export struct NeoDashboardPanel {
       Column() {
         Row() {
           Row() {
-            Image($r('app.media.ic_back'))
+            Image($rawfile('ic_back.svg'))
               .width(14).height(14)
               .fillColor(this.pal().text)
               .draggable(false)

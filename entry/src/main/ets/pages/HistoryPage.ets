@@ -112,7 +112,7 @@ struct HistoryPage {
     Column() {
       // 顶栏
       Row() {
-        Image($r('app.media.ic_back'))
+        Image($rawfile('ic_back.svg'))
           .width(20).height(20)
           .fillColor(this.pal().text2)
           .draggable(false)
@@ -150,7 +150,7 @@ struct HistoryPage {
 
       // 搜索框
       Row() {
-        Image($r('app.media.ic_search'))
+        Image($rawfile('ic_search.svg'))
           .width(16).height(16)
           .fillColor(this.pal().text2)
           .draggable(false)
@@ -233,7 +233,7 @@ struct HistoryPage {
           // 浏览历史（按日期分组）
           if (this.entries.length === 0) {
             Column() {
-              Image($r('app.media.ic_history'))
+              Image($rawfile('ic_history.svg'))
                 .width(36).height(36)
                 .fillColor(this.pal().text2)
                 .draggable(false)
@@ -256,7 +256,7 @@ struct HistoryPage {
                     .margin({ top: 14, bottom: 6 })
                 }
                 Row() {
-                  Image($r('app.media.ic_public'))
+                  Image($rawfile('ic_public.svg'))
                     .width(14).height(14)
                     .fillColor('#9AA0A6')
                     .draggable(false)

@@ -162,7 +162,7 @@ struct LlmHubPage {
     Column() {
       // 头部
       Row() {
-        Image($r('app.media.ic_back'))
+        Image($rawfile('ic_back.svg'))
           .width(20).height(20)
           .fillColor(this.pal().text2)
           .draggable(false)

@@ -68,7 +68,7 @@ struct ViewSourcePage {
       Column() {
         Row() {
           Button({ type: ButtonType.Normal }) {
-            Image($r('app.media.ic_back'))
+            Image($rawfile('ic_back.svg'))
               .width(18).height(18)
               .fillColor(this.pal().text2)
               .draggable(false)

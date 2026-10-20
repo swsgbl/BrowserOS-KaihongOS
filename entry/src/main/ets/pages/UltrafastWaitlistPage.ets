@@ -114,7 +114,7 @@ struct UltrafastWaitlistPage {
           Column() {
             Row() {
               Column() {
-                Image($r('app.media.ic_zap'))
+                Image($rawfile('ic_zap.svg'))
                   .width(22).height(22)
                   .fillColor(this.darkMode ? '#7CB1FF' : '#1A73E8')
                   .draggable(false)
@@ -155,7 +155,7 @@ struct UltrafastWaitlistPage {
             Column() {
               ForEach(this.PERKS, (perk: string, index: number) => {
                 Row() {
-                  Image($r('app.media.ic_check'))
+                  Image($rawfile('ic_check.svg'))
                     .width(17).height(17)
                     .fillColor(this.darkMode ? '#7CB1FF' : '#1A73E8')
                     .draggable(false)
@@ -178,7 +178,7 @@ struct UltrafastWaitlistPage {
             // email 表单 / 已加入态
             if (this.joined) {
               Row() {
-                Image($r('app.media.ic_check'))
+                Image($rawfile('ic_check.svg'))
                   .width(15).height(15)
                   .fillColor(this.darkMode ? '#7CB1FF' : '#1A73E8')
                   .draggable(false)

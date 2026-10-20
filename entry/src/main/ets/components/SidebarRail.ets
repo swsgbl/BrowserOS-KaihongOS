@@ -59,7 +59,7 @@ export struct SidebarRail {
     Column() {
       // 顶部 logo 位(收起态不显示,展开态小图标)
       if (this.expanded) {
-        Image($r('app.media.ic_public'))
+        Image($rawfile('ic_public.svg'))
           .width(18).height(18)
           .fillColor('#1A73E8')
           .draggable(false)
@@ -68,10 +68,10 @@ export struct SidebarRail {
 
       // 四项导航(收起=竖排居中,展开=竖排 48px 方块)
       Column({ space: this.expanded ? 2 : 12 }) {
-        this.RailIcon($r('app.media.ic_home'), '主页', 'home')
-        this.RailIcon($r('app.media.ic_schedule'), '定时', 'scheduled')
-        this.RailIcon($r('app.media.ic_agent'), '连接', 'connect')
-        this.RailIcon($r('app.media.ic_settings'), '设置', 'settings')
+        this.RailIcon($rawfile('ic_home.svg'), '主页', 'home')
+        this.RailIcon($rawfile('ic_schedule.svg'), '定时', 'scheduled')
+        this.RailIcon($rawfile('ic_agent.svg'), '连接', 'connect')
+        this.RailIcon($rawfile('ic_settings.svg'), '设置', 'settings')
       }
       .width('100%')
       .layoutWeight(1)
@@ -81,7 +81,7 @@ export struct SidebarRail {
 
       // 底部帮助
       Column() {
-        this.RailIcon($r('app.media.ic_help'), '帮助', 'help')
+        this.RailIcon($rawfile('ic_help.svg'), '帮助', 'help')
       }
       .margin({ bottom: 6 })
     }

@@ -678,7 +678,7 @@ export struct AgentSidePanel {
 
         // 视图切换（上游：非 history 页显示 History 图标钮；history 页换成 Plus 回到新会话）
         if (this.panelView === 'chat') {
-          Image($r('app.media.ic_history'))
+          Image($rawfile('ic_history.svg'))
             .width(16).height(16)
             .fillColor(this.pal().text2)
             .draggable(false)
@@ -688,7 +688,7 @@ export struct AgentSidePanel {
               this.switchToHistory()
             })
         } else {
-          Image($r('app.media.ic_add'))
+          Image($rawfile('ic_add.svg'))
             .width(16).height(16)
             .fillColor(this.pal().text2)
             .draggable(false)
@@ -722,13 +722,13 @@ export struct AgentSidePanel {
             console.info('AgentSidePanel model switch: ' + this.modelOptions[this.modelSelection])
           })
 
-        Image($r('app.media.ic_settings'))
+        Image($rawfile('ic_settings.svg'))
           .width(16).height(16)
           .fillColor(this.pal().text2)
           .draggable(false)
           .width(28)
 
-        Image($r('app.media.ic_close'))
+        Image($rawfile('ic_close.svg'))
           .width(16).height(16)
           .fillColor(this.pal().text2)
           .draggable(false)
@@ -749,7 +749,7 @@ export struct AgentSidePanel {
         // P24b: 空态 = 起手提示词面板(对标 ChatEmptyState: 图标+标题+3按钮+自定义入口)
         if (this.messages.length <= 1 && !this.editingStarters) {
           Column() {
-            Image($r('app.media.ic_agent'))
+            Image($rawfile('ic_agent.svg'))
               .width(44)
               .height(44)
               .fillColor('#FB6618')
@@ -904,7 +904,7 @@ export struct AgentSidePanel {
               Column() {
                 Stack({ alignContent: Alignment.TopEnd }) {
                   Row() {
-                    Image($r('app.media.ic_sparkles'))
+                    Image($rawfile('ic_sparkles.svg'))
                       .width(18).height(18)
                       .fillColor('#F0983F')
                       .draggable(false)
@@ -924,7 +924,7 @@ export struct AgentSidePanel {
                   .alignItems(VerticalAlign.Top)
                   .padding({ right: 24 })
 
-                  Image($r('app.media.ic_close'))
+                  Image($rawfile('ic_close.svg'))
                     .width(13).height(13)
                     .fillColor(this.pal().text2)
                     .draggable(false)
@@ -1002,7 +1002,7 @@ export struct AgentSidePanel {
           Row() {
             if (this.chatMode === 'chat') {
               Row() {
-                Image($r('app.media.ic_tab_search'))
+                Image($rawfile('ic_tab_search.svg'))
                   .width(13).height(13)
                   .fillColor('#F28B82')
                   .draggable(false)
@@ -1028,7 +1028,7 @@ export struct AgentSidePanel {
               })
             } else {
               Row() {
-                Image($r('app.media.ic_robot'))
+                Image($rawfile('ic_robot.svg'))
                   .width(13).height(13)
                   .fillColor(this.pal().text2)
                   .draggable(false)
@@ -1063,7 +1063,7 @@ export struct AgentSidePanel {
                 .maxLines(1)
                 .constraintSize({ maxWidth: 180 })
                 .textOverflow({ overflow: TextOverflow.Ellipsis })
-              Image($r('app.media.ic_close'))
+              Image($rawfile('ic_close.svg'))
                 .width(11).height(11)
                 .fillColor(this.pal().text2)
                 .draggable(false)
@@ -1085,7 +1085,7 @@ export struct AgentSidePanel {
           // P33-C: 附加标签页 chip(对标上游 ChatAttachedTabs)
           if (this.attachedTab !== null) {
             Row() {
-              Image($r('app.media.ic_public'))
+              Image($rawfile('ic_public.svg'))
                 .width(12).height(12)
                 .fillColor(this.pal().text2)
                 .draggable(false)
@@ -1096,7 +1096,7 @@ export struct AgentSidePanel {
                 .maxLines(1)
                 .constraintSize({ maxWidth: 170 })
                 .textOverflow({ overflow: TextOverflow.Ellipsis })
-              Image($r('app.media.ic_close'))
+              Image($rawfile('ic_close.svg'))
                 .width(11).height(11)
                 .fillColor(this.pal().text2)
                 .draggable(false)
@@ -1133,7 +1133,7 @@ export struct AgentSidePanel {
             if (this.hasRunningAgent()) {
               // P24c: 运行中 = 红底停止钮(对标 chat-actions stop)
               Row() {
-                Image($r('app.media.ic_stop'))
+                Image($rawfile('ic_stop.svg'))
                   .width(14)
                   .height(14)
                   .fillColor('#FFFFFF')
@@ -1189,7 +1189,7 @@ export struct AgentSidePanel {
         } else if (this.historySessions.length === 0) {
           // 空态（上游：MessageSquare 图标 + emptyMessage + "Start a new chat" 链接）
           Column() {
-            Image($r('app.media.ic_robot'))
+            Image($rawfile('ic_robot.svg'))
               .width(40)
               .height(40)
               .fillColor(this.pal().text2)
@@ -1215,7 +1215,7 @@ export struct AgentSidePanel {
             ForEach(this.historySessions, (s: SessionRecord) => {
               ListItem() {
                 Row() {
-                  Image($r('app.media.ic_robot'))
+                  Image($rawfile('ic_robot.svg'))
                     .width(18).height(18)
                     .fillColor(this.pal().text2)
                     .draggable(false)

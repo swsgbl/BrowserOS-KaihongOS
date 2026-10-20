@@ -347,7 +347,7 @@ struct OnboardingPage {
   @Builder
   FeatureRow(text: string): void {
     Row() {
-      Image($r('app.media.ic_check'))
+      Image($rawfile('ic_check.svg'))
         .width(14).height(14)
         .fillColor('#4CAF50')
         .draggable(false)
