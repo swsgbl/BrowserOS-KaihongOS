@@ -18,7 +18,7 @@ This script:
 import json, os, subprocess, sqlite3, shutil, sys, time
 
 HDC = r"C:\Program Files\Huawei\DevEco Studio\sdk\default\openharmony\toolchains\hdc.exe"
-TARGET = "127.0.0.1:15566"
+TARGET = "192.168.161.137:10178"
 BUNDLE = "com.browseros.kaihong"
 ABILITY = "EntryAbility"
 LABEL = "BrowserOS"

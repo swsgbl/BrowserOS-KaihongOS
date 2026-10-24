@@ -14,7 +14,7 @@ import subprocess, sys, os, time
 BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 HDC = r"C:\Program Files\Huawei\DevEco Studio\sdk\default\openharmony\toolchains\hdc.exe"
 BUNDLE = "com.browseros.kaihong"
-TARGET = "127.0.0.1:15566"
+TARGET = "192.168.161.137:10178"
 
 def run(cmd, cwd=BASE, desc=""):
     print(f"[{desc}] {cmd[:80]}...")

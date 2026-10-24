@@ -14,7 +14,7 @@ import sys
 import time
 
 HDC = r"C:\Program Files\Huawei\DevEco Studio\sdk\default\openharmony\toolchains\hdc.exe"
-T = "127.0.0.1:15566"
+T = "192.168.161.137:10178"
 BUNDLE = "com.browseros.kaihong"
 
 

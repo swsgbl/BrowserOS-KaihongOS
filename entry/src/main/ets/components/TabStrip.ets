@@ -135,7 +135,7 @@ export struct TabStrip {
       // P28-C: tab-search 入口移到竖排条底部(与 ic_add 并排)
       Row({ space: 4 }) {
         Button({ type: ButtonType.Normal }) {
-          Image($rawfile('ic_add.svg'))
+          Image($rawfile('ic_add.png'))
             .width(16).height(16)
             .fillColor(this.pal().text2)
             .draggable(false)
@@ -239,7 +239,7 @@ export struct TabStrip {
 
       // 新标签按钮
       Button({ type: ButtonType.Normal }) {
-        Image($rawfile('ic_add.svg'))
+        Image($rawfile('ic_add.png'))
           .width(16).height(16)
           .fillColor(this.pal().text2)
           .draggable(false)
@@ -357,7 +357,7 @@ export struct TabSearchPanel {
         Divider().color(this.pal().border).margin({ top: 4, bottom: 4 })
 
         Row() {
-          Image($rawfile('ic_add.svg'))
+          Image($rawfile('ic_add.png'))
             .width(16).height(16)
             .fillColor(this.pal().text2)
             .margin({ right: 8 })

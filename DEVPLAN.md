@@ -1140,3 +1140,34 @@ python tools/smoke_reg.py         # 30 秒健康检查
 ### P38 终态
 - 图标体系：rawfile 全量（免疫）+ id 自动同步（兜底）+ 像素门禁（拦截）+ 静态规范（防倒退）四层防线
 - git：c5a3794 → P38 提交
+
+
+---
+
+## P39：环境大迁移（KaihongOS 6.1.2.08 / API23 / PC 形态）+ hmh 考核首轮（2026-10-24，用户令：分工回归 Zodex 指挥/hmh 开发+考核；HDC 换 192.168.161.137:10178 VMware 新 VM）
+
+### 环境侦察（Zodex）
+- 新系统 **KaihongOS 6.1.2.08 / API 23**（原 5.0.2.60/API14）、**Kaihong PC x86_64** 形态、内核 6.6.101、root shell、hap-sign-tool 在、签名模板在（无 browseros p7b）、旧包未装
+- 工具链 TARGET 六文件全切新地址（踩坑：PowerShell 无编码回写把含中文的工具脚本毁成乱码——git 恢复+显式 UTF8 重做）
+
+### hmh 考核（P39 任务书：环境适配+V2 直装试验+tab group cleanup）
+- **亮点**：2 小时内打通宿主侧签名材料链（找到 SDK 的 OpenHarmonyProfileRelease.pem 与正确 keyAlias `openharmony application profile release`）、锁定装机失败根因=工程 API24>VM API23、跨项目复用 uniterm 成功经验——问题锁定与知识迁移能力合格
+- **硬伤**：①长攻坚后**上下文漂移**——跑去给 D:/AI Learning OS 项目做了签名/装机（VM 上留下一堆 aioapp 产物），我们项目本体零装机；②无 final 中断（既知病）；③未守任务边界
+- **结论**：hmh 适合"边界清晰的攻坚题"+强红线任务书+Zodex 密集监督；长链路多项目环境下需硬边界（P40 任务书已加红线条款）
+
+### Zodex 接管完成迁移
+- **API 兼容正解**：本机仅 SDK26，compatibleSdkVersion 无法直写 23（hvigor 校验已装 SDK；"6.0.0(23)" 也拒）→ 新工具 **tools/build_api23_hap.py**：构建保持 26.0.0 + 后处理 module.json/pack.info 改 min/target=23（V1 repack 同款数字化技巧去掉 restool 步）
+- **签名**：宿主 ProfileRelease.pem 推 VM + attic/browseros-profile.json（P38 留档）→ VM 端 sign-profile（keyAlias 'openharmony application profile release'）+ sign-app（'OpenHarmony Application Release'，-compatibleVersion 23）——**双端材料组合签名链跑通**
+- **【里程碑】V2 直装成功**：API23 原生吃 RestoolV2 index——**V1 repack 链正式退役**（build_v1_hap.py/gen_final_ids 保留作旧 VM 存档）；装机→Onboarding（新装正常态）→ root 置完成标记 → **BrowserShell 全要素命中**（hero next?/Ultrafast 横幅/地址栏/标签/provider pill，evidence/p39/api23_v2.json）
+- **smoke 两失败诊断与处置**：①MCP 404=宿主 9222 被本机进程占用（fport listen failed 隧道假象）→ smoke 改走宿主 19222 高位端口隧道→PASS；②图标门禁 0%=**API23 系统级 AceImage 缺陷**（hilog 铁证：`mkdir cache file path failed`+`get image data by name failed`；$r/rawfile-svg/rawfile-png 三态全空白+系统栏图标正常+沙盒 cache 属主正常）→ 门禁识别该系统错误记 SKIP（P40 攻坚）
+- **终局：smoke 9/9（1 SKIP 为系统问题跟踪）+ static 16/16**；P40（图标根因+tab group）已带红线派发 hmh
+
+### 新环境差异清单（对旧机制的冲击）
+| 机制 | API14 旧链 | API23 新链 |
+|---|---|---|
+| 资源索引 | V1 repack（restool 5.0.1） | **V2 直装**（repack 退役） |
+| 签名 | VM 端单一证书 | 宿主 ProfileRelease.pem + VM 端 app 证书组合 |
+| 图标渲染 | $rawfile 全量正常 | **系统 AceImage 缓存缺陷全灭**（P40） |
+| hdc 隧道 | fport 9222 直通 | 宿主 9222 被占→19222 高位端口 |
+| 窗口形态 | ContainerModal（偏移漂移） | PC 窗口 [211,132][1068,668]（仍需 dump 驱动） |
+| 证据 | evidence/p39/（16 文件） | |

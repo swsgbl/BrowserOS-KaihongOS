@@ -2,7 +2,7 @@
 import os, subprocess, sys
 
 HDC = r"C:\Program Files\Huawei\DevEco Studio\sdk\default\openharmony\toolchains\hdc.exe"
-TARGET = "127.0.0.1:15566"
+TARGET = "192.168.161.137:10178"
 PROJ = r"D:\BrowserOS - KaihongOS"
 HAP = os.path.join(PROJ, "entry-p8-v1-unsigned.hap")
 REMOTE = "/data/local/tmp/p8_entry.hap"
