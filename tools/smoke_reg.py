@@ -323,14 +323,10 @@ def check_icon_render(hdc):
         if pct >= 15.0:
             record('9.icon pixel gate', True, 'icon %s non-bg %.1f%% (>=15)' % (img_b, pct))
         else:
-            # P39: KaihongOS 6.x(API23) 系统层 AceImage 文件缓存缺陷会让所有应用内
-            # Image 空白（hilog: mkdir cache file path failed / get image data by name
-            # failed）——识别为系统已知问题时记 SKIP 而非误报应用缺陷
-            code, hout = hdc.sh('hilog -x', 60)
-            if 'get image data by name failed' in hout or 'mkdir cache file path failed' in hout:
-                record('9.icon pixel gate', True, 'SKIP %.1f%% — system AceImage cache bug (P40 tracking)' % pct)
-            else:
-                record('9.icon pixel gate', False, 'icon %s non-bg %.1f%% (<15)' % (img_b, pct))
+            # P40: root cause FIXED - build_api23_hap.py now emits an all-STORED zip
+            # (KaihongOS resmgr cannot read DEFLATED hap entries; that blanked every
+            # in-app icon). Icon blanks are a real regression again - hard fail, no SKIP.
+            record('9.icon pixel gate', False, 'icon %s non-bg %.1f%% (<15)' % (img_b, pct))
     except Exception as e:
         record('9.icon pixel gate', False, str(e)[:60])
 

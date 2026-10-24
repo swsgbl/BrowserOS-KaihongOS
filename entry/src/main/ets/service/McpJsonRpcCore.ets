@@ -68,10 +68,28 @@ class McpServerInfo {
   version: string = ''
 }
 
+/**
+ * P40-B: MCP initialize instructions（对标上游 claw-server SHARED_BROWSER_GUIDANCE，
+ * 对齐 browseros-ai/BrowserOS da5f95e「tab group cleanup」净语义：
+ * 任务结束时保留有用的页面，除非工具回复要求你关闭本任务的标签组；
+ * e1ee0f0 已回滚 1cccd53 的强制 task tab-group cleanup 设置——此处不引入该设置，
+ * 引导为"可选/被动"而非默认行为。本项目无 tabs 工具，文案取上游与本工具集的交集。）
+ */
+const MCP_INSTRUCTIONS: string = [
+  'You are driving the BrowserOS webview via MCP tools.',
+  '- Prefer finishing in the current page: navigate, click, type, scroll, read text, take snapshots.',
+  '- Give each step a concrete check: snapshot or getText to verify the effect before moving on.',
+  '- Preserve useful pages that the user may want to inspect; do not navigate away from them',
+  '  mid-task unless a step requires it. When the task ends, leave them open instead of',
+  "  closing them, unless a tool reply asks you to close your task's tab group.",
+  '- The back/forward tools share the page history; use them instead of re-navigating when possible.'
+].join('\n')
+
 export class McpInitializeResult {
   protocolVersion: string = '2024-11-05'
   capabilities: McpCapabilities = new McpCapabilities()
   serverInfo: McpServerInfo = new McpServerInfo()
+  instructions: string = MCP_INSTRUCTIONS
 }
 
 export class McpToolsListResult {
