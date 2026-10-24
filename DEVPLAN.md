@@ -1167,7 +1167,30 @@ python tools/smoke_reg.py         # 30 秒健康检查
 |---|---|---|
 | 资源索引 | V1 repack（restool 5.0.1） | **V2 直装**（repack 退役） |
 | 签名 | VM 端单一证书 | 宿主 ProfileRelease.pem + VM 端 app 证书组合 |
-| 图标渲染 | $rawfile 全量正常 | **系统 AceImage 缓存缺陷全灭**（P40） |
+| 图标渲染 | $rawfile 全量正常 | ~~系统 AceImage 缓存缺陷全灭~~（P40 修正：见下，ZIP 存储方式问题已修复） |
 | hdc 隧道 | fport 9222 直通 | 宿主 9222 被占→19222 高位端口 |
 | 窗口形态 | ContainerModal（偏移漂移） | PC 窗口 [211,132][1068,668]（仍需 dump 驱动） |
 | 证据 | evidence/p39/（16 文件） | |
+
+
+---
+
+## P40：API23 图标空白真根因（推翻 P39 误判）+ 上游 tab-group 对齐（2026-10-24，hmh 单棒全程红线内完成；git 67561cd）
+
+### hmh 考核第二轮结论：**优秀**
+- 红线遵守：全程只在 D:\BrowserOS - KaihongOS（P39 漂移未复发）；证据链完整（evidence/p40 44 文件 a1-a17 系统化实验）；有 final 干净收棒
+- 问题锁定：用 `hilog -p off`（隐私关——必须单独 shell 调用，组合命令被拒）抓冷启动全量日志，拿到 P39 被隐私打码遮住的真实错误
+
+### A 根因真相（P39"AceImage 系统缺陷"结论作废）
+- 真实错误（脱码后）：`Get rawFile from hap error, rawfilename:ic_back.svg, error:9001005` + `Failed to Create drawableDescriptor by 16777217, errorCode:9001001`——resmgr 读不出 hap 内任何资源条目
+- **根因：`build_api23_hap.py` 重打包用了 `ZIP_DEFLATED`——KaihongOS 6.x(API23) 的 zip 读取器只服务 `ZIP_STORED` 条目**；取证：设备上所有系统应用 hap（dshapp 等）与 hvigor 原生产物全部 STORED。DEFLATE 条目查找全失败 → 全部 $r/rawfile 图片空白；文本正常因字符串硬编码；应用能跑因 abc 走不同加载路径
+- **修复**：重打包改 `ZIP_STORED`+保留原始条目顺序+断言全 STORED（tools/build_api23_hap.py）
+- **验证链**：冷启动资源错误 61→0；icon pixel gate 真实通过 36.5%；smoke 9/9（SKIP 分支已删，图标空白重为硬失败）；视觉确认全部图标渲染（p40_final.jpeg）；附带撤回 P39 的 ic_add svg→png 试验绕道
+
+### B 上游 tab-group cleanup 对齐（da5f95e）
+- 三 commit 净效果分析：1cccd53 被 e1ee0f0 回滚，仅 da5f95e 存活（可选 tip+引导句+设置开关修复）
+- 落地：McpJsonRpcCore 的 MCP `initialize` 结果新增 `instructions` 字段（注入对齐引导，含标志句）；不引入 cleanup 设置（对齐回滚后状态）；设备实测 POST /mcp 200+instructions（594 字符）
+
+### P40 终态
+- Zodex 独立复验：smoke 9/9（icon gate 36.5% 真过）+ static 16/16
+- 证据 evidence/p40/（44 文件，取证用设备 hap 副本已清）；git 498938f→67561cd
