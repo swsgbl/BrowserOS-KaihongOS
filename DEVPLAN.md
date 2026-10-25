@@ -1217,3 +1217,17 @@ python tools/smoke_reg.py         # 30 秒健康检查
 - 已核实无需处理：KAI-080（StorageManager 已 TextDecoder）、KAI-073 主体（isUrl P3 已修端口）、KAI-066（DashboardPage 死页 P5 已删）、KAI-072（双 VM=平板+PC 两形态已实测）
 - 任务书 .zcode/p42_brief.md 已派发 hmh（红线+行号级清单）；attic/docpkg/ 存外部文档包副本
 - **P42 已完成（commit 7d6fe2e，tag v0.1.0-alpha 双镜像已推）**：A loopback/KAI-047、B CSPRNG/KAI-044、C type gate/KAI-074（ConfirmDialog 实证）、D 脱敏/KAI-075（common/Redact.ets）、E 会话按时间清理/KAI-061、F html2canvas 本地化/KAI-079（断网 screenshot 实证）、G isUrl localhost/KAI-073、H UPSTREAM_BASELINE.md+verify_mirrors.py+tag。static 25/25、smoke 9/9、证据 evidence/p42/
+
+### P43：MCP 工具面 1:1 对齐上游 17 工具 + 互操作门禁 + 限流（2026-10-25，用户令按 04 验收清单继续推进；P43a hmh 完成 3910b5d + P43b hmh 半途 Zodex 接管 d5239c1）
+
+#### P43a：17 工具注册表（KAI-031/KAI-042，hmh 一棒）
+- **MCPServer 10→17 工具**（上游 registry.ts 顺序同名）：`tabs/tab_groups/history/navigate/snapshot/diff/act/download/upload/read/grep/screenshot/pdf/wait/windows/evaluate/run`
+- 旧名收编别名（click/type/scroll→act、getText→read、back/forward→history）；act 15 kinds 对齐上游枚举（4 走 BCP+11 经 evaluate 内联 DOM 合成事件）；直通层（TabManager/HistoryManager/DownloadManager）；如实 unsupported（upload/pdf 标注 ArkWeb 限制）；新 diff（行级 LCS）/grep/evaluate/run 宏
+- **Zodex 独立验收**：tools/list **17/17 名称一致零缺失零多余**（z43_list 断言）；12/12 工具冒烟 PASS；static 25/25 + smoke 9/9
+
+#### P43b：限流 + 客户端互操作门禁（hmh 上下文耗尽死于 McpRateLimiter 写完传输层未接→Zodex 接管）
+- **McpRateLimiter.ets**（hmh 产物）：每连接滑动窗口 30req/10s 可配；**接管接线**：HttpMcpTransport（鉴权后 allow→429/-32000）+ WsMcpTransport（dispatchRpc 前 allow→sendTextFrame 错误帧）+ 双端 cleanupConn reset
+- **tools/mcp_client_e2e.py 15 项门禁：14/15 PASS**——HTTP initialize / tools/list 断言 17 / navigate→snapshot→read→grep→tabs→history→windows 全链 / 负例（401 invalid token、-32601 unknown method、参数错误）/ 限流（keep-alive 50 连发→**20 次被 429**→11s 后恢复 200）/ WS probe（服务在响应但握手 header 匹配 400 pending）
+- **限流测试方法论**：urllib 每请求新建 TCP→窗口逐连接重置不触发；必须 http.client 单连接 keep-alive 压测
+- **smoke 环境注意**：设备当前被并发 AIOS 任务抢前台（HMH Desktop）→smoke 暂 7/9；最近完整验证=P43a 后 9/9；并发任务释放后可复跑
+- git 3910b5d+d5239c1 双远端已推；evidence/p43/（tools_list/mcp_client_e2e_out/rate_hilog）
