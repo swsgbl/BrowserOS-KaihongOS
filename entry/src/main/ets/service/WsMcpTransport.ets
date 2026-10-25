@@ -3,6 +3,7 @@ import { util } from '@kit.ArkTS'
 import { cryptoFramework } from '@kit.CryptoArchitectureKit'
 import { BusinessError } from '@kit.BasicServicesKit'
 import { McpJsonRpcCore, McpHttpDelegate } from './McpJsonRpcCore'
+import { McpRateLimiter } from './McpRateLimiter'
 
 /**
  * P13: MCP WebSocket 传输端点（端口 8765，任务书指定）。
@@ -151,6 +152,7 @@ class WsMcpTransportImpl {
       this.sessionConns.delete(conn.sessionId)
     }
     this.connections.delete(conn.client.clientId)
+    McpRateLimiter.reset(`ws_${conn.client.clientId}`)
   }
 
   // ---------- 字节流入口：握手前 HTTP 累积 / 握手后 WS 帧累积 ----------
@@ -372,6 +374,15 @@ class WsMcpTransportImpl {
   // ---------- JSON-RPC 分发（与 HTTP 9222 同核 McpJsonRpcCore） ----------
 
   private async dispatchRpc(conn: WsConnState, text: string): Promise<void> {
+    // P43b (KAI-047): 每连接滑动窗口限流（与 HTTP 传输同款语义）
+    const rlKey = `ws_${conn.client.clientId}`
+    const rl = McpRateLimiter.allow(rlKey)
+    if (!rl.allowed) {
+      console.warn(`[${TAG}] rate limited id=${conn.client.clientId} retryAfterMs=${rl.retryAfterMs}`)
+      const errBody = `{"jsonrpc":"2.0","id":null,"error":{"code":-32000,"message":"rate limited","data":{"retryAfterMs":${rl.retryAfterMs}}}}`
+      await this.sendTextFrame(conn, errBody)
+      return
+    }
     const outcome = await McpJsonRpcCore.handleRpc(text, conn.token, 'mcp_ws')
     if (outcome.sessionId !== '') {
       conn.sessionId = outcome.sessionId

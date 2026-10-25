@@ -2,6 +2,7 @@ import { socket } from '@kit.NetworkKit'
 import { util } from '@kit.ArkTS'
 import { BusinessError } from '@kit.BasicServicesKit'
 import { McpJsonRpcCore, McpHttpDelegate } from './McpJsonRpcCore'
+import { McpRateLimiter } from './McpRateLimiter'
 
 /**
  * P3: MCP Streamable HTTP 传输层（简化子集）。
@@ -128,11 +129,13 @@ class HttpMcpTransportImpl {
     })
     client.on('close', () => {
       this.connections.delete(client.clientId)
+      McpRateLimiter.reset(`http_${client.clientId}`)
       console.info(`[${TAG}] client closed id=${client.clientId} total=${this.connections.size}`)
     })
     client.on('error', (err: BusinessError) => {
       console.error(`[${TAG}] client error id=${client.clientId}: ${err.code}/${err.message}`)
       this.connections.delete(client.clientId)
+      McpRateLimiter.reset(`http_${client.clientId}`)
     })
   }
 
@@ -261,6 +264,16 @@ class HttpMcpTransportImpl {
       if (!this.delegate || !this.delegate.validateToken(token)) {
         console.warn(`[${TAG}] 401 unauthorized (token len=${token.length}) client=${conn.client.clientId}`)
         await this.sendSimple(conn, '401 Unauthorized', '{"error":"invalid token"}')
+        return
+      }
+
+      // P43b (KAI-047): 每连接滑动窗口限流
+      const rlKey = `http_${conn.client.clientId}`
+      const rl = McpRateLimiter.allow(rlKey)
+      if (!rl.allowed) {
+        console.warn(`[${TAG}] 429 rate limited client=${conn.client.clientId} retryAfterMs=${rl.retryAfterMs}`)
+        await this.sendSimple(conn, '429 Too Many Requests',
+          `{"jsonrpc":"2.0","id":null,"error":{"code":-32000,"message":"rate limited","data":{"retryAfterMs":${rl.retryAfterMs}}}}`)
         return
       }
 

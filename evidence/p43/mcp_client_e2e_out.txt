@@ -1,0 +1,19 @@
+'M' ²»ÊÇÄÚ²¿»òÍâ²¿ÃüÁî£¬Ò²²»ÊÇ¿ÉÔËÐÐµÄ³ÌÐò
+»òÅú´¦ÀíÎÄ¼þ¡£
+[PASS] http initialize â€” {'jsonrpc': '2.0', 'id': 1, 'result': {'protocolVersion': '2
+[PASS] tools/list 17 upstream names â€” missing=[] count=17
+[PASS] call navigate â€” {'content': [{'type': 'text', 'text': '{"url":"https://examp
+[PASS] call snapshot (page content) â€” len=1092 {'jsonrpc': '2.0', 'id': 4, 'result': {'content': [{'type': 
+[PASS] call read â€” {'jsonrpc': '2.0', 'id': 5, 'result': {'content': 
+[PASS] call grep â€” {'jsonrpc': '2.0', 'id': 6, 'result': {'content': 
+[PASS] call tabs list â€” {'jsonrpc': '2.0', 'id': 7, 'result': {'content': 
+[PASS] call history list â€” {'jsonrpc': '2.0', 'id': 8, 'result': {'content': 
+[PASS] call windows list â€” {'jsonrpc': '2.0', 'id': 9, 'result': {'content': 
+[PASS] negative: invalid token -> 401 â€” 401
+[PASS] negative: unknown method -> JSON-RPC error â€” {'code': -32601, 'message': 'Method not found: bogus/method'
+[PASS] negative: missing url -> schema/param error â€” {'jsonrpc': '2.0', 'id': 12, 'result': None, 'error': {'code': -32000,
+[PASS] rate limit engaged (>=1 of 50 limited, keep-alive) â€” limited=20 last=429
+[PASS] rate limit window recovery â€” 200
+[FAIL] ws transport initialize
+
+== mcp_client_e2e: 14/15 PASS ==
