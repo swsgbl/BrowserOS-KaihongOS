@@ -52,7 +52,8 @@ function seedSkills(): SkillEntry[] {
 @Entry
 @Component
 struct SkillsPage {
-  @StorageProp('darkMode') darkMode: boolean = false
+  @StorageProp('darkMode') @Watch('onThemeFlip') darkMode: boolean = false // P44
+  @State themeVersion: number = 0 // P44
   @State skills: SkillEntry[] = []
   @State loaded: boolean = false
   @State detailName: string = ''
@@ -226,8 +227,19 @@ struct SkillsPage {
     return null
   }
 
+  // P44: 主题翻转钩子——@StorageProp 变更不触发 @Builder 重调,靠 themeVersion 递增驱动全树重渲染
+  onThemeFlip(): void {
+    this.themeVersion++
+    console.info('SkillsPage theme flipped: darkMode=' + this.darkMode + ' v=' + this.themeVersion)
+  }
+
   build(): void {
     Stack() {
+        // P44: themeVersion 渲染依赖锚（@Watch 递增触发全树重渲染——暗/浅切换时 @Builder 不重调的修复）
+        if (this.themeVersion < 0) {
+          Text('').fontSize(0)
+        }
+
       Column() {
         this.Header()
         if (!this.loaded) {

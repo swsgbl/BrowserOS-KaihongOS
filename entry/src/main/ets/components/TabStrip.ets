@@ -12,7 +12,8 @@ import { ContextMenu, CtxEntry } from './ContextMenu'
 
 @Component
 export struct TabStrip {
-  @StorageProp('darkMode') darkMode: boolean = false
+  @StorageProp('darkMode') @Watch('onThemeFlip') darkMode: boolean = false // P44
+  @State themeVersion: number = 0 // P44
   @State hoverTabId: string = ''
   tabs: TabInfo[] = []
   activeTabId: string = ''
@@ -49,8 +50,19 @@ export struct TabStrip {
     return hovered ? '#14000000' : '#0D000000'
   }
 
+  // P44: 主题翻转钩子——@StorageProp 变更不触发 @Builder 重调,靠 themeVersion 递增驱动全树重渲染
+  onThemeFlip(): void {
+    this.themeVersion++
+    console.info('TabStrip theme flipped: darkMode=' + this.darkMode + ' v=' + this.themeVersion)
+  }
+
   build(): void {
     if (this.vertical) {
+        // P44: themeVersion 渲染依赖锚（@Watch 递增触发全树重渲染——暗/浅切换时 @Builder 不重调的修复）
+        if (this.themeVersion < 0) {
+          Text('').fontSize(0)
+        }
+
       this.VerticalTabs()
     } else {
       this.HorizontalTabs()
@@ -282,7 +294,8 @@ export struct TabStrip {
 /** tab-search 面板:打开的标签页列表(favicon+标题+关闭),点击切换 */
 @Component
 export struct TabSearchPanel {
-  @StorageProp('darkMode') darkMode: boolean = false
+  @StorageProp('darkMode') @Watch('onThemeFlip') darkMode: boolean = false // P44
+  @State themeVersion: number = 0 // P44
   tabs: TabInfo[] = []
   activeTabId: string = ''
   onPick: (tabId: string) => void = (tabId: string) => {}
@@ -294,8 +307,19 @@ export struct TabSearchPanel {
     return Palette.of(this.darkMode)
   }
 
+  // P44: 主题翻转钩子——@StorageProp 变更不触发 @Builder 重调,靠 themeVersion 递增驱动全树重渲染
+  onThemeFlip(): void {
+    this.themeVersion++
+    console.info('TabStrip theme flipped: darkMode=' + this.darkMode + ' v=' + this.themeVersion)
+  }
+
   build(): void {
     Stack({ alignContent: Alignment.TopEnd }) {
+        // P44: themeVersion 渲染依赖锚（@Watch 递增触发全树重渲染——暗/浅切换时 @Builder 不重调的修复）
+        if (this.themeVersion < 0) {
+          Text('').fontSize(0)
+        }
+
       // 全屏透明遮罩:点击任意处关闭
       Column()
         .width('100%')

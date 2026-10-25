@@ -57,7 +57,8 @@ export class JtbdStore {
 @Entry
 @Component
 struct JtbdSurveyPage {
-  @StorageProp('darkMode') darkMode: boolean = false
+  @StorageProp('darkMode') @Watch('onThemeFlip') darkMode: boolean = false // P44
+  @State themeVersion: number = 0 // P44
   /** idle=Welcome / active=问答 / done=完成卡 */
   @State phase: string = 'idle'
   @State messages: SurveyMessage[] = []
@@ -123,8 +124,19 @@ struct JtbdSurveyPage {
     router.back()
   }
 
+  // P44: 主题翻转钩子——@StorageProp 变更不触发 @Builder 重调,靠 themeVersion 递增驱动全树重渲染
+  onThemeFlip(): void {
+    this.themeVersion++
+    console.info('JtbdSurveyPage theme flipped: darkMode=' + this.darkMode + ' v=' + this.themeVersion)
+  }
+
   build(): void {
     Column() {
+        // P44: themeVersion 渲染依赖锚（@Watch 递增触发全树重渲染——暗/浅切换时 @Builder 不重调的修复）
+        if (this.themeVersion < 0) {
+          Text('').fontSize(0)
+        }
+
       // 顶栏
       Row() {
         Image($rawfile('ic_back.svg'))

@@ -25,7 +25,8 @@ interface MenuEntry {
 export struct ThreeDotMenu {
   onAction: (action: string) => void = (action: string) => {}
   onClose: () => void = () => {}
-  @StorageProp('darkMode') darkMode: boolean = false
+  @StorageProp('darkMode') @Watch('onThemeFlip') darkMode: boolean = false // P44
+  @State themeVersion: number = 0 // P44
 
   private pal(): Palette {
     return Palette.of(this.darkMode)
@@ -48,8 +49,19 @@ export struct ThreeDotMenu {
     { icon: $rawfile('ic_help.svg'), label: '帮助', action: 'help' }
   ]
 
+  // P44: 主题翻转钩子——@StorageProp 变更不触发 @Builder 重调,靠 themeVersion 递增驱动全树重渲染
+  onThemeFlip(): void {
+    this.themeVersion++
+    console.info('ChromeWidgets theme flipped: darkMode=' + this.darkMode + ' v=' + this.themeVersion)
+  }
+
   build(): void {
     Stack({ alignContent: Alignment.TopEnd }) {
+        // P44: themeVersion 渲染依赖锚（@Watch 递增触发全树重渲染——暗/浅切换时 @Builder 不重调的修复）
+        if (this.themeVersion < 0) {
+          Text('').fontSize(0)
+        }
+
       // 全屏透明遮罩：点击任意处关闭
       Column()
         .width('100%')
@@ -123,7 +135,8 @@ export struct ThreeDotMenu {
 /** omnibox 聚焦建议下拉（历史+书签匹配，图标+标题+URL） */
 @Component
 export struct OmniboxSuggestions {
-  @StorageProp('darkMode') darkMode: boolean = false
+  @StorageProp('darkMode') @Watch('onThemeFlip') darkMode: boolean = false // P44
+  @State themeVersion: number = 0 // P44
 
   private pal(): Palette {
     return Palette.of(this.darkMode)
@@ -135,8 +148,19 @@ export struct OmniboxSuggestions {
   onSwitchEngine: () => void = () => {}
   onClose: () => void = () => {}
 
+  // P44: 主题翻转钩子——@StorageProp 变更不触发 @Builder 重调,靠 themeVersion 递增驱动全树重渲染
+  onThemeFlip(): void {
+    this.themeVersion++
+    console.info('ChromeWidgets theme flipped: darkMode=' + this.darkMode + ' v=' + this.themeVersion)
+  }
+
   build(): void {
     Stack({ alignContent: Alignment.TopStart }) {
+        // P44: themeVersion 渲染依赖锚（@Watch 递增触发全树重渲染——暗/浅切换时 @Builder 不重调的修复）
+        if (this.themeVersion < 0) {
+          Text('').fontSize(0)
+        }
+
       // 透明遮罩截获外部点击（不压暗）
       Column()
         .width('100%')
@@ -243,7 +267,8 @@ export struct OmniboxSuggestions {
 /** 星标书签气泡：名称可编辑 + 完成/删除 */
 @Component
 export struct BookmarkBubble {
-  @StorageProp('darkMode') darkMode: boolean = false
+  @StorageProp('darkMode') @Watch('onThemeFlip') darkMode: boolean = false // P44
+  @State themeVersion: number = 0 // P44
 
   private pal(): Palette {
     return Palette.of(this.darkMode)
@@ -257,8 +282,19 @@ export struct BookmarkBubble {
   onRemove: () => void = () => {}
   onClose: () => void = () => {}
 
+  // P44: 主题翻转钩子——@StorageProp 变更不触发 @Builder 重调,靠 themeVersion 递增驱动全树重渲染
+  onThemeFlip(): void {
+    this.themeVersion++
+    console.info('ChromeWidgets theme flipped: darkMode=' + this.darkMode + ' v=' + this.themeVersion)
+  }
+
   build(): void {
     Stack({ alignContent: Alignment.TopEnd }) {
+        // P44: themeVersion 渲染依赖锚（@Watch 递增触发全树重渲染——暗/浅切换时 @Builder 不重调的修复）
+        if (this.themeVersion < 0) {
+          Text('').fontSize(0)
+        }
+
       Column()
         .width('100%')
         .height('100%')

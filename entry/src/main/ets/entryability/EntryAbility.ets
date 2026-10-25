@@ -97,8 +97,8 @@ export default class EntryAbility extends UIAbility {
     console.info('BrowserOS KaihongOS EntryAbility onWindowStageCreate')
     // P5: 首启动 Onboarding —— 未完成配置则进入引导页
     // p10a: dark dispatch via AppStorage
-    AppStorage.setOrCreate('darkMode', ConfigManager.get().darkMode)
-    console.info('EntryAbility darkMode=' + ConfigManager.get().darkMode + ' sensitiveConfirm=' + ConfigManager.isSensitiveConfirm())
+    // P44-fix: 原来此处在 await configReady 之前读取,load 未完成时把默认 false 写进
+    // AppStorage 且之后无人补写 —— 重启后暗色偏好丢失的根因。移到 config 就绪之后。
     // P16a: 下载管理器初始化（建目录 + 扫描恢复已完成列表）
     try {
       DownloadManager.init(this.context)
@@ -115,6 +115,9 @@ export default class EntryAbility extends UIAbility {
     }
     // P36-fix: 等配置就绪再判定入口页（asset 探测异步 IPC 耗时不可忽略）
     await this.configReady
+    // P44-fix: darkMode 必须在配置就绪后写入（此处为 AppStorage 首次权威写入点）
+    AppStorage.setOrCreate('darkMode', ConfigManager.get().darkMode)
+    console.info('EntryAbility darkMode=' + ConfigManager.get().darkMode + ' sensitiveConfirm=' + ConfigManager.isSensitiveConfirm())
     const entryPage = ConfigManager.isOnboardingCompleted() ? 'pages/BrowserShell' : 'pages/OnboardingPage'
     console.info('EntryAbility entry page: ' + entryPage + ' (onboardingCompleted=' + ConfigManager.isOnboardingCompleted() + ')')
     windowStage.loadContent(entryPage, (err: BusinessError) => {

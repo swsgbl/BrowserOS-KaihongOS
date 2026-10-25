@@ -17,7 +17,8 @@ interface BookmarkPill {
 @Component
 export struct BookmarkBar {
   /** p10a: AppStorage('darkMode') 消费 */
-  @StorageProp('darkMode') darkMode: boolean = false
+  @StorageProp('darkMode') @Watch('onThemeFlip') darkMode: boolean = false // P44
+  @State themeVersion: number = 0 // P44
   /** shell 注入的书签数据(getAllBookmarks 已按 createdAt 降序) */
   bookmarks: BookmarkPill[] = []
   onOpenBookmark: (url: string) => void = (url: string) => {}
@@ -26,8 +27,19 @@ export struct BookmarkBar {
     return Palette.of(this.darkMode)
   }
 
+  // P44: 主题翻转钩子——@StorageProp 变更不触发 @Builder 重调,靠 themeVersion 递增驱动全树重渲染
+  onThemeFlip(): void {
+    this.themeVersion++
+    console.info('BookmarkBar theme flipped: darkMode=' + this.darkMode + ' v=' + this.themeVersion)
+  }
+
   build(): void {
     Row() {
+        // P44: themeVersion 渲染依赖锚（@Watch 递增触发全树重渲染——暗/浅切换时 @Builder 不重调的修复）
+        if (this.themeVersion < 0) {
+          Text('').fontSize(0)
+        }
+
       Scroll() {
         Row() {
           if (this.bookmarks.length === 0) {

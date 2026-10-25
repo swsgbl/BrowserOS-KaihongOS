@@ -12,7 +12,8 @@ import { Palette } from '../common/Palette'
 @Entry
 @Component
 struct UltrafastWaitlistPage {
-  @StorageProp('darkMode') darkMode: boolean = false
+  @StorageProp('darkMode') @Watch('onThemeFlip') darkMode: boolean = false // P44
+  @State themeVersion: number = 0 // P44
   @State emailInput: string = ''
   @State invalid: boolean = false
   @State joined: boolean = false
@@ -79,8 +80,19 @@ struct UltrafastWaitlistPage {
     }
   }
 
+  // P44: 主题翻转钩子——@StorageProp 变更不触发 @Builder 重调,靠 themeVersion 递增驱动全树重渲染
+  onThemeFlip(): void {
+    this.themeVersion++
+    console.info('UltrafastWaitlistPage theme flipped: darkMode=' + this.darkMode + ' v=' + this.themeVersion)
+  }
+
   build(): void {
     Column() {
+        // P44: themeVersion 渲染依赖锚（@Watch 递增触发全树重渲染——暗/浅切换时 @Builder 不重调的修复）
+        if (this.themeVersion < 0) {
+          Text('').fontSize(0)
+        }
+
       Scroll() {
         Column() {
           // header（Coming soon + Ultrafast mode 大标 + 副题）

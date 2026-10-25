@@ -19,7 +19,8 @@ interface BookmarkRow {
 @Component
 struct BookmarksPage {
   /** p10a: AppStorage('darkMode') 消费 —— EntryAbility 启动时与设置页开关写入 */
-  @StorageProp('darkMode') darkMode: boolean = false
+  @StorageProp('darkMode') @Watch('onThemeFlip') darkMode: boolean = false // P44
+  @State themeVersion: number = 0 // P44
 
   private pal(): Palette {
     return Palette.of(this.darkMode)
@@ -132,8 +133,19 @@ struct BookmarksPage {
     console.info('BookmarksPage loaded: ' + this.items.length)
   }
 
+  // P44: 主题翻转钩子——@StorageProp 变更不触发 @Builder 重调,靠 themeVersion 递增驱动全树重渲染
+  onThemeFlip(): void {
+    this.themeVersion++
+    console.info('BookmarksPage theme flipped: darkMode=' + this.darkMode + ' v=' + this.themeVersion)
+  }
+
   build(): void {
     Column() {
+        // P44: themeVersion 渲染依赖锚（@Watch 递增触发全树重渲染——暗/浅切换时 @Builder 不重调的修复）
+        if (this.themeVersion < 0) {
+          Text('').fontSize(0)
+        }
+
       Row() {
         Image($rawfile('ic_back.svg'))
           .width(20).height(20)

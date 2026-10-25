@@ -23,7 +23,8 @@ export function ctxDivider(): CtxEntry {
 
 @Component
 export struct ContextMenu {
-  @StorageProp('darkMode') darkMode: boolean = false
+  @StorageProp('darkMode') @Watch('onThemeFlip') darkMode: boolean = false // P44
+  @State themeVersion: number = 0 // P44
   /** -1 = 系统弹窗模式(无遮罩无定位,仅卡体);>=0 = 手动覆盖层模式 */
   x: number = -1
   y: number = -1
@@ -39,8 +40,19 @@ export struct ContextMenu {
     return this.darkMode ? '#3C4043' : '#F0F1F3'
   }
 
+  // P44: 主题翻转钩子——@StorageProp 变更不触发 @Builder 重调,靠 themeVersion 递增驱动全树重渲染
+  onThemeFlip(): void {
+    this.themeVersion++
+    console.info('ContextMenu theme flipped: darkMode=' + this.darkMode + ' v=' + this.themeVersion)
+  }
+
   build(): void {
     if (this.x >= 0) {
+        // P44: themeVersion 渲染依赖锚（@Watch 递增触发全树重渲染——暗/浅切换时 @Builder 不重调的修复）
+        if (this.themeVersion < 0) {
+          Text('').fontSize(0)
+        }
+
       Stack({ alignContent: Alignment.TopStart }) {
         Column()
           .width('100%')

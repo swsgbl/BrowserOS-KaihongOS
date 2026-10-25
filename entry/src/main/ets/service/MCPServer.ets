@@ -432,6 +432,13 @@ class MCPServerImpl implements McpHttpDelegate {
       return this.errorResponse(ErrorCodes.MCP_003, 'Missing url parameter')
     }
 
+    // P44-fix: browseros:// 内建 scheme 拦截 —— 该 scheme 只在 omnibox 路由分发,
+    // 直塞 Web 会 ERR_UNKNOWN_URL_SCHEME 且把标签状态污染成白屏。
+    if (url.toLowerCase().startsWith('browseros://')) {
+      return this.errorResponse(ErrorCodes.MCP_003,
+        'browseros:// scheme is not navigable via MCP; use omnibox or menu instead: ' + url)
+    }
+
     const sensitiveType = SensitiveOperationDetector.detectNavigation(agentId, url)
     if (sensitiveType) {
       const confirmed = await SensitiveOperationDetector.requestConfirmation(
