@@ -1,0 +1,3 @@
+nav: {"jsonrpc":"2.0","id":1,"result":{"content":[{"type":"text","text":"{\"url\":\"about:blank\",\"result\":\"about:blank\"}"}],"isError":false},"error":n
+
+type(sk-): {"jsonrpc":"2.0","id":1,"result":{"content":[{"type":"text","text":"{\"selector\":\"body\",\"text\":\"***\",\"result\":\"null\"}"}],"isError":false},"error":null}

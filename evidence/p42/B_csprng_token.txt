@@ -1,0 +1,3 @@
+token=DAjAHwjnqkXFhFHAVg9pOHvfUJvPDX1O
+len=32
+alnum32=True

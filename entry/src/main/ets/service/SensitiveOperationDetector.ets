@@ -53,6 +53,16 @@ class SensitiveOperationDetectorImpl {
     return null
   }
 
+  /** P42 (KAI-074): type 工具输入检测——selector 与 text 合并走敏感词表（password/payment/删除/设置类） */
+  detectType(agentId: string, selector: string, text: string): SensitiveOperationType | null {
+    // selector 权重同 click；text 单独再扫一遍（输入内容含敏感词也算）
+    const clickLike = this.detectClick(agentId, selector, text)
+    if (clickLike) {
+      return clickLike
+    }
+    return this.detectNavigation(agentId, text)
+  }
+
   detectNavigation(agentId: string, url: string): SensitiveOperationType | null {
     const lowerUrl = url.toLowerCase()
 

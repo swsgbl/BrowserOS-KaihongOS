@@ -1,0 +1,2 @@
+screenshot via local html2canvas: has_data_image=true
+{"jsonrpc":"2.0","id":2,"result":{"content":[{"type":"text","text":"{\"quality\":\"low\",\"result\":\"data:image/jpeg;base64,null\"}"}],"isError":false},"error":null}

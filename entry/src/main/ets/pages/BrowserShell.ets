@@ -2247,6 +2247,10 @@ struct BrowserShell {
 
   private isUrl(input: string): boolean {
     // P3 修复：host 支持端口号（如 http://host:11435/path）
+    // P42 (KAI-073): 白名单追回 localhost/127.0.0.1（无点主机 + 端口也按 URL 处理，其余行为不变）
+    if (/^(https?:\/\/)?(localhost|127\.0\.0\.1)(:\d{1,5})?(\/[\w-./?%&=]*)?$/.test(input)) {
+      return true
+    }
     return /^(https?:\/\/)?([\w-]+\.)+[\w-]+(:\d{1,5})?(\/[\w-./?%&=]*)?$/.test(input)
   }
 

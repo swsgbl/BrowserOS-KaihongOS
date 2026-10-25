@@ -73,11 +73,12 @@ class WsMcpTransportImpl {
     })
     try {
       // 监听 0.0.0.0：VM 内 qemu 端口转发需要 guest 侧全网卡可见
-      await server.listen({ address: '0.0.0.0', port: port })
+      // P42 (KAI-047): loopback only（与 HTTP 9222 同款决策）
+      await server.listen({ address: '127.0.0.1', port: port })
       this.server = server
       this.port = port
       this.listening = true
-      console.info(`[${TAG}] listening on 8765`)
+      console.info(`[${TAG}] listening on 127.0.0.1: 8765`)
       return true
     } catch (e) {
       const detail = (e as BusinessError).code !== undefined

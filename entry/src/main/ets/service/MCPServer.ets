@@ -15,6 +15,8 @@ import { HttpMcpTransport } from './HttpMcpTransport'
 import { McpHttpDelegate } from './McpJsonRpcCore'
 import { WsMcpTransport } from './WsMcpTransport'
 import { StorageManager } from '../storage/StorageManager'
+import { cryptoFramework } from '@kit.CryptoArchitectureKit'
+import { util } from '@kit.ArkTS'
 
 type ToolHandler = (params: Record<string, Object>, agentId: string) => Promise<MCPToolResponse>
 
@@ -59,7 +61,7 @@ class MCPServerImpl implements McpHttpDelegate {
     this.authToken = authToken
     this.registerToolHandlers()
 
-    // P3: 真实网络层接线 —— HttpMcpTransport 监听 0.0.0.0:{port}（失败即返回，不再盲重试端口）
+    // P3: 真实网络层接线 —— HttpMcpTransport 监听 127.0.0.1:{port}（P42: loopback only，fport 隧道仍通，设备 IP 直连被拒）
     const listening = await HttpMcpTransport.start(port, this)
     if (!listening) {
       ErrorHandler.handle(new AppError(ErrorCodes.MCP_004, `Port ${port} unavailable`))
@@ -75,7 +77,7 @@ class MCPServerImpl implements McpHttpDelegate {
     this.running = true
     const startData: MCPConnectionChangeData = { status: 'started', port: this.port }
     EventBus.emit(EventBusEvents.MCP_CONNECTION_CHANGE, startData)
-    console.info('[MCPServer] started, HTTP transport listening on 0.0.0.0:' + this.port)
+    console.info('[MCPServer] started, HTTP transport listening on 127.0.0.1:' + this.port)
 
     // P3: token 外显 —— 写入应用沙盒 files/mcp_token.txt（宿主经 hdc cat 可读）
     const tokenFile = StorageManager.getBasePath() + '/mcp_token.txt'
@@ -228,6 +230,16 @@ class MCPServerImpl implements McpHttpDelegate {
       return this.errorResponse(ErrorCodes.MCP_003, 'Missing selector or text parameter')
     }
 
+    // P42 (KAI-074): type 工具走敏感操作 gate——输入文本/目标 selector 过 SensitiveOperationDetector
+    const sensitiveType = SensitiveOperationDetector.detectType(agentId, selector, text)
+    if (sensitiveType) {
+      const confirmed = await SensitiveOperationDetector.requestConfirmation(
+        agentId, sensitiveType, text, selector)
+      if (!confirmed) {
+        return this.errorResponse(ErrorCodes.AGT_003, 'Operation rejected by user')
+      }
+    }
+
     const result = await BCPEngine.type(selector, text)
     const data: MCPResponseData = { selector: selector, text: text, result: result.data }
     return this.bcpToMcpResponse(result, data)
@@ -310,16 +322,38 @@ class MCPServerImpl implements McpHttpDelegate {
   }
 
   private generateRequestId(): string {
-    return `req_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`
+    // P42: CSPRNG 随机段（KAI-044）替代 Math.random
+    return `req_${Date.now()}_${this.secureRandomChars(8)}`
   }
 
   generateAuthToken(): string {
+    // P42: CSPRNG 生成（KAI-044）——格式不变（AUTH_TOKEN_LENGTH 位字母数字）
+    return this.secureRandomChars(Constants.AUTH_TOKEN_LENGTH)
+  }
+
+  /** P42: cryptoFramework CSPRNG → base62 字符串；异常回退 util.generateRandomUUID 派生（同为系统安全随机源），绝不用 Math.random */
+  private secureRandomChars(len: number): string {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-    let token = ''
-    for (let i = 0; i < Constants.AUTH_TOKEN_LENGTH; i++) {
-      token += chars.charAt(Math.floor(Math.random() * chars.length))
+    try {
+      const rand = cryptoFramework.createRandom()
+      const bytes: Uint8Array = rand.generateRandomSync(len).data
+      let out = ''
+      for (let i = 0; i < len; i++) {
+        out += chars.charAt(bytes[i] % chars.length)
+      }
+      return out
+    } catch (e) {
+      console.error('[MCPServer] generateRandomSync failed, fallback to uuid-derived: ' + JSON.stringify(e))
+      let hex = ''
+      while (hex.length < len * 2) {
+        hex += util.generateRandomUUID(false).replace(/-/g, '')
+      }
+      let out = ''
+      for (let i = 0; i < len; i++) {
+        out += chars.charAt(parseInt(hex.substring(i * 2, i * 2 + 2), 16) % chars.length)
+      }
+      return out
     }
-    return token
   }
 }
 

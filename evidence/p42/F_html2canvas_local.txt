@@ -1,0 +1,1 @@
+10-25 14:04:37.189 21423 21423 I A03d00/JSAPP: [JSBridgeInjector] html2canvas local source preloaded: 197782 chars

@@ -1,6 +1,7 @@
 import { AuditLogEntry } from '../model/AuditLogEntry'
 import { StorageManager } from './StorageManager'
 import { Constants } from '../common/Constants'
+import { redactSensitive } from '../common/Redact'
 
 class AuditLoggerImpl {
   private logQueue: AuditLogEntry[] = []
@@ -23,7 +24,8 @@ class AuditLoggerImpl {
     const dateStr = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`
     const logPath = `audit/${dateStr}.jsonl`
 
-    const lines = this.logQueue.map(entry => entry.toLogString()).join('\n')
+    // P42 (KAI-075): 审计写入统一脱敏（逐行）
+    const lines = this.logQueue.map(entry => redactSensitive(entry.toLogString())).join('\n')
     this.logQueue = []
 
     StorageManager.save(logPath, lines)

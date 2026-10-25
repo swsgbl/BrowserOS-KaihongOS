@@ -1,0 +1,5 @@
+MCP navigate http://localhost:9222/mcp → {"jsonrpc":"2.0","id":1,"result":{"content":[{"type":"text","text":"{\"url\":\"http://localhost:9222/mcp\",\"result\":\"http://localhost:9222/mcp\"}"}],"isError":false},"error":null}
+
+MCP navigate http://127.0.0.1:9222/mcp → {"jsonrpc":"2.0","id":1,"result":{"content":[{"type":"text","text":"{\"url\":\"http://127.0.0.1:9222/mcp\",\"result\":\"http://127.0.0.1:9222/mcp\"}"}],"isError":false},"error":null}
+
+两条均成功执行(无 reject/not found)——localhost/127.0.0.1 主机名在 URL 处理链路可用(P42 KAI-073 isUrl 白名单)

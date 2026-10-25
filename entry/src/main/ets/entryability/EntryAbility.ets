@@ -12,6 +12,7 @@ import { SessionManager } from '../service/SessionManager'
 import { DownloadManager } from '../service/DownloadManager'
 import { TabManager } from '../service/TabManager'
 import { ScheduleManager } from '../service/ScheduleManager'
+import { JSBridgeInjector } from '../protocol/JSBridgeInjector'
 
 export default class EntryAbility extends UIAbility {
   /** P36-B: 冷启动计时锚点（onCreate 首行），BrowserShell aboutToAppear 收口算 cold_start_ms */
@@ -22,6 +23,8 @@ export default class EntryAbility extends UIAbility {
 
   onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
     console.info('BrowserOS KaihongOS EntryAbility onCreate')
+    // P42 (KAI-079): html2canvas 本地源码预加载（rawfile → 内存缓存，截图断网可用）
+    JSBridgeInjector.preloadHtml2Canvas(this.context.resourceManager)
     // 初始化链：存储基路径指向应用沙箱 filesDir → 加载配置
     // （DocManagementInitializer 保持不调用：该模块与本体无关）
     try {
@@ -55,7 +58,7 @@ export default class EntryAbility extends UIAbility {
     // （asset 探测是真实异步 IPC，冷启 ~1.3s；不等会读到默认配置误入 OnboardingPage）
     this.configReady = ConfigManager.load().then((config) => {
       console.info(`EntryAbility ConfigManager loaded, mcpPort=${config.mcpPort} [P36] secure=${SecureStorageAdapter.isSecureStorageAvailable()} load_ms=${Date.now() - p36T0}`)
-      // P3: 启动 MCP 网络层（HTTP transport 监听 0.0.0.0:{mcpPort}，token 每次启动新生成）
+      // P3: 启动 MCP 网络层（HTTP transport 监听 127.0.0.1:{mcpPort}，token 每次启动新生成）
       const token = MCPServer.generateAuthToken()
       MCPServer.start(config.mcpPort, token, config.wsPort).then((ok) => {
         if (ok) {

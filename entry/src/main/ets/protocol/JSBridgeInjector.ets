@@ -4,6 +4,8 @@ import { IWebviewController } from '../common/IWebviewController'
 import { Constants } from '../common/Constants'
 import { ErrorHandler, AppError } from '../infra/ErrorHandler'
 import { ErrorCodes } from '../common/ErrorCodes'
+import { resourceManager } from '@kit.LocalizationKit'
+import { util } from '@kit.ArkTS'
 
 const BCP_BRIDGE_SCRIPT = `
 (function() {
@@ -339,6 +341,7 @@ const SEL_CAPTURE_SCRIPT = `
 })();
 `
 
+// P42 (KAI-079): CDN loader 仅作 rawfile 预加载失败时的降级（断网下截图依赖本地源码）
 const HTML2CANVAS_LOADER = `
 (function() {
   if (typeof html2canvas !== 'undefined') return;
@@ -355,6 +358,25 @@ class JSBridgeInjectorImpl {
   private pendingCallbacks: Map<number, (result: BCPResult) => void> = new Map()
   private callbackCounter: number = 0
   private currentWebView: IWebviewController | null = null
+  /** P42: rawfile html2canvas.min.js 源码缓存（EntryAbility 启动时预加载） */
+  private html2canvasSource: string = ''
+
+  /** P42 (KAI-079): 从 rawfile 读 html2canvas.min.js 源码缓存（getRawFileContentSync since 9） */
+  preloadHtml2Canvas(rm: resourceManager.ResourceManager): void {
+    try {
+      const bytes: Uint8Array = rm.getRawFileContentSync('html2canvas.min.js')
+      const text = util.TextDecoder.create('utf-8').decodeWithStream(bytes)
+      if (text && text.length > 1000) {
+        this.html2canvasSource = text
+        console.info('[JSBridgeInjector] html2canvas local source preloaded: ' + text.length + ' chars')
+        return
+      }
+      console.error('[JSBridgeInjector] html2canvas rawfile too short: ' + (text ? text.length : 0))
+    } catch (e) {
+      console.error('[JSBridgeInjector] html2canvas rawfile preload failed, will fallback to CDN: ' + JSON.stringify(e))
+    }
+  }
+
 
   setWebView(webviewController: IWebviewController): void {
     this.currentWebView = webviewController
@@ -363,7 +385,7 @@ class JSBridgeInjectorImpl {
   injectBridge(webviewController: IWebviewController): void {
     try {
       webviewController.runJavaScript(BCP_BRIDGE_SCRIPT)
-      webviewController.runJavaScript(HTML2CANVAS_LOADER)
+      webviewController.runJavaScript(this.getHtml2CanvasLoader())
       webviewController.runJavaScript(SEL_CAPTURE_SCRIPT)
     } catch (e) {
       ErrorHandler.handle(new AppError(ErrorCodes.BCP_001, `Bridge injection failed: ${e}`))
@@ -401,6 +423,10 @@ class JSBridgeInjectorImpl {
   }
 
   getHtml2CanvasLoader(): string {
+    // P42 (KAI-079): 优先本地 rawfile 源码（eval 注入，断网可用）；预加载失败才降级 CDN loader
+    if (this.html2canvasSource.length > 1000) {
+      return this.html2canvasSource
+    }
     return HTML2CANVAS_LOADER
   }
 

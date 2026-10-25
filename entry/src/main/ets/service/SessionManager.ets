@@ -10,6 +10,12 @@ import { RecordingQuality } from '../common/Types'
 import { ScreenshotCapture } from '../protocol/ScreenshotCapture'
 import { TabManager } from './TabManager'
 
+/** P42 (KAI-061): 会话文件时间戳载体（ArkTS 禁匿名对象类型，显式类） */
+class SessionFileTime {
+  file: string = ''
+  startTime: number = -1
+}
+
 interface SessionStartData {
   sessionId: string
   agentId: string
@@ -329,11 +335,36 @@ class SessionManagerImpl {
       return
     }
 
-    const sortedFiles = files.sort()
-    const toDelete = Math.ceil(sortedFiles.length * 0.2)
-
-    for (let i = 0; i < toDelete; i++) {
-      await StorageManager.delete(`sessions/${sortedFiles[i]}`)
+    // P42 (KAI-061): 清理按真实时间——读每个会话文件的 startTime 升序淘汰（最旧先删），
+    // 不再用文件名字符串序；parse 失败的文件视为最旧（优先清理）。删后同步索引与内存镜像。
+    const timed: SessionFileTime[] = []
+    for (const f of files) {
+      let st = -1
+      try {
+        const content = await StorageManager.load('sessions/' + f)
+        if (content) {
+          const json = JSON.parse(content) as Record<string, Object>
+          const v = json['startTime']
+          if (typeof v === 'number') {
+            st = v
+          }
+        }
+      } catch (e) {
+        // parse 失败保持 st=-1（排最旧）
+      }
+      const t = new SessionFileTime()
+      t.file = f
+      t.startTime = st
+      timed.push(t)
+    }
+    timed.sort((a, b): number => a.startTime - b.startTime)
+    const toDelete = Math.ceil(timed.length * 0.2)
+    for (let i2 = 0; i2 < toDelete; i2++) {
+      await StorageManager.delete(`sessions/${timed[i2].file}`)
+      const sid = timed[i2].file.replace(/\.json$/, '')
+      await this.removeFromIndex(sid)
+      this.persistedSessions = this.persistedSessions.filter((s: SessionRecord): boolean => s.sessionId !== sid)
+      console.info('[SessionManager] cleanup removed oldest session: ' + sid + ' startTime=' + timed[i2].startTime)
     }
   }
 

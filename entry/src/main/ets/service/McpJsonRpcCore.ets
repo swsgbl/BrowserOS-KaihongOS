@@ -1,4 +1,5 @@
 import { util } from '@kit.ArkTS'
+import { redactSensitive } from '../common/Redact'
 import { MCPToolResponse } from '../common/Types'
 
 /**
@@ -169,12 +170,13 @@ class McpJsonRpcCoreImpl {
       if (response.status === 'success') {
         const result = new McpToolCallResult()
         const item = new McpContentItem()
-        item.text = response.data === null ? 'ok' : JSON.stringify(response.data)
+        // P42 (KAI-075): 工具输出统一脱敏
+        item.text = redactSensitive(response.data === null ? 'ok' : JSON.stringify(response.data))
         result.content = [item]
         result.isError = false
         return this.outcome(rpcId, null, result)
       }
-      return this.outcome(rpcId, this.rpcError(-32000, response.error || 'tool call failed'))
+      return this.outcome(rpcId, this.rpcError(-32000, redactSensitive(response.error || 'tool call failed')))
     }
 
     return this.outcome(rpcId, this.rpcError(-32601, `Method not found: ${rpcMethod}`))

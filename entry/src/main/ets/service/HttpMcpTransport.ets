@@ -59,11 +59,12 @@ class HttpMcpTransportImpl {
     })
     try {
       // 监听 0.0.0.0：VM 内 qemu 端口转发需要 guest 侧全网卡可见
-      await server.listen({ address: '0.0.0.0', port: port })
+      // P42 (KAI-047): loopback only——宿主经 hdc fport 隧道（guest 内 hdcd 走 loopback）仍通，设备 IP 直连被拒
+      await server.listen({ address: '127.0.0.1', port: port })
       this.server = server
       this.port = port
       this.listening = true
-      console.info(`[${TAG}] listening on 0.0.0.0:${port}`)
+      console.info(`[${TAG}] listening on 127.0.0.1:${port}`)
       return true
     } catch (e) {
       const detail = (e as BusinessError).code !== undefined ? `${(e as BusinessError).code}/${(e as BusinessError).message}` : JSON.stringify(e)
