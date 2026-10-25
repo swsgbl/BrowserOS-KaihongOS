@@ -1194,3 +1194,26 @@ python tools/smoke_reg.py         # 30 秒健康检查
 ### P40 终态
 - Zodex 独立复验：smoke 9/9（icon gate 36.5% 真过）+ static 16/16
 - 证据 evidence/p40/（44 文件，取证用设备 hap 副本已清）；git 498938f→67561cd
+
+
+---
+
+## P42：外部 96 项差距矩阵核实与真缺口收口（2026-10-25，用户提交《源码复核与开发推进包_20261025》；hmh 执行中）
+
+### 矩阵定性（Zodex 映射结论）
+- 审计基线=c2e21eb（2026-10-05 空壳，P1 之前）；当前=a691112（P41，114 提交）——报告 P0 阻塞（WebView 占位/MCP 桩/登录态桩/会话断链/无 LICENSE）**约 80/96 项已被 P1-P41 解决**
+- 报告两条产品线判断（Neo 形态/daily-driver 分线）与本项目 README 架构替代表一致；Chromium fork 类（KAI-002~004）=平台不可行已固化
+- Zodex 逐项 grep 当前代码核实，**真缺口 8 项**（P42 范围）：
+  | 项 | 现状证据 | 处置 |
+  |---|---|---|
+  | KAI-047 MCP 监听 0.0.0.0 | MCPServer.ets:62 | 改 127.0.0.1 loopback only |
+  | KAI-044 Math.random token/requestId | MCPServer.ets:313/320 | cryptoFramework CSPRNG |
+  | KAI-074 handleType 无敏感 gate | MCPServer.ets:174（navigate/click 已有） | 接 SensitiveOperationDetector |
+  | KAI-075 输出/日志未系统脱敏 | — | 敏感模式清单+redactSensitive |
+  | KAI-061 会话清理按文件名排序 | SessionManager.ets:143 | 按 startTime |
+  | KAI-079 html2canvas CDN 依赖 | JSBridgeInjector.ets:346 | 本地 rawfile 化 |
+  | KAI-073 残留 localhost 不识别 | BrowserShell.ets:2248 | 白名单补 localhost/127.0.0.1 |
+  | KAI-090/093/094 发布工程 | 无 tag/无基线文档/无镜像核验 | UPSTREAM_BASELINE.md+verify_mirrors.py+tag v0.1.0-alpha |
+- 已核实无需处理：KAI-080（StorageManager 已 TextDecoder）、KAI-073 主体（isUrl P3 已修端口）、KAI-066（DashboardPage 死页 P5 已删）、KAI-072（双 VM=平板+PC 两形态已实测）
+- 任务书 .zcode/p42_brief.md 已派发 hmh（红线+行号级清单）；attic/docpkg/ 存外部文档包副本
+- **P42 已完成（commit 7d6fe2e，tag v0.1.0-alpha 双镜像已推）**：A loopback/KAI-047、B CSPRNG/KAI-044、C type gate/KAI-074（ConfirmDialog 实证）、D 脱敏/KAI-075（common/Redact.ets）、E 会话按时间清理/KAI-061、F html2canvas 本地化/KAI-079（断网 screenshot 实证）、G isUrl localhost/KAI-073、H UPSTREAM_BASELINE.md+verify_mirrors.py+tag。static 25/25、smoke 9/9、证据 evidence/p42/
