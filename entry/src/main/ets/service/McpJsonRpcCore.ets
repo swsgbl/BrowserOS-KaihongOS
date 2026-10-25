@@ -54,6 +54,7 @@ export class McpToolDescriptor {
   name: string = ''
   description: string = ''
   inputSchema: McpInputSchema = new McpInputSchema()
+  aliases: string[] = []   // [P43] 旧工具名（兼容收编，click/type/scroll→act、getText→read、back/forward→history）
 }
 
 class McpToolsCapability {
@@ -220,39 +221,103 @@ class McpJsonRpcCoreImpl {
 
   // ---------- 工具表（名字与 MCPServer ToolType 一一对应） ----------
 
+  /** [P43] 17 工具描述符（顺序/名称对齐上游 registry.ts；aliases 注明旧名收编，保 smoke/旧客户端兼容） */
   buildToolDescriptors(): McpToolDescriptor[] {
     const tools: McpToolDescriptor[] = []
+    tools.push(this.toolDef('tabs', 'Manage browser tabs: list/active/new/close/activate (TabManager passthrough)',
+      this.propMap([
+        ['action', new McpParamProp('string', 'list | active | new | close | activate (default list)')],
+        ['url', new McpParamProp('string', 'URL for action=new (default about:blank)')],
+        ['tabId', new McpParamProp('string', 'Tab id for close/activate')],
+        ['page', new McpParamProp('string', 'Alias of tabId for close/activate')]
+      ]), [], []))
+    tools.push(this.toolDef('tab_groups', 'Minimal tab-group semantics: group tabs by agentId; action list/ungroup',
+      this.propMap([
+        ['action', new McpParamProp('string', 'list | ungroup (default list)')],
+        ['group', new McpParamProp('string', 'Group name (agentId) for ungroup')]
+      ]), [], []))
+    tools.push(this.toolDef('history', 'Browser history: back/forward/list with limit (HistoryManager passthrough)',
+      this.propMap([
+        ['action', new McpParamProp('string', 'back | forward | list (default list)')],
+        ['limit', new McpParamProp('number', 'Max entries for list (default 50)')]
+      ]), [], ['back', 'forward']))
     tools.push(this.toolDef('navigate', 'Navigate the webview to a URL',
-      this.propMap([['url', new McpParamProp('string', 'The URL to navigate to')]]), ['url']))
-    tools.push(this.toolDef('click', 'Click an element by CSS selector',
-      this.propMap([['selector', new McpParamProp('string', 'CSS selector of the element')]]), ['selector']))
-    tools.push(this.toolDef('type', 'Type text into an input element',
       this.propMap([
-        ['selector', new McpParamProp('string', 'CSS selector of the input element')],
-        ['text', new McpParamProp('string', 'Text to type')]
-      ]), ['selector', 'text']))
+        ['url', new McpParamProp('string', 'The URL to navigate to')],
+        ['waitUntil', new McpParamProp('string', 'Optional wait condition (load | domcontentloaded), best-effort')]
+      ]), ['url'], []))
+    tools.push(this.toolDef('snapshot', 'Get DOM snapshot info of the current page', this.propMap([]), [], []))
+    tools.push(this.toolDef('diff', 'Line-level LCS diff between two text snapshots (baseline/current)',
+      this.propMap([
+        ['baseline', new McpParamProp('string', 'Baseline text (e.g. prior snapshot)')],
+        ['current', new McpParamProp('string', 'Current text')]
+      ]), ['baseline', 'current'], []))
+    tools.push(this.toolDef('act', 'Act on the page. kinds: click, click_at, type, type_at, fill, press, hover, hover_at, focus, check, uncheck, select, scroll, drag, drag_at (aligned with upstream act.ts)',
+      this.propMap([
+        ['kind', new McpParamProp('string', 'click|click_at|type|type_at|fill|press|hover|hover_at|focus|check|uncheck|select|scroll|drag|drag_at')],
+        ['ref', new McpParamProp('string', 'CSS selector of target element')],
+        ['text', new McpParamProp('string', 'Text for kind=type/type_at')],
+        ['value', new McpParamProp('string', 'Value for kind=fill/select')],
+        ['key', new McpParamProp('string', 'Key/combo for kind=press, e.g. Enter, Control+a')],
+        ['direction', new McpParamProp('string', 'up | down | left | right for kind=scroll')],
+        ['amount', new McpParamProp('number', 'Scroll amount in wheel notches (default 3)')],
+        ['x', new McpParamProp('number', 'Viewport x for *_at kinds')],
+        ['y', new McpParamProp('number', 'Viewport y for *_at kinds')],
+        ['targetRef', new McpParamProp('string', 'Target selector for kind=drag')],
+        ['startX', new McpParamProp('number', 'Drag start x for kind=drag_at')],
+        ['startY', new McpParamProp('number', 'Drag start y for kind=drag_at')],
+        ['endX', new McpParamProp('number', 'Drag end x for kind=drag_at')],
+        ['endY', new McpParamProp('number', 'Drag end y for kind=drag_at')],
+        ['clear', new McpParamProp('boolean', 'Clear field before type_at/fill')]
+      ]), ['kind'], ['click', 'type', 'scroll']))
+    tools.push(this.toolDef('download', 'Manage downloads: start(url)/cancel(id)/status(id)/list (DownloadManager passthrough)',
+      this.propMap([
+        ['action', new McpParamProp('string', 'start | cancel | status | list (default list)')],
+        ['url', new McpParamProp('string', 'URL for action=start')],
+        ['id', new McpParamProp('string', 'Download id for status/cancel')],
+        ['fileName', new McpParamProp('string', 'Optional file name for start')],
+        ['mimeType', new McpParamProp('string', 'Optional mime type for start')]
+      ]), [], []))
+    tools.push(this.toolDef('upload', 'File upload — unsupported on ArkWeb in this build (onFileSelectorShow wiring deferred)',
+      this.propMap([
+        ['filePath', new McpParamProp('string', 'Reserved: preset file path to inject')]
+      ]), [], []))
+    tools.push(this.toolDef('read', 'Read page text; optional selector narrows to that element textContent',
+      this.propMap([
+        ['selector', new McpParamProp('string', 'Optional CSS selector to read a single element')]
+      ]), [], ['getText']))
+    tools.push(this.toolDef('grep', 'Regex search over page text; returns matches[{line,text}] + count',
+      this.propMap([
+        ['pattern', new McpParamProp('string', 'JavaScript regular expression source')]
+      ]), ['pattern'], []))
     tools.push(this.toolDef('screenshot', 'Capture a screenshot of the current page',
-      this.propMap([['quality', new McpParamProp('string', 'low | medium | high')]]), []))
-    tools.push(this.toolDef('snapshot', 'Get DOM snapshot info of the current page', this.propMap([]), []))
-    tools.push(this.toolDef('scroll', 'Scroll the page',
       this.propMap([
-        ['deltaX', new McpParamProp('number', 'Horizontal scroll pixels')],
-        ['deltaY', new McpParamProp('number', 'Vertical scroll pixels')]
-      ]), ['deltaY']))
-    tools.push(this.toolDef('getText', 'Get visible text of the current page', this.propMap([]), []))
+        ['quality', new McpParamProp('string', 'low | medium | high')]
+      ]), [], []))
+    tools.push(this.toolDef('pdf', 'Print page to PDF — unsupported on ArkWeb in this build', this.propMap([]), [], []))
     tools.push(this.toolDef('wait', 'Wait for milliseconds or for a selector to appear',
       this.propMap([
         ['ms', new McpParamProp('number', 'Milliseconds to wait')],
         ['selector', new McpParamProp('string', 'CSS selector to wait for')],
         ['timeout', new McpParamProp('number', 'Selector wait timeout ms')]
-      ]), []))
-    tools.push(this.toolDef('back', 'Go back in history', this.propMap([]), []))
-    tools.push(this.toolDef('forward', 'Go forward in history', this.propMap([]), []))
+      ]), [], []))
+    tools.push(this.toolDef('windows', 'Single-window build: list returns [{windowId:main,tabs:N}]; other actions unsupported',
+      this.propMap([
+        ['action', new McpParamProp('string', 'list | focus | new | close (only list supported)')]
+      ]), [], []))
+    tools.push(this.toolDef('evaluate', 'Evaluate a JavaScript expression in the page and return JSON-serialized result',
+      this.propMap([
+        ['expression', new McpParamProp('string', 'JS expression (evaluated via runJavaScript)')]
+      ]), ['expression'], []))
+    tools.push(this.toolDef('run', 'Run a macro: sequentially execute an array of act/navigate steps',
+      this.propMap([
+        ['steps', new McpParamProp('array', 'Array of {tool: act|navigate, params: {...}} steps')]
+      ]), ['steps'], []))
     return tools
   }
 
   private toolDef(name: string, description: string, props: Record<string, McpParamProp>,
-    required: string[]): McpToolDescriptor {
+    required: string[], aliases: string[]): McpToolDescriptor {
     const schema = new McpInputSchema()
     schema.properties = props
     schema.required = required
@@ -260,6 +325,7 @@ class McpJsonRpcCoreImpl {
     def.name = name
     def.description = description
     def.inputSchema = schema
+    def.aliases = aliases
     return def
   }
 

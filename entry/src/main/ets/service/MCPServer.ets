@@ -15,6 +15,10 @@ import { HttpMcpTransport } from './HttpMcpTransport'
 import { McpHttpDelegate } from './McpJsonRpcCore'
 import { WsMcpTransport } from './WsMcpTransport'
 import { StorageManager } from '../storage/StorageManager'
+import { TabManager } from './TabManager'
+import { HistoryManager } from './HistoryManager'
+import { DownloadManager, DownloadItem } from './DownloadManager'
+import { TabInfo } from '../model/TabInfo'
 import { cryptoFramework } from '@kit.CryptoArchitectureKit'
 import { util } from '@kit.ArkTS'
 
@@ -49,12 +53,77 @@ interface MCPResponseData {
   result?: string | null
 }
 
+/** [P43] tabs list 行（对齐上游 page/url/title 三元组） */
+class McpTabLine {
+  tabId: string = ''
+  url: string = ''
+  title: string = ''
+  active: boolean = false
+}
+
+/** [P43] tab_groups list 行 */
+class McpGroupLine {
+  group: string = ''
+  tabIds: string[] = []
+}
+
+/** [P43] history list 行 */
+class McpHistoryLine {
+  url: string = ''
+  title: string = ''
+  timestamp: number = 0
+}
+
+/** [P43] download list/status 行 */
+class McpDownloadLine {
+  id: string = ''
+  url: string = ''
+  fileName: string = ''
+  status: string = ''
+  receivedBytes: number = 0
+  totalBytes: number = 0
+  error: string = ''
+}
+
+/** [P43] grep 匹配行 */
+class McpGrepMatch {
+  line: number = 0
+  text: string = ''
+}
+
+/** [P43] windows list 行（单窗口形态） */
+class McpWindowLine {
+  windowId: string = ''
+  tabs: number = 0
+}
+
+/** [P43] diff 输出行 */
+class McpDiffLine {
+  op: string = ''
+  line: number = 0
+  text: string = ''
+}
+
 class MCPServerImpl implements McpHttpDelegate {
   private port: number = Constants.DEFAULT_MCP_PORT
   private authToken: string = ''
   private running: boolean = false
   private toolHandlers: Map<string, ToolHandler> = new Map()
   private connections: Set<string> = new Set()
+
+  /** [P43] 旧工具名 → 新注册表归一映射（smoke/旧客户端兼容；click/type/scroll→act、getText→read、back/forward→history） */
+  private resolveAlias(name: string): string {
+    if (name === 'click' || name === 'type' || name === 'scroll') {
+      return 'act'
+    }
+    if (name === 'getText') {
+      return 'read'
+    }
+    if (name === 'back' || name === 'forward') {
+      return 'history'
+    }
+    return name
+  }
 
   async start(port: number, authToken: string, wsPort: number = 8765): Promise<boolean> {
     this.port = port
@@ -126,7 +195,17 @@ class MCPServerImpl implements McpHttpDelegate {
       }
     }
 
-    const handler = this.toolHandlers.get(toolName)
+    // [P43] 别名归一后取 handler
+    const canonical = this.resolveAlias(toolName)
+    // [P43] 旧名别名适配：click/type/scroll→act 时补 kind 参数（旧客户端只传 selector/text/delta）
+    const adapted: Record<string, Object> = {}
+    Object.keys(params).forEach(k => { adapted[k] = params[k] })
+    if (canonical === 'act' && toolName !== 'act' && adapted['kind'] === undefined) {
+      if (toolName === 'click') { adapted['kind'] = 'click' as Object }
+      else if (toolName === 'type') { adapted['kind'] = 'type' as Object }
+      else if (toolName === 'scroll') { adapted['kind'] = 'scroll' as Object }
+    }
+    const handler = this.toolHandlers.get(canonical)
     if (!handler) {
       return {
         status: 'error',
@@ -137,13 +216,13 @@ class MCPServerImpl implements McpHttpDelegate {
     }
 
     const requestId = this.generateRequestId()
-    const auditEntry = new AuditLogEntry(requestId, agentId, toolName, params['url'] as string || '')
+    const auditEntry = new AuditLogEntry(requestId, agentId, canonical, params['url'] as string || '')
 
-    const callData: MCPToolCallData = { requestId: requestId, agentId: agentId, toolName: toolName, params: params }
+    const callData: MCPToolCallData = { requestId: requestId, agentId: agentId, toolName: canonical, params: params }
     EventBus.emit(EventBusEvents.MCP_TOOL_CALL, callData)
 
     try {
-      const response = await handler(params, agentId)
+    const response = await handler(adapted, agentId)
       auditEntry.setResult(response.status, response.error || '')
       AuditLogger.log(auditEntry)
       const responseData: MCPToolResponseEventData = { requestId: requestId, response: response }
@@ -171,17 +250,181 @@ class MCPServerImpl implements McpHttpDelegate {
   }
 
   private registerToolHandlers(): void {
-    this.toolHandlers.set(ToolType.NAVIGATE, this.handleNavigate)
-    this.toolHandlers.set(ToolType.CLICK, this.handleClick)
-    this.toolHandlers.set(ToolType.TYPE, this.handleType)
-    this.toolHandlers.set(ToolType.SCREENSHOT, this.handleScreenshot)
-    this.toolHandlers.set(ToolType.SNAPSHOT, this.handleSnapshot)
-    this.toolHandlers.set(ToolType.SCROLL, this.handleScroll)
-    this.toolHandlers.set(ToolType.GET_TEXT, this.handleGetText)
-    this.toolHandlers.set(ToolType.WAIT, this.handleWait)
-    this.toolHandlers.set(ToolType.BACK, this.handleBack)
-    this.toolHandlers.set(ToolType.FORWARD, this.handleForward)
+    // [P43] 17 工具注册表（顺序与名称对齐上游 registry.ts；tools/list 描述符在 McpJsonRpcCore 同步维护）
+    this.toolHandlers.set('tabs', this.handleTabs)
+    this.toolHandlers.set('tab_groups', this.handleTabGroups)
+    this.toolHandlers.set('history', this.handleHistory)
+    this.toolHandlers.set('navigate', this.handleNavigate)
+    this.toolHandlers.set('snapshot', this.handleSnapshot)
+    this.toolHandlers.set('diff', this.handleDiff)
+    this.toolHandlers.set('act', this.handleAct)
+    this.toolHandlers.set('download', this.handleDownload)
+    this.toolHandlers.set('upload', this.handleUpload)
+    this.toolHandlers.set('read', this.handleRead)
+    this.toolHandlers.set('grep', this.handleGrep)
+    this.toolHandlers.set('screenshot', this.handleScreenshot)
+    this.toolHandlers.set('pdf', this.handlePdf)
+    this.toolHandlers.set('wait', this.handleWait)
+    this.toolHandlers.set('windows', this.handleWindows)
+    this.toolHandlers.set('evaluate', this.handleEvaluate)
+    this.toolHandlers.set('run', this.handleRun)
   }
+
+  /** [P43] 通用成功响应（data 为任意可 JSON 化对象） */
+  private okResponse(data: Record<string, Object>): Promise<MCPToolResponse> {
+    const resp: MCPToolResponse = {
+      status: 'success',
+      data: data,
+      error: null,
+      requestId: this.generateRequestId()
+    }
+    return Promise.resolve(resp)
+  }
+
+  // ---------- [P43] tabs：TabManager 直通（action: list/active/new/close/activate） ----------
+
+  private handleTabs: ToolHandler = async (params, agentId) => {
+    const action = params['action'] as string || 'list'
+    if (action === 'list') {
+      const tabs = TabManager.getAllTabs()
+      const activeId = TabManager.getActiveTabId()
+      const lines: McpTabLine[] = []
+      for (const t of tabs) {
+        const line = new McpTabLine()
+        line.tabId = t.tabId
+        line.url = t.currentUrl
+        line.title = t.title
+        line.active = t.tabId === activeId
+        lines.push(line)
+      }
+      const rec10: Record<string, Object> = { 'tabs': lines, 'count': lines.length }
+    return this.okResponse(rec10)
+    }
+    if (action === 'active') {
+      const id = TabManager.getActiveTabId()
+      const t = TabManager.getTab(id)
+      if (!t) {
+        return this.errorResponse(ErrorCodes.MCP_003, 'tabs active: no active tab')
+      }
+      const rec11: Record<string, Object> = { 'tabId': id, 'url': t.currentUrl, 'title': t.title, 'active': true }
+    return this.okResponse(rec11)
+    }
+    if (action === 'new') {
+      const url = params['url'] as string || 'about:blank'
+      const tab = TabManager.createTab(false)
+      TabManager.updateTabUrl(tab.tabId, url)
+      const rec12: Record<string, Object> = { 'tabId': tab.tabId, 'url': url }
+    return this.okResponse(rec12)
+    }
+    if (action === 'close') {
+      const tabId = (params['tabId'] as string) || (params['page'] as string)
+      if (!tabId) {
+        return this.errorResponse(ErrorCodes.MCP_003, 'tabs close: tabId (or page) is required')
+      }
+      const ok = TabManager.closeTab(tabId)
+      if (!ok) {
+        return this.errorResponse(ErrorCodes.MCP_003, `tabs close: no such tab ${tabId}`)
+      }
+      const rec13: Record<string, Object> = { 'tabId': tabId, 'closed': true }
+    return this.okResponse(rec13)
+    }
+    if (action === 'activate') {
+      const tabId = (params['tabId'] as string) || (params['page'] as string)
+      if (!tabId) {
+        return this.errorResponse(ErrorCodes.MCP_003, 'tabs activate: tabId is required')
+      }
+      const ok = TabManager.switchTab(tabId)
+      if (!ok) {
+        return this.errorResponse(ErrorCodes.MCP_003, `tabs activate: no such tab ${tabId}`)
+      }
+      const rec14: Record<string, Object> = { 'tabId': tabId, 'activated': true }
+    return this.okResponse(rec14)
+    }
+    return this.errorResponse(ErrorCodes.MCP_003, `tabs: unsupported action ${action}`)
+  }
+
+  // ---------- [P43] tab_groups：最小组语义（按 agentId 归组；action: list/ungroup） ----------
+
+  private handleTabGroups: ToolHandler = async (params, agentId) => {
+    const action = params['action'] as string || 'list'
+    if (action === 'list') {
+      const rec15: Record<string, Object> = { 'groups': this.collectTabGroups(), 'count': this.collectTabGroups().length }
+    return this.okResponse(rec15)
+    }
+    if (action === 'ungroup') {
+      const group = params['group'] as string
+      if (!group) {
+        return this.errorResponse(ErrorCodes.MCP_003, 'tab_groups ungroup: group is required')
+      }
+      const hit = this.collectTabGroups().find(g => g.group === group)
+      if (!hit) {
+        return this.errorResponse(ErrorCodes.MCP_003, `tab_groups ungroup: no such group ${group}`)
+      }
+      let closed = 0
+      for (const tid of hit.tabIds) {
+        if (TabManager.closeTab(tid)) {
+          closed++
+        }
+      }
+      const rec16: Record<string, Object> = { 'group': group, 'closedTabs': closed }
+    return this.okResponse(rec16)
+    }
+    return this.errorResponse(ErrorCodes.MCP_003, `tab_groups: unsupported action ${action}`)
+  }
+
+  private collectTabGroups(): McpGroupLine[] {
+    const map: Map<string, string[]> = new Map()
+    for (const t of TabManager.getAllTabs()) {
+      const key = t.agentId !== '' ? t.agentId : 'default'
+      let arr = map.get(key)
+      if (!arr) {
+        arr = []
+        map.set(key, arr)
+      }
+      arr.push(t.tabId)
+    }
+    const out: McpGroupLine[] = []
+    map.forEach((tabIds, group) => {
+      const line = new McpGroupLine()
+      line.group = group
+      line.tabIds = tabIds
+      out.push(line)
+    })
+    return out
+  }
+
+  // ---------- [P43] history：HistoryManager/BCP 直通（action: back/forward/list；旧 back/forward 工具收编为别名） ----------
+
+  private handleHistory: ToolHandler = async (params, agentId) => {
+    const action = params['action'] as string || 'list'
+    if (action === 'back') {
+      const result = await BCPEngine.back()
+      const rec1: MCPResponseData = {}
+    return this.bcpToMcpResponse(result, rec1)
+    }
+    if (action === 'forward') {
+      const result = await BCPEngine.forward()
+      const rec2: MCPResponseData = {}
+    return this.bcpToMcpResponse(result, rec2)
+    }
+    if (action === 'list') {
+      const limit = (params['limit'] as number) || 50
+      const raw = HistoryManager.getAllHistory(limit)
+      const lines: McpHistoryLine[] = []
+      for (const h of raw) {
+        const line = new McpHistoryLine()
+        line.url = h.url
+        line.title = h.title
+        line.timestamp = h.timestamp
+        lines.push(line)
+      }
+      const rec17: Record<string, Object> = { 'entries': lines, 'count': lines.length, 'limit': limit }
+    return this.okResponse(rec17)
+    }
+    return this.errorResponse(ErrorCodes.MCP_003, `history: unsupported action ${action}`)
+  }
+
+  // ---------- navigate：现有实现保留；schema 由 JsonRpcCore 补齐上游 waitUntil ----------
 
   private handleNavigate: ToolHandler = async (params, agentId) => {
     const url = params['url'] as string
@@ -199,107 +442,509 @@ class MCPServerImpl implements McpHttpDelegate {
     }
 
     const result = await BCPEngine.navigate(url)
-    const data: MCPResponseData = { url: url, result: result.data }
+    const data: MCPResponseData = { url: url, result: result.data === null ? null : `${result.data}` }
     return this.bcpToMcpResponse(result, data)
   }
 
-  private handleClick: ToolHandler = async (params, agentId) => {
-    const selector = params['selector'] as string
-    if (!selector) {
-      return this.errorResponse(ErrorCodes.MCP_003, 'Missing selector parameter')
-    }
-
-    const sensitiveType = SensitiveOperationDetector.detectClick(agentId, selector, params['text'] as string || '')
-    if (sensitiveType) {
-      const confirmed = await SensitiveOperationDetector.requestConfirmation(
-        agentId, sensitiveType, '', selector)
-      if (!confirmed) {
-        return this.errorResponse(ErrorCodes.AGT_003, 'Operation rejected by user')
-      }
-    }
-
-    const result = await BCPEngine.click(selector)
-    const data: MCPResponseData = { selector: selector, result: result.data }
-    return this.bcpToMcpResponse(result, data)
-  }
-
-  private handleType: ToolHandler = async (params, agentId) => {
-    const selector = params['selector'] as string
-    const text = params['text'] as string
-    if (!selector || text === undefined) {
-      return this.errorResponse(ErrorCodes.MCP_003, 'Missing selector or text parameter')
-    }
-
-    // P42 (KAI-074): type 工具走敏感操作 gate——输入文本/目标 selector 过 SensitiveOperationDetector
-    const sensitiveType = SensitiveOperationDetector.detectType(agentId, selector, text)
-    if (sensitiveType) {
-      const confirmed = await SensitiveOperationDetector.requestConfirmation(
-        agentId, sensitiveType, text, selector)
-      if (!confirmed) {
-        return this.errorResponse(ErrorCodes.AGT_003, 'Operation rejected by user')
-      }
-    }
-
-    const result = await BCPEngine.type(selector, text)
-    const data: MCPResponseData = { selector: selector, text: text, result: result.data }
-    return this.bcpToMcpResponse(result, data)
-  }
-
-  private handleScreenshot: ToolHandler = async (params, agentId) => {
-    const quality = params['quality'] as string || 'medium'
-    const result = await ScreenshotCapture.capture(quality)
-    const data: MCPResponseData = { quality: quality, result: result.data }
-    return this.bcpToMcpResponse(result, data)
-  }
+  // ---------- [P43] snapshot：现有 markdown 快照保留 ----------
 
   private handleSnapshot: ToolHandler = async (params, agentId) => {
     const result = await SnapshotGenerator.generate()
-    const data: MCPResponseData = { result: result.data }
+    const data: MCPResponseData = { result: result.data === null ? null : `${result.data}` }
     return this.bcpToMcpResponse(result, data)
   }
 
-  private handleScroll: ToolHandler = async (params, agentId) => {
-    const deltaX = params['deltaX'] as number || 0
-    const deltaY = params['deltaY'] as number || 0
-    const result = await BCPEngine.scroll(deltaX, deltaY)
-    const data: MCPResponseData = { deltaX: deltaX, deltaY: deltaY, result: result.data }
-    return this.bcpToMcpResponse(result, data)
+  // ---------- [P43] diff：两段文本行级 diff（LCS；baseline/current 直传，简化自上游快照 id 对） ----------
+
+  private handleDiff: ToolHandler = async (params, agentId) => {
+    const baseline = params['baseline'] as string
+    const current = params['current'] as string
+    if (baseline === undefined || current === undefined) {
+      return this.errorResponse(ErrorCodes.MCP_003, 'diff: baseline and current are required')
+    }
+    const a = baseline.split('\n')
+    const b = current.split('\n')
+    // 规模保护：超 2000 行降级为端点对比（LCS DP 2000x2000 已是 4M 格）
+    if (a.length > 2000 || b.length > 2000) {
+      const rec18: Record<string, Object> = {
+        'diff': 'page-too-large', 'baselineLines': a.length, 'currentLines': b.length,
+        'sameStart': a[0] === b[0], 'sameEnd': a[a.length - 1] === b[b.length - 1]
+      }
+    return this.okResponse(rec18)
+    }
+    const n = a.length
+    const m = b.length
+    const dp: number[][] = []
+    for (let i = 0; i <= n; i++) {
+      dp.push(new Array<number>(m + 1).fill(0))
+    }
+    for (let i = n - 1; i >= 0; i--) {
+      for (let j = m - 1; j >= 0; j--) {
+        dp[i][j] = a[i] === b[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1])
+      }
+    }
+    const out: McpDiffLine[] = []
+    let i = 0
+    let j = 0
+    while (i < n && j < m) {
+      if (a[i] === b[j]) {
+        i++
+        j++
+      } else if (dp[i + 1][j] >= dp[i][j + 1]) {
+        const line = new McpDiffLine()
+        line.op = 'removed'
+        line.line = i + 1
+        line.text = a[i]
+        out.push(line)
+        i++
+      } else {
+        const line = new McpDiffLine()
+        line.op = 'added'
+        line.line = j + 1
+        line.text = b[j]
+        out.push(line)
+        j++
+      }
+    }
+    while (i < n) {
+      const line = new McpDiffLine()
+      line.op = 'removed'
+      line.line = i + 1
+      line.text = a[i]
+      out.push(line)
+      i++
+    }
+    while (j < m) {
+      const line = new McpDiffLine()
+      line.op = 'added'
+      line.line = j + 1
+      line.text = b[j]
+      out.push(line)
+      j++
+    }
+    const truncated = out.length > 400
+    const changes = truncated ? out.slice(0, 400) : out
+    const rec19: Record<string, Object> = { 'changes': changes, 'count': out.length, 'truncated': truncated }
+    return this.okResponse(rec19)
   }
 
-  private handleGetText: ToolHandler = async (params, agentId) => {
+  // ---------- [P43] act：15 kinds 分发（对齐上游 act.ts 枚举） ----------
+  // click/click_at、type/type_at、scroll 走 BCPEngine 现有管线（含敏感 gate）；
+  // 其余 DOM kinds（fill/press/hover/hover_at/focus/check/uncheck/select/drag/drag_at）经 evaluate 注入同步 helper 内联实现。
+
+  private handleAct: ToolHandler = async (params, agentId) => {
+    const kind = params['kind'] as string
+    if (!kind) {
+      return this.errorResponse(ErrorCodes.MCP_003, 'act: kind is required')
+    }
+    const ref = (params['ref'] as string) || (params['selector'] as string)
+    const text = params['text'] as string
+    const value = params['value'] as string
+    const key = params['key'] as string
+    const x = params['x'] as number
+    const y = params['y'] as number
+
+    if (kind === 'click' || kind === 'click_at') {
+      if (ref) {
+        const sensitiveType = SensitiveOperationDetector.detectClick(agentId, ref, text || '')
+        if (sensitiveType) {
+          const confirmed = await SensitiveOperationDetector.requestConfirmation(agentId, sensitiveType, '', ref)
+          if (!confirmed) {
+            return this.errorResponse(ErrorCodes.AGT_003, 'Operation rejected by user')
+          }
+        }
+        const result = await BCPEngine.click(ref)
+        const rec3: MCPResponseData = { result: kind }
+    return this.bcpToMcpResponse(result, rec3)
+      }
+      if (x !== undefined && y !== undefined) {
+        // 坐标点击：elementFromIndex 无坐标版——合成 click 事件到 elementFromPoint
+        return await this.evalDom(agentId, kind,
+          `H.at(${x},${y},'click')`)
+      }
+      return this.errorResponse(ErrorCodes.MCP_003, 'act click: ref (or x/y) is required')
+    }
+
+    if (kind === 'type' || kind === 'type_at') {
+      if (text === undefined) {
+        return this.errorResponse(ErrorCodes.MCP_003, 'act type: text is required')
+      }
+      if (ref) {
+        const sensitiveType = SensitiveOperationDetector.detectType(agentId, ref, text)
+        if (sensitiveType) {
+          const confirmed = await SensitiveOperationDetector.requestConfirmation(agentId, sensitiveType, text, ref)
+          if (!confirmed) {
+            return this.errorResponse(ErrorCodes.AGT_003, 'Operation rejected by user')
+          }
+        }
+        const result = await BCPEngine.type(ref, text)
+        const rec4: MCPResponseData = { result: kind }
+    return this.bcpToMcpResponse(result, rec4)
+      }
+      if (x !== undefined && y !== undefined) {
+        const clear = params['clear'] === true
+        return await this.evalDom(agentId, kind,
+          `H.at(${x},${y},'type',${JSON.stringify(text)},${clear})`)
+      }
+      return this.errorResponse(ErrorCodes.MCP_003, 'act type: ref or x/y is required')
+    }
+
+    if (kind === 'fill') {
+      if (ref && value !== undefined) {
+        const clear = params['clear'] === true
+        return await this.evalDom(agentId, kind,
+          `H.q(${JSON.stringify(ref)},'fill',${JSON.stringify(value)},${clear})`)
+      }
+      return this.errorResponse(ErrorCodes.MCP_003, 'act fill: ref and value are required')
+    }
+
+    if (kind === 'press') {
+      if (!key) {
+        return this.errorResponse(ErrorCodes.MCP_003, 'act press: key is required')
+      }
+      return await this.evalDom(agentId, kind, `H.press(${JSON.stringify(key)})`)
+    }
+
+    if (kind === 'hover' || kind === 'hover_at') {
+      if (kind === 'hover') {
+        if (!ref) {
+          return this.errorResponse(ErrorCodes.MCP_003, 'act hover: ref is required')
+        }
+        return await this.evalDom(agentId, kind, `H.q(${JSON.stringify(ref)},'hover')`)
+      }
+      if (x === undefined || y === undefined) {
+        return this.errorResponse(ErrorCodes.MCP_003, 'act hover_at: x and y are required')
+      }
+      return await this.evalDom(agentId, kind, `H.at(${x},${y},'hover')`)
+    }
+
+    if (kind === 'focus') {
+      if (!ref) {
+        return this.errorResponse(ErrorCodes.MCP_003, 'act focus: ref is required')
+      }
+      return await this.evalDom(agentId, kind, `H.q(${JSON.stringify(ref)},'focus')`)
+    }
+
+    if (kind === 'check' || kind === 'uncheck') {
+      if (!ref) {
+        return this.errorResponse(ErrorCodes.MCP_003, `act ${kind}: ref is required`)
+      }
+      return await this.evalDom(agentId, kind, `H.q(${JSON.stringify(ref)},'check',${kind === 'check'})`)
+    }
+
+    if (kind === 'select') {
+      if (!ref || value === undefined) {
+        return this.errorResponse(ErrorCodes.MCP_003, 'act select: ref and value are required')
+      }
+      return await this.evalDom(agentId, kind, `H.q(${JSON.stringify(ref)},'select',${JSON.stringify(value)})`)
+    }
+
+    if (kind === 'scroll') {
+      const direction = (params['direction'] as string) || 'down'
+      const amount = (params['amount'] as number) || 3
+      // 无 ref：整页滚（换算 notches→像素 100/格）；有 ref：先滚元素入视口再整页滚
+      let preScroll = ''
+      if (ref) {
+        preScroll = `var el=document.querySelector(${JSON.stringify(ref)});if(el){el.scrollIntoView({block:'center'})}else{throw new Error('no match for selector')};`
+      }
+      const js = `(function(){${preScroll}window.scrollBy({left:${direction === 'left' ? '-' : direction === 'right' ? '' : '0'}${amount * 100},top:${direction === 'up' ? '-' : direction === 'down' ? '' : '0'}${amount * 100},behavior:'instant'});return {ok:true,scrollX:window.scrollX,scrollY:window.scrollY}})()`
+      const result = await BCPEngine.evaluate(js)
+      const rec5: MCPResponseData = { result: kind }
+    return this.bcpToMcpResponse(result, rec5)
+    }
+
+    if (kind === 'drag') {
+      const targetRef = params['targetRef'] as string
+      if (!ref || !targetRef) {
+        return this.errorResponse(ErrorCodes.MCP_003, 'act drag: ref and targetRef are required')
+      }
+      return await this.evalDom(agentId, kind,
+        `H.drag(${JSON.stringify(ref)},${JSON.stringify(targetRef)})`)
+    }
+
+    if (kind === 'drag_at') {
+      const sx = params['startX'] as number
+      const sy = params['startY'] as number
+      const ex = params['endX'] as number
+      const ey = params['endY'] as number
+      if (sx === undefined || sy === undefined || ex === undefined || ey === undefined) {
+        return this.errorResponse(ErrorCodes.MCP_003, 'act drag_at: startX/startY/endX/endY are required')
+      }
+      return await this.evalDom(agentId, kind, `H.dragAt(${sx},${sy},${ex},${ey})`)
+    }
+
+    return this.errorResponse(ErrorCodes.MCP_003, `act: unknown kind "${kind}"`)
+  }
+
+  /** [P43] 同步 DOM helper：随 evaluate 内联注入（不依赖 bridge 常驻），返回 {ok,...} 结构 */
+  private static readonly DOM_HELPERS: string =
+    'var H={' +
+    'q:function(s,op,arg,arg2){var el=document.querySelector(s);if(!el){throw new Error("no match: "+s)}' +
+    'if(op==="fill"){if(arg2){el.value=""}el.value=arg;el.dispatchEvent(new Event("input",{bubbles:true}));el.dispatchEvent(new Event("change",{bubbles:true}));return{ok:true,filled:arg}}' +
+    'if(op==="focus"){el.focus();return{ok:true}}' +
+    'if(op==="hover"){el.dispatchEvent(new MouseEvent("mouseover",{bubbles:true}));el.dispatchEvent(new MouseEvent("mousemove",{bubbles:true}));return{ok:true}}' +
+    'if(op==="check"){if(el.type==="checkbox"||el.type==="radio"){el.checked=arg;el.dispatchEvent(new Event("change",{bubbles:true}));return{ok:true,checked:arg}}throw new Error("not checkable: "+s)}' +
+    'if(op==="select"){el.value=arg;el.dispatchEvent(new Event("change",{bubbles:true}));return{ok:true,selected:arg}}' +
+    'throw new Error("bad op: "+op)},' +
+    'at:function(x,y,op,arg,arg2){var el=document.elementFromPoint(x,y);if(!el){throw new Error("no element at "+x+","+y)}' +
+    'if(op==="click"){el.dispatchEvent(new MouseEvent("click",{bubbles:true,clientX:x,clientY:y}));return{ok:true,clicked:true}}' +
+    'if(op==="type"){if(el.focus){el.focus()}if(arg2&&el.value!==undefined){el.value=""}el.value=arg||"";el.dispatchEvent(new Event("input",{bubbles:true}));return{ok:true,typed:arg}}' +
+    'if(op==="hover"){el.dispatchEvent(new MouseEvent("mouseover",{bubbles:true,clientX:x,clientY:y}));return{ok:true}}' +
+    'throw new Error("bad op: "+op)},' +
+    'press:function(k){var opts={key:k,bubbles:true,cancelable:true};document.activeElement&&document.activeElement.dispatchEvent(new KeyboardEvent("keydown",opts));document.activeElement&&document.activeElement.dispatchEvent(new KeyboardEvent("keyup",opts));return{ok:true,key:k}},' +
+    'drag:function(s,t){var a=document.querySelector(s),b=document.querySelector(t);if(!a||!b){throw new Error("no match for drag refs")}var ra=a.getBoundingClientRect(),rb=b.getBoundingClientRect();return H.dragAt(ra.left+ra.width/2,ra.top+ra.height/2,rb.left+rb.width/2,rb.top+rb.height/2)},' +
+    'dragAt:function(x1,y1,x2,y2){var el=document.elementFromPoint(x1,y1);if(!el){throw new Error("no element at drag start")}var o={bubbles:true,cancelable:true,clientX:x1,clientY:y1};el.dispatchEvent(new MouseEvent("mousedown",o));var m={bubbles:true,cancelable:true,clientX:x2,clientY:y2};document.dispatchEvent(new MouseEvent("mousemove",m));var t=document.elementFromPoint(x2,y2)||el;var u={bubbles:true,cancelable:true,clientX:x2,clientY:y2};t.dispatchEvent(new MouseEvent("mouseup",u));t.dispatchEvent(new MouseEvent("drop",u));return{ok:true,from:[x1,y1],to:[x2,y2]}}};'
+
+  /** [P43] act DOM kinds 执行：helper 内联 + 表达式求值；失败如实带回页面侧异常 */
+  private async evalDom(agentId: string, kind: string, call: string): Promise<MCPToolResponse> {
+    const js = `(function(){${MCPServerImpl.DOM_HELPERS}return ${call}})()`
+    const result = await BCPEngine.evaluate(js)
+    const rec6: MCPResponseData = { result: kind }
+    return this.bcpToMcpResponse(result, rec6)
+  }
+
+  // ---------- [P43] download：DownloadManager 直通（action: start/cancel/status/list） ----------
+
+  private handleDownload: ToolHandler = async (params, agentId) => {
+    const action = params['action'] as string || 'list'
+    if (action === 'list') {
+      const items = DownloadManager.getDownloads()
+      const lines: McpDownloadLine[] = []
+      for (const d of items) {
+        lines.push(this.downloadLine(d))
+      }
+      const rec20: Record<string, Object> = { 'downloads': lines, 'count': lines.length }
+    return this.okResponse(rec20)
+    }
+    if (action === 'status') {
+      const id = params['id'] as string
+      if (!id) {
+        return this.errorResponse(ErrorCodes.MCP_003, 'download status: id is required')
+      }
+      const hit = this.findDownload(id)
+      if (!hit) {
+        return this.errorResponse(ErrorCodes.MCP_003, `download status: no such download ${id}`)
+      }
+      const dl = this.downloadLine(hit)
+      const recDl: Record<string, Object> = { 'id': dl.id, 'url': dl.url, 'fileName': dl.fileName, 'status': dl.status, 'receivedBytes': dl.receivedBytes, 'totalBytes': dl.totalBytes, 'error': dl.error }
+      return this.okResponse(recDl)
+    }
+    if (action === 'start') {
+      const url = params['url'] as string
+      if (!url) {
+        return this.errorResponse(ErrorCodes.MCP_003, 'download start: url is required')
+      }
+      const fileName = params['fileName'] as string || ''
+      const mimeType = params['mimeType'] as string || 'application/octet-stream'
+      const sensitiveType = SensitiveOperationDetector.detectNavigation(agentId, url)
+      if (sensitiveType) {
+        const confirmed = await SensitiveOperationDetector.requestConfirmation(agentId, sensitiveType, url, '')
+        if (!confirmed) {
+          return this.errorResponse(ErrorCodes.AGT_003, 'Operation rejected by user')
+        }
+      }
+      DownloadManager.start(url, fileName, mimeType)
+      const rec21: Record<string, Object> = { 'url': url, 'fileName': fileName, 'status': 'started' }
+    return this.okResponse(rec21)
+    }
+    if (action === 'cancel') {
+      const id = params['id'] as string
+      if (!id) {
+        return this.errorResponse(ErrorCodes.MCP_003, 'download cancel: id is required')
+      }
+      DownloadManager.cancel(id)
+      const rec22: Record<string, Object> = { 'id': id, 'canceled': true }
+    return this.okResponse(rec22)
+    }
+    return this.errorResponse(ErrorCodes.MCP_003, `download: unsupported action ${action}`)
+  }
+
+  private findDownload(id: string): DownloadItem | null {
+    for (const d of DownloadManager.getDownloads()) {
+      if (d.id === id) {
+        return d
+      }
+    }
+    return null
+  }
+
+  private downloadLine(d: DownloadItem): McpDownloadLine {
+    const line = new McpDownloadLine()
+    line.id = d.id
+    line.url = d.url
+    line.fileName = d.fileName
+    line.status = `${d.status}`
+    line.receivedBytes = d.receivedBytes
+    line.totalBytes = d.totalBytes
+    line.error = d.error
+    return line
+  }
+
+  // ---------- [P43] upload：ArkWeb 有 onFileSelectorShow（web.d.ts:6532）但 BrowserShell 未接线预设文件注入 ----------
+  // 工具面在场、如实返回 unsupported（接线留待后续棒）
+
+  private handleUpload: ToolHandler = async (params, agentId) => {
+    const rec23: Record<string, Object> = { 'error': 'unsupported on ArkWeb', 'supported': false, 'detail': 'requires onFileSelectorShow wiring (deferred)' }
+    return this.okResponse(rec23)
+  }
+
+  // ---------- [P43] read：页面正文读取（selector 可选→该元素 textContent；否则整页文本）；旧 getText 收编为别名 ----------
+
+  private handleRead: ToolHandler = async (params, agentId) => {
+    const selector = params['selector'] as string
+    if (selector) {
+      const js = `(function(){var el=document.querySelector(${JSON.stringify(selector)});return el?el.textContent:"__NO_MATCH__"})()`
+      const result = await BCPEngine.evaluate(js)
+      const rec7: Record<string, Object> = { 'selector': selector }
+    return this.bcpToMcpResponse(result, rec7)
+    }
     const result = await BCPEngine.getText()
-    const data: MCPResponseData = { result: result.data }
+    const data: MCPResponseData = { result: result.data === null ? null : `${result.data}` }
     return this.bcpToMcpResponse(result, data)
   }
+
+  // ---------- [P43] grep：页面文本正则检索（pattern 必填；返回 matches[{line,text}]+count） ----------
+
+  private handleGrep: ToolHandler = async (params, agentId) => {
+    const pattern = params['pattern'] as string
+    if (!pattern) {
+      return this.errorResponse(ErrorCodes.MCP_003, 'grep: pattern is required')
+    }
+    let regex: RegExp
+    try {
+      regex = new RegExp(pattern)
+    } catch (e) {
+      return this.errorResponse(ErrorCodes.MCP_003, `grep: invalid pattern ${pattern}`)
+    }
+    const textResult = await BCPEngine.getText()
+    if (!textResult.success) {
+      const rec8: MCPResponseData = {}
+    return this.bcpToMcpResponse(textResult, rec8)
+    }
+    const body = `${textResult.data}`
+    const lines = body.split('\n')
+    const matches: McpGrepMatch[] = []
+    for (let li = 0; li < lines.length; li++) {
+      if (regex.test(lines[li])) {
+        const m = new McpGrepMatch()
+        m.line = li + 1
+        m.text = lines[li]
+        matches.push(m)
+      }
+      if (matches.length >= 100) {
+        break
+      }
+    }
+    const rec24: Record<string, Object> = { 'matches': matches, 'count': matches.length, 'truncated': matches.length >= 100 }
+    return this.okResponse(rec24)
+  }
+
+  // ---------- screenshot：现有实现保留 ----------
+
+  private handleScreenshot: ToolHandler = async (params, agentId) => {
+    const quality = (params['quality'] as string) || 'medium'
+    const result = await ScreenshotCapture.capture(quality)
+    const data: MCPResponseData = { quality: quality, result: result.data === null ? null : `${result.data}` }
+    return this.bcpToMcpResponse(result, data)
+  }
+
+  // ---------- [P43] pdf：ArkWeb 无 printToPDF —— 工具面在场、如实返回 unsupported ----------
+
+  private handlePdf: ToolHandler = async (params, agentId) => {
+    const rec25: Record<string, Object> = { 'error': 'unsupported on ArkWeb', 'supported': false }
+    return this.okResponse(rec25)
+  }
+
+  // ---------- wait：现有实现保留；schema 对齐上游（ms/selector） ----------
 
   private handleWait: ToolHandler = async (params, agentId) => {
     const ms = params['ms'] as number
     const selector = params['selector'] as string
 
     if (selector) {
-      const timeout = params['timeout'] as number || 5000
+      const timeout = (params['timeout'] as number) || 5000
       const result = await BCPEngine.waitForElement(selector, timeout)
-      const data: MCPResponseData = { selector: selector, timeout: timeout, result: result.data }
+      const data: MCPResponseData = { selector: selector, timeout: timeout, result: result.data === null ? null : `${result.data}` }
       return this.bcpToMcpResponse(result, data)
     } else if (ms) {
       const result = await BCPEngine.wait(ms)
-      const data: MCPResponseData = { ms: ms, result: result.data }
+      const data: MCPResponseData = { ms: ms, result: null }
       return this.bcpToMcpResponse(result, data)
     } else {
       return this.errorResponse(ErrorCodes.MCP_003, 'Missing ms or selector parameter')
     }
   }
 
-  private handleBack: ToolHandler = async (params, agentId) => {
-    const result = await BCPEngine.back()
-    const data: MCPResponseData = { result: result.data }
-    return this.bcpToMcpResponse(result, data)
+  // ---------- [P43] windows：单窗口形态（list 返回 main 窗口+tab 数；focus/new/close 返回 unsupported 标注） ----------
+
+  private handleWindows: ToolHandler = async (params, agentId) => {
+    const action = params['action'] as string || 'list'
+    if (action === 'list') {
+      const line = new McpWindowLine()
+      line.windowId = 'main'
+      line.tabs = TabManager.getTabCount()
+      const rec26: Record<string, Object> = { 'windows': [line] }
+    return this.okResponse(rec26)
+    }
+    const rec27: Record<string, Object> = { 'error': 'unsupported on single-window build', 'supported': false, 'action': action }
+    return this.okResponse(rec27)
   }
 
-  private handleForward: ToolHandler = async (params, agentId) => {
-    const result = await BCPEngine.forward()
-    const data: MCPResponseData = { result: result.data }
-    return this.bcpToMcpResponse(result, data)
+  // ---------- [P43] evaluate：runJavaScript 表达式求值（P12 管线复用） ----------
+
+  private handleEvaluate: ToolHandler = async (params, agentId) => {
+    const expression = params['expression'] as string
+    if (!expression) {
+      return this.errorResponse(ErrorCodes.MCP_003, 'evaluate: expression is required')
+    }
+    const result = await BCPEngine.evaluate(expression)
+    const rec9: Record<string, Object> = { 'expression': expression, 'result': result.data === null ? '' : JSON.stringify(result.data) }
+    return this.bcpToMcpResponse(result, rec9)
+  }
+
+  // ---------- [P43] run：顺序执行一组 act/navigate 步骤的宏（最小可用） ----------
+
+  private handleRun: ToolHandler = async (params, agentId) => {
+    const stepsRaw = params['steps']
+    if (stepsRaw === undefined) {
+      return this.errorResponse(ErrorCodes.MCP_003, 'run: steps array is required')
+    }
+    const steps = stepsRaw as Object[]
+    if (!Array.isArray(steps) || steps.length === 0) {
+      return this.errorResponse(ErrorCodes.MCP_003, 'run: steps must be a non-empty array')
+    }
+    const results: MCPToolResponse[] = []
+    for (let s = 0; s < steps.length; s++) {
+      const stepObj = steps[s] as Record<string, Object>
+      const tool = `${stepObj['tool'] || ''}`
+      let stepParams: Record<string, Object> = {}
+      if (stepObj['params'] !== undefined && stepObj['params'] !== null) {
+        stepParams = stepObj['params'] as Record<string, Object>
+      }
+      if (tool !== 'act' && tool !== 'navigate') {
+        results.push(this.errorResponse(ErrorCodes.MCP_003, `run step ${s + 1}: only act/navigate steps supported, got "${tool}"`))
+        break
+      }
+      const handler = this.toolHandlers.get(tool)
+      if (!handler) {
+        results.push(this.errorResponse(ErrorCodes.MCP_003, `run step ${s + 1}: unknown tool "${tool}"`))
+        break
+      }
+      const resp = await handler(stepParams, agentId)
+      results.push(resp)
+      if (resp.status !== 'success') {
+        break
+      }
+    }
+    const allOk = results.length === steps.length && results.every(r => r.status === 'success')
+    const runData: Record<string, Object> = { 'steps': results.length, 'results': results }
+    const resp: MCPToolResponse = {
+      status: allOk ? 'success' : 'error',
+      data: allOk ? runData : null,
+      error: allOk ? null : 'run macro aborted',
+      requestId: this.generateRequestId()
+    }
+    return resp
   }
 
   private bcpToMcpResponse(bcpResult: BCPResult, data: MCPResponseData): MCPToolResponse {

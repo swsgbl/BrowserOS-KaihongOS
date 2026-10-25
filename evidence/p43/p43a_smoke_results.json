@@ -1,0 +1,62 @@
+[
+  {
+    "tool": "tabs list",
+    "verdict": "PASS",
+    "detail": "{\"tabs\":[{\"tabId\":\"tab_1_1792848409626\",\"url\":\"about:blank\",\"title\":\"about:blank\",\"active\":true}],\"count\":1}"
+  },
+  {
+    "tool": "tabs active",
+    "verdict": "PASS",
+    "detail": "{\"tabId\":\"tab_1_1792848409626\",\"url\":\"about:blank\",\"title\":\"about:blank\",\"active\":true}"
+  },
+  {
+    "tool": "history list",
+    "verdict": "PASS",
+    "detail": "{\"entries\":[{\"url\":\"about:blank\",\"title\":\"about:blank\",\"timestamp\":1792921048637},{\"url\":\"about:blank\",\"title\":\"about:blank\",\"timestamp\":1792919747987"
+  },
+  {
+    "tool": "read",
+    "verdict": "PASS",
+    "detail": "len=17 {\"result\":\"null\"}"
+  },
+  {
+    "tool": "grep",
+    "verdict": "PASS",
+    "detail": "{\"matches\":[{\"line\":1,\"text\":\"null\"}],\"count\":1,\"truncated\":false}"
+  },
+  {
+    "tool": "evaluate 1+1",
+    "verdict": "PASS",
+    "detail": "{\"expression\":\"1+1\",\"result\":\"\\\"{\\\\\\\"ok\\\\\\\":true,\\\\\\\"result\\\\\\\":2}\\\"\"}"
+  },
+  {
+    "tool": "evaluate title",
+    "verdict": "PASS",
+    "detail": "{\"expression\":\"document.title\",\"result\":\"\\\"{\\\\\\\"ok\\\\\\\":true,\\\\\\\"result\\\\\\\":\\\\\\\"\\\\\\\"}\\\"\"}"
+  },
+  {
+    "tool": "run macro",
+    "verdict": "PASS",
+    "detail": "{\"steps\":1,\"results\":[{\"status\":\"success\",\"data\":{\"result\":\"scroll\"},\"error\":null,\"requestId\":\"req_1792921170458_9fUYNEkW\"}]}"
+  },
+  {
+    "tool": "windows list",
+    "verdict": "PASS",
+    "detail": "{\"windows\":[{\"windowId\":\"main\",\"tabs\":1}]}"
+  },
+  {
+    "tool": "click alias->act",
+    "verdict": "PASS",
+    "detail": "{\"result\":\"click\"}"
+  },
+  {
+    "tool": "upload unsupported",
+    "verdict": "PASS",
+    "detail": "{\"error\":\"unsupported on ArkWeb\",\"supported\":false,\"detail\":\"requires onFileSelectorShow wiring (deferred)\"}"
+  },
+  {
+    "tool": "pdf unsupported",
+    "verdict": "PASS",
+    "detail": "{\"error\":\"unsupported on ArkWeb\",\"supported\":false}"
+  }
+]

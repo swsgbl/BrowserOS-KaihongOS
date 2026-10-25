@@ -281,6 +281,45 @@ class BCPEngineImpl {
   getWebviewId(): string {
     return this.webviewId
   }
+  /** [P43] evaluate: 在当前页面求值任意 JS 表达式，结果 JSON 序列化返回（MCP evaluate/run 宏/act 扩展 kinds 复用） */
+  async evaluate(expression: string): Promise<BCPResult> {
+    const timer = PerformanceMonitor.startTimer('bcp_evaluate', 'BCP')
+    const bridgeReady = await this.ensureBridge()
+    if (!bridgeReady) {
+      timer()
+      return { success: false, data: null, error: ErrorCodes.getMessage(ErrorCodes.BCP_001) }
+    }
+    try {
+      // IIFE 包裹：表达式求值；页面侧异常以 {ok:false,error} 带回而非 reject
+      const wrapped = `(function(){try{const r=(${expression});return JSON.stringify({ok:true,result:(r===undefined?null:r)})}catch(e){return JSON.stringify({ok:false,error:String(e)})}})()`
+      const raw = await this.webviewController!.runJavaScript(wrapped)
+      timer()
+      return { success: true, data: this.parseEvalJson(`${raw}`), error: null }
+    } catch (e) {
+      timer()
+      return { success: false, data: null, error: `${e}` }
+    }
+  }
+
+  /** [P43] 解析 runJavaScript 回传：剥 JSON 字符串引号 → JSON.parse；非合法 JSON 原样包装 */
+  /** [P43] 解析 runJavaScript 回传：剥 JSON 字符串引号 → 校验合法 JSON 后原样返回（string）；非法则包装为 {ok,result} JSON 串 */
+  private parseEvalJson(raw: string): string {
+    let text = raw
+    if (text.length >= 2 && text.startsWith('"') && text.endsWith('"')) {
+      try {
+        text = JSON.parse(text) as string
+      } catch (e) {
+        console.warn('[BCPEngine] parseEvalJson unquote failed: ' + raw)
+      }
+    }
+    try {
+      JSON.parse(text)
+      return text
+    } catch (e) {
+      const wrapped: Record<string, Object> = { 'ok': true, 'result': text }
+      return JSON.stringify(wrapped)
+    }
+  }
 }
 
 export const BCPEngine = new BCPEngineImpl()

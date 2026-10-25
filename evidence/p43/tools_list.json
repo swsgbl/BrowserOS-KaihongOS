@@ -1,0 +1,384 @@
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "result": {
+    "tools": [
+      {
+        "name": "tabs",
+        "description": "Manage browser tabs: list/active/new/close/activate (TabManager passthrough)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "description": "list | active | new | close | activate (default list)"
+            },
+            "url": {
+              "type": "string",
+              "description": "URL for action=new (default about:blank)"
+            },
+            "tabId": {
+              "type": "string",
+              "description": "Tab id for close/activate"
+            },
+            "page": {
+              "type": "string",
+              "description": "Alias of tabId for close/activate"
+            }
+          },
+          "required": []
+        },
+        "aliases": []
+      },
+      {
+        "name": "tab_groups",
+        "description": "Minimal tab-group semantics: group tabs by agentId; action list/ungroup",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "description": "list | ungroup (default list)"
+            },
+            "group": {
+              "type": "string",
+              "description": "Group name (agentId) for ungroup"
+            }
+          },
+          "required": []
+        },
+        "aliases": []
+      },
+      {
+        "name": "history",
+        "description": "Browser history: back/forward/list with limit (HistoryManager passthrough)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "description": "back | forward | list (default list)"
+            },
+            "limit": {
+              "type": "number",
+              "description": "Max entries for list (default 50)"
+            }
+          },
+          "required": []
+        },
+        "aliases": [
+          "back",
+          "forward"
+        ]
+      },
+      {
+        "name": "navigate",
+        "description": "Navigate the webview to a URL",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string",
+              "description": "The URL to navigate to"
+            },
+            "waitUntil": {
+              "type": "string",
+              "description": "Optional wait condition (load | domcontentloaded), best-effort"
+            }
+          },
+          "required": [
+            "url"
+          ]
+        },
+        "aliases": []
+      },
+      {
+        "name": "snapshot",
+        "description": "Get DOM snapshot info of the current page",
+        "inputSchema": {
+          "type": "object",
+          "properties": {},
+          "required": []
+        },
+        "aliases": []
+      },
+      {
+        "name": "diff",
+        "description": "Line-level LCS diff between two text snapshots (baseline/current)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "baseline": {
+              "type": "string",
+              "description": "Baseline text (e.g. prior snapshot)"
+            },
+            "current": {
+              "type": "string",
+              "description": "Current text"
+            }
+          },
+          "required": [
+            "baseline",
+            "current"
+          ]
+        },
+        "aliases": []
+      },
+      {
+        "name": "act",
+        "description": "Act on the page. kinds: click, click_at, type, type_at, fill, press, hover, hover_at, focus, check, uncheck, select, scroll, drag, drag_at (aligned with upstream act.ts)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "description": "click|click_at|type|type_at|fill|press|hover|hover_at|focus|check|uncheck|select|scroll|drag|drag_at"
+            },
+            "ref": {
+              "type": "string",
+              "description": "CSS selector of target element"
+            },
+            "text": {
+              "type": "string",
+              "description": "Text for kind=type/type_at"
+            },
+            "value": {
+              "type": "string",
+              "description": "Value for kind=fill/select"
+            },
+            "key": {
+              "type": "string",
+              "description": "Key/combo for kind=press, e.g. Enter, Control+a"
+            },
+            "direction": {
+              "type": "string",
+              "description": "up | down | left | right for kind=scroll"
+            },
+            "amount": {
+              "type": "number",
+              "description": "Scroll amount in wheel notches (default 3)"
+            },
+            "x": {
+              "type": "number",
+              "description": "Viewport x for *_at kinds"
+            },
+            "y": {
+              "type": "number",
+              "description": "Viewport y for *_at kinds"
+            },
+            "targetRef": {
+              "type": "string",
+              "description": "Target selector for kind=drag"
+            },
+            "startX": {
+              "type": "number",
+              "description": "Drag start x for kind=drag_at"
+            },
+            "startY": {
+              "type": "number",
+              "description": "Drag start y for kind=drag_at"
+            },
+            "endX": {
+              "type": "number",
+              "description": "Drag end x for kind=drag_at"
+            },
+            "endY": {
+              "type": "number",
+              "description": "Drag end y for kind=drag_at"
+            },
+            "clear": {
+              "type": "boolean",
+              "description": "Clear field before type_at/fill"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        "aliases": [
+          "click",
+          "type",
+          "scroll"
+        ]
+      },
+      {
+        "name": "download",
+        "description": "Manage downloads: start(url)/cancel(id)/status(id)/list (DownloadManager passthrough)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "description": "start | cancel | status | list (default list)"
+            },
+            "url": {
+              "type": "string",
+              "description": "URL for action=start"
+            },
+            "id": {
+              "type": "string",
+              "description": "Download id for status/cancel"
+            },
+            "fileName": {
+              "type": "string",
+              "description": "Optional file name for start"
+            },
+            "mimeType": {
+              "type": "string",
+              "description": "Optional mime type for start"
+            }
+          },
+          "required": []
+        },
+        "aliases": []
+      },
+      {
+        "name": "upload",
+        "description": "File upload — unsupported on ArkWeb in this build (onFileSelectorShow wiring deferred)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "filePath": {
+              "type": "string",
+              "description": "Reserved: preset file path to inject"
+            }
+          },
+          "required": []
+        },
+        "aliases": []
+      },
+      {
+        "name": "read",
+        "description": "Read page text; optional selector narrows to that element textContent",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "selector": {
+              "type": "string",
+              "description": "Optional CSS selector to read a single element"
+            }
+          },
+          "required": []
+        },
+        "aliases": [
+          "getText"
+        ]
+      },
+      {
+        "name": "grep",
+        "description": "Regex search over page text; returns matches[{line,text}] + count",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "pattern": {
+              "type": "string",
+              "description": "JavaScript regular expression source"
+            }
+          },
+          "required": [
+            "pattern"
+          ]
+        },
+        "aliases": []
+      },
+      {
+        "name": "screenshot",
+        "description": "Capture a screenshot of the current page",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "quality": {
+              "type": "string",
+              "description": "low | medium | high"
+            }
+          },
+          "required": []
+        },
+        "aliases": []
+      },
+      {
+        "name": "pdf",
+        "description": "Print page to PDF — unsupported on ArkWeb in this build",
+        "inputSchema": {
+          "type": "object",
+          "properties": {},
+          "required": []
+        },
+        "aliases": []
+      },
+      {
+        "name": "wait",
+        "description": "Wait for milliseconds or for a selector to appear",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "ms": {
+              "type": "number",
+              "description": "Milliseconds to wait"
+            },
+            "selector": {
+              "type": "string",
+              "description": "CSS selector to wait for"
+            },
+            "timeout": {
+              "type": "number",
+              "description": "Selector wait timeout ms"
+            }
+          },
+          "required": []
+        },
+        "aliases": []
+      },
+      {
+        "name": "windows",
+        "description": "Single-window build: list returns [{windowId:main,tabs:N}]; other actions unsupported",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "description": "list | focus | new | close (only list supported)"
+            }
+          },
+          "required": []
+        },
+        "aliases": []
+      },
+      {
+        "name": "evaluate",
+        "description": "Evaluate a JavaScript expression in the page and return JSON-serialized result",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "expression": {
+              "type": "string",
+              "description": "JS expression (evaluated via runJavaScript)"
+            }
+          },
+          "required": [
+            "expression"
+          ]
+        },
+        "aliases": []
+      },
+      {
+        "name": "run",
+        "description": "Run a macro: sequentially execute an array of act/navigate steps",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "steps": {
+              "type": "array",
+              "description": "Array of {tool: act|navigate, params: {...}} steps"
+            }
+          },
+          "required": [
+            "steps"
+          ]
+        },
+        "aliases": []
+      }
+    ]
+  },
+  "error": null
+}
