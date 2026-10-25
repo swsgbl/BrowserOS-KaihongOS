@@ -13,6 +13,7 @@ import { pasteboard } from '@kit.BasicServicesKit'
 import { preferences } from '@kit.ArkData'
 import { router } from '@kit.ArkUI'
 import { Palette } from '../common/Palette'
+import { getEngineById } from '../common/SearchEngines'
 /**
  * P8: 官网 UI 一比一复刻 —— NeoDashboardPanel 全面重排。
  * C1 新标签页 Cockpit：3 列磁贴网格（首块 2x 宽 hero 渐变卡）+ 深色页脚最近会话卡 + 空态。
@@ -281,6 +282,35 @@ export struct NeoDashboardPanel {
           .fontWeight(FontWeight.Bold)
           .fontColor(this.pal().text)
           .layoutWeight(1)
+
+        // P45-D: 搜索引擎常驻指示条 —— 建议下拉里的「切换」入口太深（须先点地址栏），
+        // 用户找不到搜索引擎设置。Cockpit 头部常驻显示当前引擎，点击直达设置搜索节。
+        Row() {
+          Image($rawfile('ic_search.svg'))
+            .width(12).height(12)
+            .fillColor(this.pal().text2)
+            .draggable(false)
+          Text('搜索引擎 · ' + getEngineById(ConfigManager.getSearchEngineId()).name)
+            .fontSize(11)
+            .fontColor(this.pal().text2)
+            .maxLines(1)
+            .constraintSize({ maxWidth: 140 })
+            .margin({ left: 5 })
+          Text('切换')
+            .fontSize(11)
+            .fontColor('#1A73E8')
+            .margin({ left: 6 })
+        }
+        .height(30)
+        .padding({ left: 10, right: 10 })
+        .backgroundColor(this.pal().surfaceInput)
+        .borderRadius(15)
+        .margin({ left: 8 })
+        .onClick(() => {
+          console.info('[P45] dashboard engine switch entry clicked')
+          const navParams: Record<string, Object> = { 'section': 'search' }
+          router.pushUrl({ url: 'pages/SettingsPage', params: navParams })
+        })
 
         Button('MCP 安装板')
           .fontSize(12)

@@ -134,6 +134,23 @@ export struct TabStrip {
             .height(32)
             .bindContextMenu(this.TabCtxMenu(tab.tabId), ResponseType.LongPress)
           }, (tab: TabInfo) => tab.tabId)
+
+          // P45-A: + 按钮紧跟最后一个标签正下方（1:1 对齐上游），不再钉死在列底部
+          Button({ type: ButtonType.Normal }) {
+            Image($rawfile('ic_add.png'))
+              .width(16).height(16)
+              .fillColor(this.pal().text2)
+              .draggable(false)
+          }
+          .width(28).height(28)
+          .margin({ top: 4 })
+          .backgroundColor(Color.Transparent)
+          .accessibilityText('新建标签页')
+          .onClick(() => {
+            if (this.onTabCreate) {
+              this.onTabCreate()
+            }
+          })
         }
         .width('100%')
         .alignItems(HorizontalAlign.Start)
@@ -144,23 +161,8 @@ export struct TabStrip {
       .scrollBar(BarState.Off)
       .edgeEffect(EdgeEffect.None)
 
-      // P28-C: tab-search 入口移到竖排条底部(与 ic_add 并排)
+      // P28-C: tab-search 入口保留在竖排条底部（上游搜索是独立区域）
       Row({ space: 4 }) {
-        Button({ type: ButtonType.Normal }) {
-          Image($rawfile('ic_add.png'))
-            .width(16).height(16)
-            .fillColor(this.pal().text2)
-            .draggable(false)
-        }
-        .width(28).height(28)
-        .backgroundColor(Color.Transparent)
-        .accessibilityText('新建标签页')
-        .onClick(() => {
-          if (this.onTabCreate) {
-            this.onTabCreate()
-          }
-        })
-
         Button({ type: ButtonType.Normal }) {
           Image($rawfile('ic_tab_search.svg'))
             .width(16).height(16)

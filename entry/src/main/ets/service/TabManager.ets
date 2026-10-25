@@ -247,11 +247,20 @@ class TabManagerImpl {
       if (valid.length === 0) {
         return 0
       }
+      // P45-B: 冷启动清理 about:blank 堆积标签 —— 空白标签恢复无价值且让用户觉得"浏览器坏了"
+      // (用户关页残留 / agent 建页未导航 / 新建页即关机)。dashboard 与 agent 标签保留。
+      const nonBlank = valid.filter((x: PersistTab): boolean =>
+        x.isDashboard || (x.agentId !== undefined && x.agentId.length > 0) || (x.url !== 'about:blank' && x.url !== ''))
+      const cleaned = valid.length - nonBlank.length
+      if (cleaned > 0) {
+        console.info(`[P45] cleaned ${cleaned} blank tabs on restore`)
+      }
+      const source = nonBlank.length > 0 ? nonBlank : [{ id: 'auto_dash_' + Date.now(), title: 'Dashboard', url: '', isDashboard: true, agentId: '' } as PersistTab]
       this.tabs.clear()
       this.webviews.clear()
       this.activeTabId = ''
       let restored = 0
-      for (const item of valid) {
+      for (const item of source) {
         let idToUse = item.id
         while (this.tabs.has(idToUse)) {
           idToUse = this.generateTabId()

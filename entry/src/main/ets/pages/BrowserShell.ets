@@ -187,6 +187,12 @@ struct BrowserShell {
 
   @State currentUrl: string = ''
   @State urlInput: string = ''
+  // P45-C: omnibox 控制器 —— 聚焦时全选现有文本（残留 URL/搜索词一键替换，不再追加）
+  private omniController: TextInputController = new TextInputController()
+  // P45-C fallback: IME 通道会清掉 setTextSelection 的选区再 commit（实测追加而非替换）。
+  // 记录聚焦时快照，首次 onChange 若为「快照+新输入」的追加形态则剥掉前缀，等效整体替换。
+  private omniFocusSnapshot: string = ''
+  private omniFirstEditPending: boolean = false
   @State tabs: TabInfo[] = []
   @State activeTabId: string = ''
   @State isLoading: boolean = false
@@ -772,7 +778,7 @@ struct BrowserShell {
           .width(16).height(16)
           .fillColor(this.currentUrl.startsWith('https://') ? '#137333' : '#5F6368')
           .draggable(false)
-        TextInput({ text: this.urlInput, placeholder: '输入URL或搜索关键词' }).id('p11f_omnibox').fontColor(this.pal().text).placeholderColor(this.pal().text2)
+        TextInput({ text: this.urlInput, placeholder: '输入URL或搜索关键词', controller: this.omniController }).id('p11f_omnibox').fontColor(this.pal().text).placeholderColor(this.pal().text2)
           .layoutWeight(1)
           .height(32)
           .fontSize(13)
@@ -780,10 +786,28 @@ struct BrowserShell {
           .backgroundColor(Color.Transparent)
           .padding({ left: 0, right: 0 })
           .onChange((value: string) => {
+            // P45-C fallback: 首次编辑若为追加形态（快照是新文本的前缀）则剥前缀 ——
+            // IME 不消费选区、直接在光标处 commit，导致「聚焦全选」失效变追加。
+            if (this.omniFirstEditPending && this.omniFocusSnapshot.length > 0) {
+              if (value.startsWith(this.omniFocusSnapshot) && value.length > this.omniFocusSnapshot.length) {
+                value = value.substring(this.omniFocusSnapshot.length)
+                this.urlInput = value
+                this.omniController.caretPosition(value.length)
+                console.info('[P45] omnibox append-mode detected, stripped to: ' + value)
+              }
+              this.omniFirstEditPending = false
+            }
             this.urlInput = value
             this.updateSuggestions(value)
           })
           .onFocus(() => {
+            // P45-C: 聚焦全选现有文本 —— 用户直接输入即整体替换（Chromium omnibox 行为）
+            if (this.urlInput.length > 0) {
+              this.omniController.setTextSelection(0, this.urlInput.length)
+              console.info('[P45] omnibox focus -> select all (' + this.urlInput.length + ' chars)')
+            }
+            this.omniFocusSnapshot = this.urlInput
+            this.omniFirstEditPending = true
             this.updateSuggestions(this.urlInput)
             this.showSuggestions = this.suggestItems.length > 0
           })
@@ -1354,6 +1378,30 @@ struct BrowserShell {
           .fontSize(12)
           .fontColor('#FFFFFFCC')
           .margin({ top: 10, left: 14 })
+
+        // P45-D: 搜索引擎常驻指示 —— 用户反馈"找不到搜索引擎入口"（原入口藏在建议下拉底行，
+        // 须先点地址栏才出现）。hero 卡右上角常驻显示当前引擎，点击直达设置页搜索节。
+        Row() {
+          Text('搜索引擎 · ' + getEngineById(ConfigManager.getSearchEngineId()).name)
+            .fontSize(11)
+            .fontColor('#FFFFFFE6')
+            .maxLines(1)
+          Text('切换')
+            .fontSize(11)
+            .fontColor('#FFFFFF')
+            .fontWeight(FontWeight.Medium)
+            .margin({ left: 6 })
+        }
+        .padding({ left: 10, right: 10, top: 5, bottom: 5 })
+        .borderRadius(12)
+        .backgroundColor('#33FFFFFF')
+        .position({ x: '100%', y: 8 })
+        .markAnchor({ x: '100%', y: 0 })
+        .onClick(() => {
+          console.info('[P45] dashboard engine switch entry clicked')
+          const navParams: Record<string, Object> = { 'section': 'search' }
+          router.pushUrl({ url: 'pages/SettingsPage', params: navParams })
+        })
       }
       .width('86%')
       .borderRadius(20)
