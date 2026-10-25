@@ -74,8 +74,11 @@ def main():
     else:
         check("module.json5 exists", False, str(mj))
 
-    # 4. repo must-have files
-    for rel in ("LICENSE", "README.md", "DEVPLAN.md", "docs/ARCHITECTURE.md"):
+    # 4. repo must-have files（P41 合规套件）
+    for rel in ("LICENSE", "NOTICE", "README.md", "DEVPLAN.md", "CHANGELOG.md",
+                "CONTRIBUTING.md", "CODE_OF_CONDUCT.md", "SECURITY.md",
+                "docs/ARCHITECTURE.md", ".github/ISSUE_TEMPLATE/bug_report.md",
+                ".github/PULL_REQUEST_TEMPLATE.md"):
         check(f"file {rel}", (ROOT / rel).exists())
 
     # 5. icon set

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 安全漏洞
+    url: https://github.com/swsgbl/BrowserOS-KaihongOS/security/advisories/new
+    about: 请勿公开报告安全漏洞，走 Security Advisory 私密通道
+  - name: 开发台账（DEVPLAN）
+    url: https://github.com/swsgbl/BrowserOS-KaihongOS/blob/main/DEVPLAN.md
+    about: P1-P40 逐阶段记录与设备证据，多数"功能去哪了"问题可先查此处

@@ -1,0 +1,54 @@
+BrowserOS - KaihongOS
+Copyright (C) 2026 BrowserOS-KaihongOS contributors
+
+This product is free software licensed under the GNU Affero General Public
+License v3.0 or later (AGPL-3.0-or-later). The complete license text is
+shipped in the LICENSE file at the root of this repository.
+
+======================================================================
+ THIRD-PARTY NOTICES AND ATTRIBUTIONS
+======================================================================
+
+1. BrowserOS (upstream project)
+   Homepage : https://github.com/browseros-ai/BrowserOS
+   License  : GNU Affero General Public License v3.0 (AGPL-3.0)
+   Use      : This project is a derivative work of BrowserOS. Screen
+              structures, feature semantics, UI copy and the desktop
+              icon pixel source (docs/logo/favicon.png of the upstream
+              repository) are derived from or inspired by the upstream
+              AGPL-3.0 sources. Accordingly, this project is licensed
+              under AGPL-3.0 as well and distributes its full source
+              code. All rights to the original unmodified portions
+              remain with their original authors.
+
+2. Material Icons
+   Homepage : https://fonts.google.com/icons
+   License  : Apache License 2.0
+   Use      : In-app vector icons follow the Material Icons visual
+              language; the SVG assets shipped in
+              entry/src/main/resources are redrawn simplified paths in
+              the same style (24x24 viewBox, single-path glyphs).
+
+3. OpenHarmony / HarmonyOS SDK toolchain
+   Homepage : https://www.openharmony.org / https://developer.huawei.com
+   License  : respective upstream licenses
+   Use      : Build toolchain (hvigor, restool, hap-sign-tool) and
+              development kit APIs (@kit.*). Not redistributed in this
+              repository.
+
+4. Trademarks
+   - "BrowserOS" is the name of the upstream open-source project.
+   - "KaihongOS" / "深开鸿" is an operating system name of
+     Shenzhen Kaihong Digital Industry Development Co., Ltd.
+   - "HarmonyOS" is a trademark of Huawei Technologies Co., Ltd.
+   - Other product names mentioned are trademarks of their respective
+     owners.
+   This independent porting/research project is not affiliated with,
+   endorsed by, or sponsored by any of the above parties.
+
+5. No user data collection
+   This software collects no user data and performs no telemetry.
+   LLM provider credentials entered by the user are stored only in the
+   device hardware-backed secure storage (Asset Store Kit) and never
+   leave the device except toward the LLM endpoint explicitly
+   configured by the user. See SECURITY.md.
