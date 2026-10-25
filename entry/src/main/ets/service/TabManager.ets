@@ -83,11 +83,13 @@ class TabManagerImpl {
   }
 
   closeTab(tabId: string): boolean {
+    console.info('[P45] TabManager.closeTab called: ' + tabId + ' exists=' + this.tabs.has(tabId) + ' total=' + this.tabs.size)
     if (!this.tabs.has(tabId)) {
       return false
     }
     this.tabs.delete(tabId)
     this.webviews.delete(tabId)
+    console.info('[P45] TabManager.closeTab done: ' + tabId + ' remaining=' + this.tabs.size)
 
     if (this.activeTabId === tabId) {
       const remaining = Array.from(this.tabs.keys())

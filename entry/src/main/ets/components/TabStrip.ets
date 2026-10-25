@@ -15,8 +15,8 @@ export struct TabStrip {
   @StorageProp('darkMode') @Watch('onThemeFlip') darkMode: boolean = false // P44
   @State themeVersion: number = 0 // P44
   @State hoverTabId: string = ''
-  tabs: TabInfo[] = []
-  activeTabId: string = ''
+  @Prop tabs: TabInfo[] = []
+  @Prop activeTabId: string = ''
   onTabSwitch?: (tabId: string) => void
   onTabClose?: (tabId: string) => void
   onTabCreate?: () => void
@@ -102,13 +102,15 @@ export struct TabStrip {
                     .fillColor(this.pal().text2)
                     .draggable(false)
                 }
-                .width(28)
-                .height(28)
+                .width(32)
+                .height(32)
                 .opacity(1)
                 .backgroundColor(Color.Transparent)
                 .hitTestBehavior(HitTestMode.Default)
+                .zIndex(10)
                 .accessibilityText('关闭标签页 ' + (tab.title || '新标签页'))
                 .onClick(() => {
+                  console.info('[P45] TabStrip close clicked: ' + tab.tabId)
                   if (this.onTabClose) {
                     this.onTabClose(tab.tabId)
                   }
