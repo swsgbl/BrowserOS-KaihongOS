@@ -137,7 +137,7 @@ export struct TabStrip {
             .bindContextMenu(this.TabCtxMenu(tab.tabId), ResponseType.LongPress)
           }, (tab: TabInfo) => tab.tabId)
 
-          // P45-A: + 按钮紧跟最后一个标签正下方（1:1 对齐上游），不再钉死在列底部
+          // P45-A: + 按钮紧跟最后一个标签正下方，水平居中（1:1 对齐上游 vertical tabs）
           Button({ type: ButtonType.Normal }) {
             Image($rawfile('ic_add.png'))
               .width(16).height(16)
@@ -146,6 +146,8 @@ export struct TabStrip {
           }
           .width(28).height(28)
           .margin({ top: 4 })
+          .alignSelf(ItemAlign.Center)
+          .borderRadius(14)
           .backgroundColor(Color.Transparent)
           .accessibilityText('新建标签页')
           .onClick(() => {
