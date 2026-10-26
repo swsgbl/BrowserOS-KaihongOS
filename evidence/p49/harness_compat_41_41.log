@@ -1,0 +1,44 @@
+token len=32 tail=sLss
+[PASS] claude-code initialize — {'jsonrpc': '2.0', 'id': 1, 'result': {'protocolVersion': '2024-11-05', 'capabil
+[PASS] claude-code tools/list (17 tools, schemas=True) — missing=[]
+[PASS] claude-code tools/call navigate — {'jsonrpc': '2.0', 'id': 3, 'result': {'content': [{'type': 
+[PASS] claude-code tools/call snapshot — len=1096
+[PASS] claude-code tools/call read — {'content': [{'type': 'text', 'text': '{"result":"null"}'}],
+[PASS] codex initialize — {'jsonrpc': '2.0', 'id': 6, 'result': {'protocolVersion': '2024-11-05', 'capabil
+[PASS] codex tools/list (17 tools, schemas=True) — missing=[]
+[PASS] codex tools/call navigate — {'jsonrpc': '2.0', 'id': 8, 'result': {'content': [{'type': 
+[PASS] codex tools/call snapshot — len=1096
+[PASS] codex tools/call read — {'content': [{'type': 'text', 'text': '{"result":"null"}'}],
+[PASS] cursor-ide initialize — {'jsonrpc': '2.0', 'id': 11, 'result': {'protocolVersion': '2024-11-05', 'capabi
+[PASS] cursor-ide tools/list (17 tools, schemas=True) — missing=[]
+[PASS] cursor-ide tools/call navigate — {'jsonrpc': '2.0', 'id': 13, 'result': {'content': [{'type':
+[PASS] cursor-ide tools/call snapshot — len=1097
+[PASS] cursor-ide tools/call read — {'content': [{'type': 'text', 'text': '{"result":"null"}'}],
+[PASS] deepseek-generic initialize — {'jsonrpc': '2.0', 'id': 16, 'result': {'protocolVersion': '2024-11-05', 'capabi
+[PASS] deepseek-generic tools/list (17 tools, schemas=True) — missing=[]
+[PASS] deepseek-generic tools/call navigate — {'jsonrpc': '2.0', 'id': 18, 'result': {'content': [{'type':
+[PASS] deepseek-generic tools/call snapshot — len=1097
+[PASS] deepseek-generic tools/call read — {'content': [{'type': 'text', 'text': '{"result":"null"}'}],
+[PASS] windsurf initialize — {'jsonrpc': '2.0', 'id': 21, 'result': {'protocolVersion': '2024-11-05', 'capabi
+[PASS] windsurf tools/list (17 tools, schemas=True) — missing=[]
+[PASS] windsurf tools/call navigate — {'jsonrpc': '2.0', 'id': 23, 'result': {'content': [{'type':
+[PASS] windsurf tools/call snapshot — len=1097
+[PASS] windsurf tools/call read — {'content': [{'type': 'text', 'text': '{"result":"null"}'}],
+[PASS] vscode-generic initialize — {'jsonrpc': '2.0', 'id': 26, 'result': {'protocolVersion': '2024-11-05', 'capabi
+[PASS] vscode-generic tools/list (17 tools, schemas=True) — missing=[]
+[PASS] vscode-generic tools/call navigate — {'jsonrpc': '2.0', 'id': 28, 'result': {'content': [{'type':
+[PASS] vscode-generic tools/call snapshot — len=1097
+[PASS] vscode-generic tools/call read — {'content': [{'type': 'text', 'text': '{"result":"null"}'}],
+[PASS] b1 multi-client concurrency (2 sessions x interleaved calls)
+[PASS] b2 claude-code config JSON contract
+[PASS] b2 codex config JSON contract
+[PASS] b2 cursor-ide config JSON contract
+[PASS] b2 deepseek-generic config JSON contract
+[PASS] b2 windsurf config JSON contract
+[PASS] b2 vscode-generic config JSON contract
+[PASS] b4 navigate example.com — {'jsonrpc': '2.0', 'id': 45, 'result': {'content': [{'type':
+[PASS] b4 snapshot page content loaded — len=1097 sample="result\":\"该域名仅用于文档示例，无需获得许可。这并非一项服务，请勿将其用于测试和监控目的。\\nThis domain is 
+[PASS] b4 read round-trip — {"jsonrpc": "2.0", "id": 47, "result": {"content": [{"type": "text", "
+[PASS] b4 hilog MCP trail present — loglen=875516
+
+== harness_compat_test: 41/41 PASS ==

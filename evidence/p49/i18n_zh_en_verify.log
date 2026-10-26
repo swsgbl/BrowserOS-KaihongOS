@@ -1,0 +1,7 @@
+[PASS] zh heroSubtitle
+[PASS] zh: menu Skills entry (i18n)
+[PASS] zh skillsTitle=技能
+[PASS] zh skNewSkill/skRuns/skTokensSaved — BrowserOS|技能|新建技能|技能|次数|节省令牌|0|未统计
+[PASS] zh: ultrafast CTA (i18n) — 申请抢先体验
+[PASS] zh waitlist 即将推出/加入等待名单/月 — BrowserOS|即将推出|Ultrafast 模式|浏览器操作模型无限量使用|$5/月|更快的点击、输入与导航
+FATAL spawnSync C:\WINDOWS\system32\cmd.exe ETIMEDOUT

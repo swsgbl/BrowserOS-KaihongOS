@@ -88,7 +88,37 @@ def check_launch(hdc):
     record('3.cold launch', ok, ('lifecycle OK' if ok else out.strip()[:60] + ' | logs:' + logs.strip()[:60]))
 
 
+def _maximize_window(hdc):
+    """P49: 冷启动后 app 常为自由窗口（toolbar 下移），先最大化恢复全屏坐标假设。"""
+    hdc.sh('uitest dumpLayout -p /data/local/tmp/smoke_mx.json', 40)
+    hdc.raw('file recv /data/local/tmp/smoke_mx.json smoke_mx_layout.json', 30)
+    try:
+        with open('smoke_mx_layout.json', encoding='utf-8') as f:
+            lay = f.read()
+    except Exception:
+        return
+    mb = _find_node_id(lay, 'EnhanceMaximizeBtn')
+    if mb:
+        xs = [int(v) for v in re.findall(r'\d+', mb)]
+        hdc.sh('uitest uiInput click %d %d' % ((xs[0] + xs[2]) // 2, (xs[1] + xs[3]) // 2), 20)
+        time.sleep(1.2)
+
+
+def _find_node_id(lay_text, idval):
+    try:
+        data = json.loads(lay_text)
+    except json.JSONDecodeError:
+        return None
+    for attrs in _walk(data):
+        if attrs.get('id') == idval:
+            b = str(attrs.get('bounds', ''))
+            if re.match(r'^\[\d+,\d+\]\[\d+,\d+\]$', b):
+                return b
+    return None
+
+
 def check_render(hdc):
+    _maximize_window(hdc)
     hdc.sh('uitest dumpLayout -p /data/local/tmp/smoke_reg.json', 40)
     hdc.raw('file recv /data/local/tmp/smoke_reg.json smoke_reg_layout.json', 30)
     try:
@@ -267,8 +297,9 @@ def check_new_pages(hdc):
     menu_ok = False
     try:
         with open('smoke_menu_layout.json', encoding='utf-8', errors='replace') as f:
-            menu = f.read()
-        menu_ok = '"Skills"' in menu.replace('”', '"') or 'Skills' in menu
+            menu = f.read().replace('”', '"')
+        # P49-A: 菜单项已 i18n（zh=技能 / en=Skills）
+        menu_ok = '"技能"' in menu or '"Skills"' in menu
     except Exception:
         menu_ok = False
     record('8.p34/p35 screens registered', ok_pages and menu_ok,
