@@ -918,7 +918,7 @@ struct BrowserShell {
             .fillColor(this.currentUrl.startsWith('https://') ? '#137333' : '#5F6368')
             .draggable(false)
         }
-        TextInput({ text: this.urlInput, placeholder: '输入URL或搜索关键词', controller: this.omniController }).id('p11f_omnibox').fontColor(this.pal().text).placeholderColor(this.pal().text2)
+        TextInput({ text: this.urlInput, placeholder: '', controller: this.omniController }).id('p11f_omnibox').fontColor(this.pal().text).placeholderColor(this.pal().text2)
           .layoutWeight(1)
           .height(32)
           .fontSize(13)
