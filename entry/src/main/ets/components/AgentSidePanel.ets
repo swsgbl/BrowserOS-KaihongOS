@@ -132,7 +132,7 @@ export struct AgentSidePanel {
   /** P19a: 消息列表滚动控制器（答案回流后滚底） */
   private scroller: Scroller = new Scroller()
 
-  private get modelOptions(): string[] {
+  private modelOptions(): string[] {
     return ['agnes-3.0-flash', 'agnes-3.0-pro', 'glm-4.7', I18n.t('asCustomCfg'), I18n.t('asManageProviders')]
   }
 
@@ -724,7 +724,7 @@ export struct AgentSidePanel {
         Blank()
 
         // 模型下拉（简化：点击循环切换）
-        Text(this.modelOptions[this.modelSelection])
+        Text(this.modelOptions()[this.modelSelection])
           .fontSize(11)
           .fontColor('#1A73E8')
           .maxLines(1)
@@ -734,14 +734,14 @@ export struct AgentSidePanel {
           .borderRadius(12)
           .backgroundColor(this.pal().selected)
           .onClick(() => {
-            this.modelSelection = (this.modelSelection + 1) % this.modelOptions.length
-            if (this.modelOptions[this.modelSelection] === I18n.t('asManageProviders')) {
+            this.modelSelection = (this.modelSelection + 1) % this.modelOptions().length
+            if (this.modelOptions()[this.modelSelection] === I18n.t('asManageProviders')) {
               // p23b: 循环到管理项 = 跳 LLM Hub，选择回退保持原模型显示
               router.pushUrl({ url: 'pages/LlmHubPage' })
               this.modelSelection = 0
               return
             }
-            console.info('AgentSidePanel model switch: ' + this.modelOptions[this.modelSelection])
+            console.info('AgentSidePanel model switch: ' + this.modelOptions()[this.modelSelection])
           })
 
         Image($rawfile('ic_settings.svg'))

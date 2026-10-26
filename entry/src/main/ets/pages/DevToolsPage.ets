@@ -207,7 +207,7 @@ struct DevToolsPage {
 
         // Tab 条
         Row() {
-          ForEach(['Console', 'Network', 'Info'], (name: string, idx: number) => {
+          ForEach([I18n.t('dtConsole'), I18n.t('dtNetwork'), I18n.t('dtInfo')], (name: string, idx: number) => {
             Text(name)
               .fontSize(13)
               .fontWeight(this.tabIdx === idx ? FontWeight.Bold : FontWeight.Normal)

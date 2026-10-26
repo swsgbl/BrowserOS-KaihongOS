@@ -75,7 +75,7 @@ struct JtbdSurveyPage {
   @State qIndex: number = 0
   @State answers: string[] = []
 
-  private get QUESTIONS(): string[] {
+  private QUESTIONS(): string[] {
     return [
       I18n.t('jtQ1'),
       I18n.t('jtQ2'),
@@ -91,7 +91,7 @@ struct JtbdSurveyPage {
 
   private startSurvey(): void {
     this.phase = 'active'
-    this.messages = [new SurveyMessage('agent', this.QUESTIONS[0])]
+    this.messages = [new SurveyMessage('agent', this.QUESTIONS()[0])]
     console.info('[P35] survey started')
   }
 
@@ -105,8 +105,8 @@ struct JtbdSurveyPage {
     this.inputText = ''
     const next = this.qIndex + 1
     this.qIndex = next
-    if (next < this.QUESTIONS.length) {
-      this.messages.push(new SurveyMessage('agent', this.QUESTIONS[next]))
+    if (next < this.QUESTIONS().length) {
+      this.messages.push(new SurveyMessage('agent', this.QUESTIONS()[next]))
       console.info('[P35] survey Q' + (next + 1) + ' posed')
     } else {
       this.phase = 'done'
@@ -164,7 +164,7 @@ struct JtbdSurveyPage {
           .margin({ left: 6 })
         Blank()
         if (this.phase === 'active') {
-          Text(`${Math.min(this.qIndex + 1, this.QUESTIONS.length)}/${this.QUESTIONS.length}`)
+          Text(`${Math.min(this.qIndex + 1, this.QUESTIONS().length)}/${this.QUESTIONS().length}`)
             .fontSize(11)
             .fontColor(this.pal().text2)
         }
@@ -194,19 +194,19 @@ struct JtbdSurveyPage {
               .alignItems(HorizontalAlign.Center)
               .margin({ top: 30 })
 
-              Text('Share Your Experience')
+              Text(I18n.t('surveyTitle'))
                 .fontSize(18)
                 .fontWeight(FontWeight.Bold)
                 .fontColor(this.pal().text)
                 .margin({ top: 16 })
-              Text("We'd love to learn about how you use browser automation. This quick conversation helps us build features that matter to you.")
+              Text(I18n.t('surveySub'))
                 .fontSize(12)
                 .fontColor(this.pal().text2)
                 .textAlign(TextAlign.Center)
                 .lineHeight(19)
                 .margin({ top: 8, left: 24, right: 24 })
 
-              Button('Start Survey')
+              Button(I18n.t('surveyStart'))
                 .fontSize(15)
                 .fontWeight(FontWeight.Medium)
                 .height(44)
@@ -286,12 +286,12 @@ struct JtbdSurveyPage {
               .alignItems(HorizontalAlign.Center)
               .margin({ top: 30 })
 
-              Text('Thank You!')
+              Text(I18n.t('surveyThanks'))
                 .fontSize(18)
                 .fontWeight(FontWeight.Bold)
                 .fontColor(this.pal().text)
                 .margin({ top: 16 })
-              Text('Your feedback helps us build better products. We appreciate you taking the time to share your experience.')
+              Text(I18n.t('surveyThanksDesc'))
                 .fontSize(12)
                 .fontColor(this.pal().text2)
                 .textAlign(TextAlign.Center)

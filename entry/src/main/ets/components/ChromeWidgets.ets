@@ -39,14 +39,14 @@ export struct ThreeDotMenu {
     return Palette.of(this.darkMode)
   }
 
-  private get group1(): MenuEntry[] {
+  private group1(): MenuEntry[] {
     return [
       { icon: $rawfile('ic_add.svg'), label: I18n.t('menuNewTab'), action: 'new_tab' },
       { icon: $rawfile('ic_content_copy.svg'), label: I18n.t('menuNewWindow'), action: 'new_window' },
       { icon: $rawfile('ic_incognito.svg'), label: I18n.t('menuNewIncognito'), action: 'new_incognito' }
     ]
   }
-  private get group2(): MenuEntry[] {
+  private group2(): MenuEntry[] {
     return [
       { icon: $rawfile('ic_history.svg'), label: I18n.t('menuHistory'), action: 'history' },
       { icon: $rawfile('ic_star_outline.svg'), label: I18n.t('menuBookmarks'), action: 'bookmarks' },
@@ -54,10 +54,10 @@ export struct ThreeDotMenu {
       { icon: $rawfile('ic_key.svg'), label: I18n.t('menuPasswords'), action: 'passwords' }
     ]
   }
-  private get group3(): MenuEntry[] {
+  private group3(): MenuEntry[] {
     return [
       { icon: $rawfile('ic_schedule.svg'), label: I18n.t('menuScheduled'), action: 'scheduled_tasks' },
-      { icon: $rawfile('ic_robot.svg'), label: 'Skills', action: 'skills' },
+      { icon: $rawfile('ic_robot.svg'), label: I18n.t('menuSkills'), action: 'skills' },
       { icon: $rawfile('ic_zoom_search.svg'), label: I18n.t('menuZoomIn'), action: 'zoom_in' },
       { icon: $rawfile('ic_zoom_out.svg'), label: I18n.t('menuZoomOut'), action: 'zoom_out' },
       { icon: $rawfile('ic_reload.svg'), label: I18n.t('menuZoomReset'), action: 'zoom_reset' },
@@ -94,11 +94,11 @@ export struct ThreeDotMenu {
 
       // 菜单卡（右上下锚定，宽 240）
       Column() {
-        this.MenuGroup(this.group1)
+        this.MenuGroup(this.group1())
         Divider().color(this.pal().border).margin({ top: 4, bottom: 4 })
-        this.MenuGroup(this.group2)
+        this.MenuGroup(this.group2())
         Divider().color(this.pal().border).margin({ top: 4, bottom: 4 })
-        this.MenuGroup(this.group3)
+        this.MenuGroup(this.group3())
         Divider().color(this.pal().border).margin({ top: 4, bottom: 4 })
         Row() {
           Image($rawfile('ic_exit.svg'))

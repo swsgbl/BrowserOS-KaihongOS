@@ -319,11 +319,11 @@ struct SkillsPage {
   Header(): void {
     Row() {
       Column() {
-        Text('Skills')
+        Text(I18n.t('skillsTitle'))
           .fontSize(28)
           .fontWeight(FontWeight.Bold)
           .fontColor(this.pal().text)
-        Text('Skills BrowserOS neo linked into your coding agents. Re-run one by name.')
+        Text(I18n.t('skillsSubtitle'))
           .fontSize(11)
           .fontColor(this.pal().text2)
           .margin({ top: 4 })
@@ -331,7 +331,7 @@ struct SkillsPage {
       .alignItems(HorizontalAlign.Start)
       .layoutWeight(1)
 
-      Button('New skill')
+      Button(I18n.t('skNewSkill'))
         .fontSize(12)
         .height(32)
         .backgroundColor('#2E6FE8')
@@ -352,18 +352,18 @@ struct SkillsPage {
     Column() {
       // 表头
       Row() {
-        Text('Skill')
+        Text(I18n.t('skSkill'))
           .fontSize(12)
           .fontWeight(FontWeight.Medium)
           .fontColor(this.pal().text2)
           .layoutWeight(1)
-        Text('Runs')
+        Text(I18n.t('skRuns'))
           .fontSize(12)
           .fontWeight(FontWeight.Medium)
           .fontColor(this.pal().text2)
           .width(48)
           .textAlign(TextAlign.End)
-        Text('Tokens saved')
+        Text(I18n.t('skTokensSaved'))
           .fontSize(12)
           .fontWeight(FontWeight.Medium)
           .fontColor(this.pal().text2)
@@ -407,12 +407,12 @@ struct SkillsPage {
 
           Column() {
             if (s.savedTokens > 0) {
-              Text(`${s.savedTokens} saved`)
+              Text(I18n.t('skSavedN').replace('{n}', `${s.savedTokens}`))
                 .fontSize(13)
                 .fontColor(this.pal().text)
                 .textAlign(TextAlign.End)
             } else {
-              Text('not measured')
+              Text(I18n.t('skNotMeasured'))
                 .fontSize(12)
                 .fontColor(this.pal().text2)
                 .textAlign(TextAlign.End)
@@ -422,7 +422,7 @@ struct SkillsPage {
           .alignItems(HorizontalAlign.End)
 
           Row() {
-            Button('Run')
+            Button(I18n.t('skRun'))
               .fontSize(11)
               .height(26)
               .backgroundColor('#22A06B')
@@ -431,7 +431,7 @@ struct SkillsPage {
               .onClick(() => {
                 this.runSkill(s)
               })
-            Text('Delete')
+            Text(I18n.t('delete'))
               .fontSize(11)
               .fontColor('#C5221F')
               .margin({ left: 10 })
@@ -481,7 +481,7 @@ struct SkillsPage {
                   this.detailName = ''
                 })
               Blank()
-              Button('Run')
+              Button(I18n.t('skRun'))
                 .fontSize(13)
                 .height(32)
                 .backgroundColor('#22A06B')
@@ -515,7 +515,7 @@ struct SkillsPage {
               .margin({ top: 4 })
               .alignSelf(ItemAlign.Start)
 
-            Text('Prompt')
+            Text(I18n.t('skPrompt'))
               .fontSize(11)
               .fontColor(this.pal().text2)
               .margin({ top: 14 })
@@ -531,13 +531,13 @@ struct SkillsPage {
               .alignSelf(ItemAlign.Start)
 
             Row() {
-              Text(`Runs: ${this.findSkill(this.detailName)?.runCount ?? 0}`)
+              Text(I18n.t('skRunsN').replace('{n}', `${this.findSkill(this.detailName)?.runCount ?? 0}`))
                 .fontSize(11)
                 .fontColor(this.pal().text2)
               Text(' · ')
                 .fontSize(11)
                 .fontColor(this.pal().text2)
-              Text((this.findSkill(this.detailName)?.savedTokens ?? 0) > 0 ? `saved ${this.findSkill(this.detailName)?.savedTokens}` : 'not measured')
+              Text((this.findSkill(this.detailName)?.savedTokens ?? 0) > 0 ? I18n.t('skSavedN').replace('{n}', `${this.findSkill(this.detailName)?.savedTokens}`) : I18n.t('skNotMeasured'))
                 .fontSize(11)
                 .fontColor(this.pal().text2)
             }
@@ -573,7 +573,7 @@ struct SkillsPage {
         })
 
       Column() {
-        Text('New skill')
+        Text(I18n.t('skNewSkill'))
           .fontSize(15)
           .fontWeight(FontWeight.Bold)
           .fontColor(this.pal().text)
@@ -611,7 +611,7 @@ struct SkillsPage {
           .fontColor(this.pal().text2)
           .margin({ top: 10 })
           .alignSelf(ItemAlign.Start)
-        TextArea({ text: this.formPrompt, placeholder: 'Tell the agent what to do...' })
+        TextArea({ text: this.formPrompt, placeholder: I18n.t('skPromptPh') })
           .fontColor(this.pal().text)
           .placeholderColor(this.pal().text2)
           .width('100%')

@@ -73,7 +73,7 @@ struct SettingsPage {
   // 版本（P17b: 动态读取 app.json5 versionName，避免硬编码漂移）
   @State appVersion: string = ''
 
-  private get navItems(): NavItem[] {
+  private navItems(): NavItem[] {
     return [
       { key: 'search', icon: $rawfile('ic_search.svg'), label: I18n.t('stTabSearch') },
       { key: 'ai', icon: $rawfile('ic_robot.svg'), label: I18n.t('stTabAI') },
@@ -193,7 +193,7 @@ struct SettingsPage {
           .width('100%')
           .padding({ left: 20, top: 24, bottom: 16 })
 
-        ForEach(this.navItems, (item: NavItem, index: number) => {
+        ForEach(this.navItems(), (item: NavItem, index: number) => {
           Row() {
             Image(item.icon)
               .width(16).height(16)

@@ -8,10 +8,18 @@
  */
 import { preferences } from '@kit.ArkData'
 import { Palette } from '../common/Palette'
+import { I18n } from '../common/I18n'
 
 @Entry
 @Component
 struct UltrafastWaitlistPage {
+  // P49: locale 刷新锚
+  @StorageProp('app_locale') @Watch('onLocaleFlip') appLocale: string = 'zh'
+  @State localeVersion: number = 0
+
+  onLocaleFlip(): void {
+    this.localeVersion++
+  }
   @StorageProp('darkMode') @Watch('onThemeFlip') darkMode: boolean = false // P44
   @State themeVersion: number = 0 // P44
   @State emailInput: string = ''
@@ -20,9 +28,9 @@ struct UltrafastWaitlistPage {
   @State joinedEmail: string = ''
 
   private readonly PERKS: string[] = [
-    'Faster clicks, typing, and navigation',
-    'Bring your own Claude, Codex, or other agent subscription to power your main agent',
-    'Use 10× fewer tokens from your main agent, with our browser-action model handling most actions'
+    I18n.t('wlPerk1'),
+    I18n.t('wlPerk2'),
+    I18n.t('wlPerk3')
   ]
 
   private readonly EMAIL_PATTERN: RegExp = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -97,23 +105,23 @@ struct UltrafastWaitlistPage {
         Column() {
           // header（Coming soon + Ultrafast mode 大标 + 副题）
           Column() {
-            Text('COMING SOON')
+            Text(I18n.t('wlComingSoon'))
               .fontSize(12)
               .fontWeight(FontWeight.Bold)
               .fontColor(this.darkMode ? '#7CB1FF' : '#1A73E8')
               .letterSpacing(1.5)
             Text() {
-              Span('Ultrafast')
+              Span(I18n.t('wlUltrafast'))
                 .fontColor(this.darkMode ? '#7CB1FF' : '#1A73E8')
                 .fontWeight(FontWeight.Bold)
                 .fontStyle(FontStyle.Italic)
-              Span(' mode')
+              Span(I18n.t('wlMode'))
                 .fontColor(this.pal().text)
                 .fontWeight(FontWeight.Bold)
             }
             .fontSize(30)
             .margin({ top: 8 })
-            Text('We trained our own browser-action model for faster browser tasks.')
+            Text(I18n.t('wlSubtitle'))
               .fontSize(13)
               .fontColor(this.pal().text2)
               .margin({ top: 8 })
@@ -138,7 +146,7 @@ struct UltrafastWaitlistPage {
               .justifyContent(FlexAlign.Center)
               .alignItems(HorizontalAlign.Center)
 
-              Text('Unlimited browser-action model access')
+              Text(I18n.t('wlUnlimited'))
                 .fontSize(15)
                 .fontWeight(FontWeight.Bold)
                 .fontColor(this.pal().text)
@@ -152,7 +160,7 @@ struct UltrafastWaitlistPage {
                     .fontSize(28)
                     .fontWeight(FontWeight.Bold)
                     .fontColor(this.pal().text)
-                  Span('/mo')
+                  Span(I18n.t('wlMo'))
                     .fontSize(13)
                     .fontColor(this.pal().text2)
                 }
@@ -194,7 +202,7 @@ struct UltrafastWaitlistPage {
                   .width(15).height(15)
                   .fillColor(this.darkMode ? '#7CB1FF' : '#1A73E8')
                   .draggable(false)
-                Text(`You're on the list. We'll email you when it's ready.`)
+                Text(I18n.t('wlJoined'))
                   .fontSize(13)
                   .fontWeight(FontWeight.Medium)
                   .fontColor(this.pal().text)
@@ -207,7 +215,7 @@ struct UltrafastWaitlistPage {
             } else {
               Column() {
                 Row() {
-                  TextInput({ text: this.emailInput, placeholder: 'you@example.com' })
+                  TextInput({ text: this.emailInput, placeholder: I18n.t('wlEmailPh') })
                     .fontSize(13)
                     .layoutWeight(1)
                     .height(42)
@@ -223,7 +231,7 @@ struct UltrafastWaitlistPage {
                     .onSubmit(() => {
                       this.submitJoin()
                     })
-                  Button('Join waitlist')
+                  Button(I18n.t('wlJoin'))
                     .fontSize(13)
                     .fontWeight(FontWeight.Medium)
                     .height(42)
@@ -240,7 +248,7 @@ struct UltrafastWaitlistPage {
                 .alignItems(VerticalAlign.Center)
 
                 if (this.invalid) {
-                  Text('Enter a valid email address.')
+                  Text(I18n.t('wlInvalidEmail'))
                     .fontSize(12)
                     .fontColor('#DC2626')
                     .margin({ top: 8 })
