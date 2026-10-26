@@ -3,6 +3,7 @@
  * + agent 会话条目带 ▶ 回放直达 SessionPlayerPage
  */
 import { HistoryManager, HistoryEntry } from '../service/HistoryManager'
+import { I18n } from '../common/I18n'
 import { SessionManager } from '../service/SessionManager'
 import { SessionRecord } from '../model/SessionRecord'
 import { router } from '@kit.ArkUI'
@@ -17,6 +18,13 @@ interface GroupedEntry {
 @Entry
 @Component
 struct HistoryPage {
+  // P48: locale 刷新锚
+  @StorageProp('app_locale') @Watch('onLocaleFlip') appLocale: string = 'zh'
+  @State localeVersion: number = 0
+
+  onLocaleFlip(): void {
+    this.localeVersion++
+  }
   /** p10a: AppStorage('darkMode') 消费 —— EntryAbility 启动时与设置页开关写入 */
   @StorageProp('darkMode') @Watch('onThemeFlip') darkMode: boolean = false // P44
   @State themeVersion: number = 0 // P44
@@ -93,10 +101,10 @@ struct HistoryPage {
     const now = new Date()
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
     if (ts >= todayStart) {
-      return '今天'
+      return I18n.t('hiToday')
     }
     if (ts >= todayStart - 86400000) {
-      return '昨天'
+      return I18n.t('hiYesterday')
     }
     return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`
   }
@@ -129,20 +137,20 @@ struct HistoryPage {
           .fillColor(this.pal().text2)
           .draggable(false)
           .width(36)
-          .accessibilityText('返回')
+          .accessibilityText(I18n.t('back'))
           .onClick(() => {
             router.back()
           })
-        Text('历史记录')
+        Text(I18n.t('hiTitle'))
           .fontSize(17)
           .fontWeight(FontWeight.Bold)
           .fontColor(this.pal().text)
           .layoutWeight(1)
-        Text(`${this.entries.length} 条`)
+        Text(`${this.entries.length}` + I18n.t('ntCountEnd'))
           .fontSize(11)
           .fontColor(this.pal().text2)
           .margin({ right: 10 })
-        Button('清除')
+        Button(I18n.t('hiClear'))
           .fontSize(12)
           .height(28)
           .padding({ left: 12, right: 12 })
@@ -167,7 +175,7 @@ struct HistoryPage {
           .fillColor(this.pal().text2)
           .draggable(false)
           .margin({ left: 8, right: 6 })
-        TextInput({ text: this.keyword, placeholder: '搜索历史记录' }).fontColor(this.pal().text).placeholderColor(this.pal().text2)
+        TextInput({ text: this.keyword, placeholder: I18n.t('hiSearchPh') }).fontColor(this.pal().text).placeholderColor(this.pal().text2)
           .layoutWeight(1)
           .height(34)
           .fontSize(13)
@@ -188,7 +196,7 @@ struct HistoryPage {
         Column() {
           // agent 会话组
           if (this.sessions.length > 0) {
-            Text('代理会话')
+            Text(I18n.t('hiAgentSessions'))
               .fontSize(12)
               .fontWeight(FontWeight.Medium)
               .fontColor(this.pal().text2)
@@ -210,11 +218,11 @@ struct HistoryPage {
                 .alignItems(HorizontalAlign.Center)
 
                 Column() {
-                  Text(`代理 ${s.agentId.substring(0, 14)}…`)
+                  Text(`${I18n.t('hiAgent')}${s.agentId.substring(0, 14)}…`)
                     .fontSize(13)
                     .fontColor(this.pal().text)
                     .maxLines(1)
-                  Text(`${s.operationLogs.length} 步操作 · ${this.timeOf(s.startTime)}`)
+                  Text(`${s.operationLogs.length}${I18n.t('hiSteps')}${this.timeOf(s.startTime)}`)
                     .fontSize(10)
                     .fontColor(this.pal().text2)
                     .margin({ top: 1 })
@@ -223,7 +231,7 @@ struct HistoryPage {
                 .layoutWeight(1)
                 .margin({ left: 10 })
 
-                Text('回放')
+                Text(I18n.t('hiReplay'))
                   .fontSize(12)
                   .fontColor('#1A73E8')
                   .padding({ left: 10, right: 10, top: 5, bottom: 5 })
@@ -249,7 +257,7 @@ struct HistoryPage {
                 .width(36).height(36)
                 .fillColor(this.pal().text2)
                 .draggable(false)
-              Text('暂无历史记录')
+              Text(I18n.t('hiEmpty'))
                 .fontSize(13)
                 .fontColor(this.pal().text2)
                 .margin({ top: 8 })
@@ -323,17 +331,17 @@ struct HistoryPage {
       })
 
       Column() {
-        Text('清除浏览数据')
+        Text(I18n.t('hiClearData'))
           .fontSize(16)
           .fontWeight(FontWeight.Bold)
           .fontColor(this.pal().text)
-        Text('将删除全部浏览历史与代理会话录制，此操作不可撤销。')
+        Text(I18n.t('hiClearDesc'))
           .fontSize(12)
           .fontColor(this.pal().text2)
           .margin({ top: 10 })
           .textAlign(TextAlign.Center)
         Row({ space: 10 }) {
-          Button('取消')
+          Button(I18n.t('cancel'))
             .fontSize(13)
             .height(34)
             .layoutWeight(1)
@@ -342,7 +350,7 @@ struct HistoryPage {
             .onClick(() => {
               this.showClearConfirm = false
             })
-          Button('清除')
+          Button(I18n.t('hiClear'))
             .fontSize(13)
             .height(34)
             .layoutWeight(1)

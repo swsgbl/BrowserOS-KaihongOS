@@ -1,0 +1,15 @@
+[
+  ["return '今天'", "return I18n.t('hiToday')"],
+  ["return '昨天'", "return I18n.t('hiYesterday')"],
+  ["Text('历史记录')", "Text(I18n.t('hiTitle'))"],
+  ["Button('清除')", "Button(I18n.t('hiClear'))"],
+  ["TextInput({ text: this.keyword, placeholder: '搜索历史记录' })", "TextInput({ text: this.keyword, placeholder: I18n.t('hiSearchPh') })"],
+  ["Text('代理会话')", "Text(I18n.t('hiAgentSessions'))"],
+  ["Text(`代理 ${s.agentId.substring(0, 14)}…`)", "Text(`${I18n.t('hiAgent')}${s.agentId.substring(0, 14)}…`)"],
+  ["Text(`${s.operationLogs.length} 步操作 · ${this.timeOf(s.startTime)}`)", "Text(`${s.operationLogs.length}${I18n.t('hiSteps')}${this.timeOf(s.startTime)}`)"],
+  ["Text('回放')", "Text(I18n.t('hiReplay'))"],
+  ["Text('暂无历史记录')", "Text(I18n.t('hiEmpty'))"],
+  ["Text('清除浏览数据')", "Text(I18n.t('hiClearData'))"],
+  ["Text('将删除全部浏览历史与代理会话录制，此操作不可撤销。')", "Text(I18n.t('hiClearDesc'))"],
+  ["Button('取消')", "Button(I18n.t('cancel'))"]
+]

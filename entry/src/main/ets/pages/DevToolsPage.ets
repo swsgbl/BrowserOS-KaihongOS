@@ -4,12 +4,20 @@
  * JS 求值通过 TabManager 活动标签的 controller runJavaScript 执行
  */
 import { DevToolsCollector, ConsoleLogEntry, NetworkEntry, DtLogLevel } from '../service/DevToolsCollector'
+import { I18n } from '../common/I18n'
 import { TabManager } from '../service/TabManager'
 import { router } from '@kit.ArkUI'
 
 @Entry
 @Component
 struct DevToolsPage {
+  // P48: locale 刷新锚
+  @StorageProp('app_locale') @Watch('onLocaleFlip') appLocale: string = 'zh'
+  @State localeVersion: number = 0
+
+  onLocaleFlip(): void {
+    this.localeVersion++
+  }
   @StorageProp('darkMode') @Watch('onThemeFlip') darkMode: boolean = false
   @State themeVersion: number = 0
   @State tabIdx: number = 0 // 0=Console 1=Network 2=Info
@@ -77,21 +85,21 @@ struct DevToolsPage {
   private loadInfo(): void {
     const id = this.activeTabId()
     const tab = TabManager.getTab(id)
-    this.infoUrl = tab && tab.currentUrl ? tab.currentUrl : '(无)'
-    this.infoTitle = tab && tab.title ? tab.title : '(无)'
+    this.infoUrl = tab && tab.currentUrl ? tab.currentUrl : I18n.t('dtNone')
+    this.infoTitle = tab && tab.title ? tab.title : I18n.t('dtNone')
     const ctrl = TabManager.getWebView(id)
     if (ctrl) {
       ctrl.controller.runJavaScript('navigator.userAgent').then((r: string) => {
         this.infoUa = r.replace(/^"|"$/g, '')
       }).catch(() => {
-        this.infoUa = '(不可用)'
+        this.infoUa = I18n.t('dtNa')
       })
     }
     const logs = DevToolsCollector.getConsole(id)
     if (logs.length > 0) {
-      this.infoLoadMs = 'Console 消息数: ' + logs.length
+      this.infoLoadMs = I18n.t('dtConsoleN') + logs.length
     } else {
-      this.infoLoadMs = 'Console 消息数: 0（页面未产生日志）'
+      this.infoLoadMs = I18n.t('dtConsole0')
     }
   }
 
@@ -136,7 +144,7 @@ struct DevToolsPage {
     const wv = TabManager.getWebView(id)
     if (!wv) {
       this.evalHistory.unshift('> ' + code)
-      this.evalHistory.unshift('< 错误: 无活动 WebView')
+      this.evalHistory.unshift(I18n.t('dtErrNoWebview'))
       return
     }
     this.evalHistory.unshift('> ' + code)
@@ -144,7 +152,7 @@ struct DevToolsPage {
       this.evalHistory.unshift('< ' + r)
       console.info('[P47] devtools eval ok')
     }).catch((e: Object) => {
-      this.evalHistory.unshift('< 错误: ' + e)
+      this.evalHistory.unshift(I18n.t('dtErrPre') + e)
     })
     this.evalInput = ''
   }
@@ -176,7 +184,7 @@ struct DevToolsPage {
           .width(36).height(36)
           .backgroundColor(Color.Transparent)
           .onClick(() => { router.back() })
-          Text('开发者工具')
+          Text(I18n.t('dtTitle'))
             .fontSize(16)
             .fontWeight(FontWeight.Bold)
             .fontColor(this.text())
@@ -185,7 +193,7 @@ struct DevToolsPage {
             .fontSize(10)
             .fontColor(this.text2())
             .margin({ right: 8 })
-          Button('清空')
+          Button(I18n.t('dtClear'))
             .fontSize(12)
             .height(30)
             .backgroundColor(this.panel())
@@ -244,7 +252,7 @@ struct DevToolsPage {
       Scroll() {
         Column() {
           if (this.consoleLogs.length === 0 && this.evalHistory.length === 0) {
-            Text('暂无 Console 消息。\n页面运行 console.log/warn/error 后在此显示。')
+            Text(I18n.t('dtNoConsole'))
               .fontSize(12)
               .fontColor(this.text2())
               .textAlign(TextAlign.Center)
@@ -301,7 +309,7 @@ struct DevToolsPage {
           .fontColor('#8AB4F8')
           .fontFamily('monospace')
           .margin({ left: 10 })
-        TextInput({ text: this.evalInput, placeholder: '输入 JS 表达式，如 1+1 或 document.title' })
+        TextInput({ text: this.evalInput, placeholder: I18n.t('dtEvalPh') })
           .fontSize(12)
           .fontColor(this.text())
           .placeholderColor(this.text2())
@@ -326,7 +334,7 @@ struct DevToolsPage {
     Scroll() {
       Column() {
         if (this.networkLogs.length === 0) {
-          Text('暂无网络请求记录。\n页面加载后请求将在此显示。')
+          Text(I18n.t('dtNoNet'))
             .fontSize(12)
             .fontColor(this.text2())
             .textAlign(TextAlign.Center)
@@ -359,7 +367,7 @@ struct DevToolsPage {
             })
 
             if (this.expandedNet === idx) {
-              Text('Headers: ' + (net.headers.length > 0 ? net.headers : '(无)'))
+              Text('Headers: ' + (net.headers.length > 0 ? net.headers : I18n.t('dtNone')))
                 .fontSize(10)
                 .fontColor(this.text2())
                 .fontFamily('monospace')
@@ -386,10 +394,10 @@ struct DevToolsPage {
     Scroll() {
       Column() {
         this.InfoRow('URL', this.infoUrl)
-        this.InfoRow('标题', this.infoTitle)
+        this.InfoRow(I18n.t('dtTitleRow'), this.infoTitle)
         this.InfoRow('UserAgent', this.infoUa)
-        this.InfoRow('统计', this.infoLoadMs)
-        this.InfoRow('网络请求数', '' + this.networkLogs.length)
+        this.InfoRow(I18n.t('dtStats'), this.infoLoadMs)
+        this.InfoRow(I18n.t('dtNetCount'), '' + this.networkLogs.length)
       }
       .width('100%')
       .alignItems(HorizontalAlign.Start)

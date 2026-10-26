@@ -4,6 +4,7 @@
  * 「设为当前」= 写回 llmBaseUrl/llmApiKey/llmModel 三个生效字段（AgentEngine 零改动）
  */
 import { ConfigManager } from '../storage/ConfigManager'
+import { I18n } from '../common/I18n'
 import { AppConfig, AppConfigUpdate } from '../model/AppConfig'
 import { router } from '@kit.ArkUI'
 import { Palette } from '../common/Palette'
@@ -18,6 +19,13 @@ interface LlmProvider {
 @Entry
 @Component
 struct LlmHubPage {
+  // P48: locale 刷新锚
+  @StorageProp('app_locale') @Watch('onLocaleFlip') appLocale: string = 'zh'
+  @State localeVersion: number = 0
+
+  onLocaleFlip(): void {
+    this.localeVersion++
+  }
   @StorageProp('darkMode') @Watch('onThemeFlip') darkMode: boolean = false // P44
   @State themeVersion: number = 0 // P44
   @State providers: LlmProvider[] = []
@@ -87,10 +95,10 @@ struct LlmHubPage {
     } as AppConfigUpdate)
     if (ok) {
       this.curBaseUrl = ConfigManager.get().llmBaseUrl
-      this.showToast('已切换到 ' + p.name)
+      this.showToast(I18n.t('lhSwitchedTo') + p.name)
       console.info('LlmHub apply provider: ' + p.name + ' -> ' + p.baseUrl)
     } else {
-      this.showToast('保存失败：端点格式不合法')
+      this.showToast(I18n.t('lhSaveFail'))
     }
   }
 
@@ -121,11 +129,11 @@ struct LlmHubPage {
     const key = this.fKey.trim()
     const model = this.fModel.trim()
     if (name.length === 0) {
-      this.formError = '名称不能为空'
+      this.formError = I18n.t('lhNameEmpty')
       return
     }
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
-      this.formError = '端点必须以 http:// 或 https:// 开头'
+      this.formError = I18n.t('lhUrlInvalid')
       return
     }
     const list = this.parseProviders()
@@ -137,7 +145,7 @@ struct LlmHubPage {
     }
     await this.persist(list)
     this.showAdd = false
-    this.showToast(this.editIndex >= 0 ? '已更新 ' + name : '已添加 ' + name)
+    this.showToast(this.editIndex >= 0 ? I18n.t('lhUpdated') + name : I18n.t('lhAdded') + name)
   }
 
   private async removeAt(i: number): Promise<void> {
@@ -145,13 +153,13 @@ struct LlmHubPage {
     const removed = list.splice(i, 1)
     await this.persist(list)
     if (removed.length > 0) {
-      this.showToast('已删除 ' + removed[0].name)
+      this.showToast(I18n.t('lhDeleted') + removed[0].name)
     }
   }
 
   private maskKey(k: string): string {
     if (k.length === 0) {
-      return '(无 Key)'
+      return I18n.t('lhNoKey')
     }
     if (k.length <= 8) {
       return '••••'
@@ -178,7 +186,7 @@ struct LlmHubPage {
           .width(20).height(20)
           .fillColor(this.pal().text2)
           .draggable(false)
-          .accessibilityText('返回')
+          .accessibilityText(I18n.t('back'))
           .onClick(() => {
             router.back()
           })
@@ -187,7 +195,7 @@ struct LlmHubPage {
           .fontWeight(FontWeight.Bold)
           .fontColor(this.pal().text)
           .layoutWeight(1)
-        Text('添加')
+        Text(I18n.t('lhAddProvider'))
           .fontSize(13)
           .fontWeight(FontWeight.Medium)
           .fontColor('#1A73E8')
@@ -204,7 +212,7 @@ struct LlmHubPage {
       .backgroundColor(this.pal().surfaceAlt)
 
       // 当前生效提示
-      Text('当前: ' + (this.curBaseUrl.length > 0 ? this.curBaseUrl : '(未配置)'))
+      Text(I18n.t('lhCurrent') + (this.curBaseUrl.length > 0 ? this.curBaseUrl : I18n.t('lhNotConfig')))
         .fontSize(11)
         .fontColor(this.pal().text2)
         .width('100%')
@@ -214,22 +222,22 @@ struct LlmHubPage {
       // 添加/编辑面板
       if (this.showAdd) {
         Column() {
-          Text(this.editIndex >= 0 ? '编辑供应商' : '添加供应商')
+          Text(this.editIndex >= 0 ? I18n.t('lhEditProvider') : I18n.t('lhAddProvider'))
             .fontSize(14)
             .fontWeight(FontWeight.Medium)
             .fontColor(this.pal().text)
             .alignSelf(ItemAlign.Start)
 
-          this.FormField('名称', this.fName, '如：本地 Ollama', (v: string) => {
+          this.FormField(I18n.t('lhName'), this.fName, I18n.t('lhNamePh'), (v: string) => {
             this.fName = v
           })
-          this.FormField('API 端点', this.fUrl, 'https://api.example.com/v1', (v: string) => {
+          this.FormField(I18n.t('lhUrl'), this.fUrl, 'https://api.example.com/v1', (v: string) => {
             this.fUrl = v
           })
-          this.FormField('API Key', this.fKey, 'sk-...（可留空）', (v: string) => {
+          this.FormField(I18n.t('lhKey'), this.fKey, I18n.t('lhKeyPh'), (v: string) => {
             this.fKey = v
           })
-          this.FormField('模型', this.fModel, '如：gpt-4o-mini', (v: string) => {
+          this.FormField(I18n.t('lhModel'), this.fModel, I18n.t('lhModelPh'), (v: string) => {
             this.fModel = v
           })
 
@@ -242,7 +250,7 @@ struct LlmHubPage {
           }
 
           Row() {
-            Button('取消')
+            Button(I18n.t('cancel'))
               .fontSize(13)
               .height(34)
               .backgroundColor(this.pal().surface)
@@ -254,7 +262,7 @@ struct LlmHubPage {
                 this.formError = ''
               })
             Blank()
-            Button('保存')
+            Button(I18n.t('save'))
               .fontSize(13)
               .height(34)
               .backgroundColor('#1A73E8')
@@ -279,11 +287,11 @@ struct LlmHubPage {
       // 空态/列表
       if (this.providers.length === 0) {
         Column() {
-          Text('暂无供应商预设')
+          Text(I18n.t('lhEmpty'))
             .fontSize(13)
             .fontColor(this.pal().text2)
             .margin({ top: 8 })
-          Text('添加后可一键切换代理的模型后端')
+          Text(I18n.t('lhEmptyDesc'))
             .fontSize(11)
             .fontColor(this.pal().text2)
             .margin({ top: 4 })
@@ -305,7 +313,7 @@ struct LlmHubPage {
                         .maxLines(1)
                         .textOverflow({ overflow: TextOverflow.Ellipsis })
                       if (this.isCurrent(p)) {
-                        Text('当前')
+                        Text(I18n.t('lhCurrentTag'))
                           .fontSize(10)
                           .fontColor('#1A73E8')
                           .padding({ left: 6, right: 6, top: 2, bottom: 2 })
@@ -314,7 +322,7 @@ struct LlmHubPage {
                           .margin({ left: 6 })
                       }
                     }
-                    Text(p.baseUrl + ' · ' + (p.model.length > 0 ? p.model : '默认模型') + ' · ' + this.maskKey(p.apiKey))
+                    Text(p.baseUrl + ' · ' + (p.model.length > 0 ? p.model : I18n.t('lhDefaultModel')) + ' · ' + this.maskKey(p.apiKey))
                       .fontSize(11)
                       .fontColor(this.pal().text2)
                       .maxLines(1)
@@ -329,7 +337,7 @@ struct LlmHubPage {
                 Row() {
                   Blank()
                   if (!this.isCurrent(p)) {
-                    Text('设为当前')
+                    Text(I18n.t('lhSetCurrent'))
                       .fontSize(12)
                       .fontColor('#1A73E8')
                       .padding({ left: 10, right: 10, top: 6, bottom: 6 })
@@ -337,14 +345,14 @@ struct LlmHubPage {
                         this.applyProvider(p)
                       })
                   }
-                  Text('编辑')
+                  Text(I18n.t('edit'))
                     .fontSize(12)
                     .fontColor(this.pal().text2)
                     .padding({ left: 10, right: 10, top: 6, bottom: 6 })
                     .onClick(() => {
                       this.openEdit(i)
                     })
-                  Text('删除')
+                  Text(I18n.t('delete'))
                     .fontSize(12)
                     .fontColor('#C5221F')
                     .padding({ left: 10, right: 10, top: 6, bottom: 6 })

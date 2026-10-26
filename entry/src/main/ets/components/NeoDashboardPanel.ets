@@ -1,4 +1,5 @@
 import { AgentEngine } from '../service/AgentEngine'
+import { I18n } from '../common/I18n'
 import { AgentStatusInfo } from '../model/AgentStatus'
 import { AgentStatus, RunStrategy } from '../common/Types'
 import { ConnectionManager } from '../service/ConnectionManager'
@@ -36,20 +37,22 @@ interface ConnectorItem {
 }
 
 /** P25a: 上游 mcp-icons/ 46 连接器品牌(字母序,与 apps/app/assets/mcp-icons 一致) */
-const CONNECTORS: ConnectorItem[] = [
-  { name: 'Airtable' }, { name: 'Asana' }, { name: 'Box' }, { name: 'Brave Search' },
-  { name: 'Cal.com' }, { name: 'Canva' }, { name: 'ClickUp' }, { name: 'Cloudflare' },
-  { name: 'Confluence' }, { name: 'Discord' }, { name: 'Dropbox' }, { name: 'Exa' },
-  { name: 'Figma' }, { name: 'GitHub' }, { name: 'GitLab' }, { name: 'Gmail' },
-  { name: 'Google' }, { name: 'Google Calendar' }, { name: 'Google Docs' }, { name: 'Google Drive' },
-  { name: 'Google Forms' }, { name: 'HubSpot' }, { name: 'Intercom' }, { name: 'Jira' },
-  { name: 'Linear' }, { name: 'LinkedIn' }, { name: 'Memo' }, { name: 'Microsoft Teams' },
-  { name: 'Mixpanel' }, { name: 'Monday' }, { name: 'Notion' }, { name: 'OneDrive' },
-  { name: 'Outlook' }, { name: 'PostHog' }, { name: 'Postman' }, { name: 'Resend' },
-  { name: 'Salesforce' }, { name: 'Shopify' }, { name: 'Slack' }, { name: 'Stripe' },
-  { name: 'Supabase' }, { name: 'Vercel' }, { name: 'WhatsApp' }, { name: 'WordPress' },
-  { name: 'YouTube' }, { name: 'Zendesk' }
-]
+function CONNECTORS_LIST(): ConnectorItem[] {
+  return [
+    { name: 'Airtable' }, { name: 'Asana' }, { name: 'Box' }, { name: 'Brave Search' },
+    { name: 'Cal.com' }, { name: 'Canva' }, { name: 'ClickUp' }, { name: 'Cloudflare' },
+    { name: 'Confluence' }, { name: 'Discord' }, { name: 'Dropbox' }, { name: 'Exa' },
+    { name: 'Figma' }, { name: 'GitHub' }, { name: 'GitLab' }, { name: 'Gmail' },
+    { name: 'Google' }, { name: 'Google Calendar' }, { name: 'Google Docs' }, { name: 'Google Drive' },
+    { name: 'Google Forms' }, { name: 'HubSpot' }, { name: 'Intercom' }, { name: 'Jira' },
+    { name: 'Linear' }, { name: 'LinkedIn' }, { name: 'Memo' }, { name: 'Microsoft Teams' },
+    { name: 'Mixpanel' }, { name: 'Monday' }, { name: 'Notion' }, { name: 'OneDrive' },
+    { name: 'Outlook' }, { name: 'PostHog' }, { name: 'Postman' }, { name: 'Resend' },
+    { name: 'Salesforce' }, { name: 'Shopify' }, { name: 'Slack' }, { name: 'Stripe' },
+    { name: 'Supabase' }, { name: 'Vercel' }, { name: 'WhatsApp' }, { name: 'WordPress' },
+    { name: 'YouTube' }, { name: 'Zendesk' }
+  ]
+}
 
 /** P25a: 连接器稳定 hash 色(同品牌恒定;8 色板循环) */
 function connectorColor(name: string): string {
@@ -76,6 +79,13 @@ function monoText(): void {
 
 @Component
 export struct NeoDashboardPanel {
+  // P48: locale 刷新锚
+  @StorageProp('app_locale') @Watch('onLocaleFlip') appLocale: string = 'zh'
+  @State localeVersion: number = 0
+
+  onLocaleFlip(): void {
+    this.localeVersion++
+  }
   /** p10a: AppStorage('darkMode') 消费 —— EntryAbility 启动时与设置页开关写入 */
   @StorageProp('darkMode') @Watch('onThemeFlip') darkMode: boolean = false // P44
   @State themeVersion: number = 0 // P44
@@ -111,11 +121,11 @@ export struct NeoDashboardPanel {
   shellOpenReplay: (sessionId: string) => void = () => {}
 
   private readonly harnesses: HarnessDesc[] = [
-    { name: 'Claude Code', desc: 'Anthropic 终端代理，一键接入浏览器', logoBg: '#D97757', logoText: 'CC' },
-    { name: 'Cursor', desc: 'AI 代码编辑器，MCP 直连', logoBg: '#2D2D30', logoText: 'Cu' },
-    { name: 'VS Code', desc: '微软编辑器，Copilot 好搭档', logoBg: '#22A06B', logoText: 'VS' },
-    { name: 'Zed', desc: '高性能编辑器，轻量接入', logoBg: '#2E6FE8', logoText: 'Z' },
-    { name: 'Codex', desc: 'OpenAI 编码代理，同一键安装', logoBg: '#111111', logoText: 'Cx' }
+    { name: 'Claude Code', desc: I18n.t('ndConnClaude'), logoBg: '#D97757', logoText: 'CC' },
+    { name: 'Cursor', desc: I18n.t('ndConnCursor'), logoBg: '#2D2D30', logoText: 'Cu' },
+    { name: 'VS Code', desc: I18n.t('ndConnVscode'), logoBg: '#22A06B', logoText: 'VS' },
+    { name: 'Zed', desc: I18n.t('ndConnZed'), logoBg: '#2E6FE8', logoText: 'Z' },
+    { name: 'Codex', desc: I18n.t('ndConnCodex'), logoBg: '#111111', logoText: 'Cx' }
   ]
 
   aboutToAppear(): void {
@@ -155,7 +165,7 @@ export struct NeoDashboardPanel {
   private joinUltrafast(): void {
     console.info('[P34] ultrafast join clicked')
     this.ultrafastHidden = true
-    this.ultrafastToast = '已加入 Ultrafast 等待列表'
+    this.ultrafastToast = I18n.t('ntJoinWaitlist')
     setTimeout(() => { this.ultrafastToast = '' }, 2000)
     const p = this.ultraPrefs
     if (p !== null) {
@@ -235,10 +245,10 @@ export struct NeoDashboardPanel {
       const data = pasteboard.createData(pasteboard.MIMETYPE_TEXT_PLAIN, text)
       pasteboard.getSystemPasteboard().setData(data)
       if (which === 0) {
-        this.heroCopiedHint = '已复制'
+        this.heroCopiedHint = I18n.t('copied')
         setTimeout(() => { this.heroCopiedHint = '' }, 1500)
       } else {
-        this.copiedHint = '已复制'
+        this.copiedHint = I18n.t('copied')
         setTimeout(() => { this.copiedHint = '' }, 1500)
       }
       console.info('NeoDashboardPanel copied to clipboard len=' + text.length)
@@ -290,13 +300,13 @@ export struct NeoDashboardPanel {
             .width(12).height(12)
             .fillColor(this.pal().text2)
             .draggable(false)
-          Text('搜索引擎 · ' + getEngineById(ConfigManager.getSearchEngineId()).name)
+          Text(I18n.t('ntSearchEngine') + getEngineById(ConfigManager.getSearchEngineId()).name)
             .fontSize(11)
             .fontColor(this.pal().text2)
             .maxLines(1)
             .constraintSize({ maxWidth: 140 })
             .margin({ left: 5 })
-          Text('切换')
+          Text(I18n.t('ntSwitch'))
             .fontSize(11)
             .fontColor('#1A73E8')
             .margin({ left: 6 })
@@ -312,7 +322,7 @@ export struct NeoDashboardPanel {
           router.pushUrl({ url: 'pages/SettingsPage', params: navParams })
         })
 
-        Button('MCP 安装板')
+        Button(I18n.t('ndMcpBoard'))
           .fontSize(12)
           .height(30)
           .backgroundColor('#2D2D30')
@@ -328,7 +338,7 @@ export struct NeoDashboardPanel {
             .width(14).height(14)
             .fillColor(this.pal().text)
             .draggable(false)
-          Text('关闭')
+          Text(I18n.t('close'))
             .fontSize(12)
             .fontColor(this.pal().text)
             .margin({ left: 4 })
@@ -425,7 +435,7 @@ export struct NeoDashboardPanel {
       .alignSelf(ItemAlign.Start)
 
       Row() {
-        Button('查看代理')
+        Button(I18n.t('ntViewAgent'))
           .fontSize(11)
           .height(28)
           .backgroundColor(this.pal().surface)
@@ -440,7 +450,7 @@ export struct NeoDashboardPanel {
         Text(' · ')
           .fontSize(11)
           .fontColor('#FFFFFFCC')
-        Text(`${this.agentStatuses.length} 个代理 · ${this.sessions.length} 个会话`)
+        Text(`${this.agentStatuses.length}${I18n.t('ndAgents')}${this.sessions.length}${I18n.t('ndSessions')}`)
           .fontSize(10)
           .fontColor('#FFFFFFCC')
       }
@@ -470,7 +480,7 @@ export struct NeoDashboardPanel {
         .fontWeight(FontWeight.Medium)
         .fontColor(this.pal().text)
         .margin({ top: 8 })
-      Text('命令式技能台账')
+      Text(I18n.t('ndSkills'))
         .fontSize(10)
         .fontColor(this.pal().text2)
         .margin({ top: 2 })
@@ -544,7 +554,7 @@ export struct NeoDashboardPanel {
         .height(28)
         .backgroundColor(Color.Transparent)
         .margin({ top: 6, right: 6 })
-        .accessibilityText('关闭横幅')
+        .accessibilityText(I18n.t('ntCloseBanner'))
         .onClick(() => {
           this.dismissUltrafast()
         })
@@ -572,11 +582,11 @@ export struct NeoDashboardPanel {
   @Builder
   EmptyStateTile(): void {
     Column() {
-      Text('暂无代理')
+      Text(I18n.t('ndNoAgent'))
         .fontSize(13)
         .fontWeight(FontWeight.Medium)
         .fontColor(this.pal().text2)
-      Text('在下方创建第一个 AI 代理')
+      Text(I18n.t('ndNoAgentDesc'))
         .fontSize(10)
         .fontColor(this.pal().text2)
         .margin({ top: 4 })
@@ -616,7 +626,7 @@ export struct NeoDashboardPanel {
             .maxLines(1)
             .textOverflow({ overflow: TextOverflow.Ellipsis })
           if (status.status === AgentStatus.RUNNING) {
-            Text('停止')
+            Text(I18n.t('asStop'))
               .fontSize(9)
               .fontColor('#C43E3E')
               .onClick(() => {
@@ -651,7 +661,7 @@ export struct NeoDashboardPanel {
         .margin({ top: 5, bottom: 5 })
 
         if (status.status === AgentStatus.COMPLETED || status.status === AgentStatus.ERROR) {
-          Text('回放')
+          Text(I18n.t('hiReplay'))
             .fontSize(10)
             .fontColor('#2E6FE8')
             .onClick(() => {
@@ -688,12 +698,12 @@ export struct NeoDashboardPanel {
   RecentSessionsCard(): void {
     Column() {
       Row() {
-        Text('最近会话')
+        Text(I18n.t('ndRecent'))
           .fontSize(13)
           .fontWeight(FontWeight.Bold)
           .fontColor('#FFFFFF')
           .layoutWeight(1)
-        Text(`${this.sessions.length} 条`)
+        Text(`${this.sessions.length}` + I18n.t('ntCountEnd'))
           .fontSize(10)
           .fontColor('#9AA0A6')
       }
@@ -701,7 +711,7 @@ export struct NeoDashboardPanel {
       .margin({ bottom: 8 })
 
       if (this.sessions.length === 0) {
-        Text('暂无会话 —— 跑一个代理任务后自动录制')
+        Text(I18n.t('ndNoSession'))
           .fontSize(11)
           .fontColor('#9AA0A6')
           .margin({ top: 8, bottom: 8 })
@@ -715,11 +725,11 @@ export struct NeoDashboardPanel {
               .fontSize(11)
               .fontColor('#E8EAED')
               .layoutWeight(1)
-            Text(`${s.operationLogs.length} 步`)
+            Text(`${s.operationLogs.length}` + I18n.t('asSteps'))
               .fontSize(10)
               .fontColor('#9AA0A6')
               .margin({ right: 8 })
-            Text('回放')
+            Text(I18n.t('hiReplay'))
               .fontSize(10)
               .fontColor('#8AB4F8')
               .onClick(() => {
@@ -746,13 +756,13 @@ export struct NeoDashboardPanel {
   @Builder
   AgentSetupCard(): void {
     Column() {
-      Text('LLM 接入（OpenAI 兼容）')
+      Text(I18n.t('stLlmCard'))
         .fontSize(14)
         .fontWeight(FontWeight.Bold)
         .fontColor(this.pal().text)
         .alignSelf(ItemAlign.Start)
 
-      Text('API 端点')
+      Text(I18n.t('stApiEndpoint'))
         .fontSize(11)
         .fontColor(this.pal().text2)
         .margin({ top: 10, bottom: 4 })
@@ -769,19 +779,19 @@ export struct NeoDashboardPanel {
         .fontColor(this.pal().text2)
         .margin({ top: 8, bottom: 4 })
         .alignSelf(ItemAlign.Start)
-      TextInput({ text: this.llmApiKeyInput, placeholder: 'sk-...（本地服务可留空）' }).fontColor(this.pal().text).placeholderColor(this.pal().text2)
+      TextInput({ text: this.llmApiKeyInput, placeholder: I18n.t('stApiKeyPh') }).fontColor(this.pal().text).placeholderColor(this.pal().text2)
         .width('100%')
         .height(36)
         .backgroundColor(this.pal().surfaceInput)
         .borderRadius(8)
         .onChange((value: string) => { this.llmApiKeyInput = value })
 
-      Text('模型名')
+      Text(I18n.t('stModelName'))
         .fontSize(11)
         .fontColor(this.pal().text2)
         .margin({ top: 8, bottom: 4 })
         .alignSelf(ItemAlign.Start)
-      TextInput({ text: this.llmModelInput, placeholder: '如 agnes-3.0-flash' }).fontColor(this.pal().text).placeholderColor(this.pal().text2)
+      TextInput({ text: this.llmModelInput, placeholder: I18n.t('stModelPh') }).fontColor(this.pal().text).placeholderColor(this.pal().text2)
         .width('100%')
         .height(36)
         .backgroundColor(this.pal().surfaceInput)
@@ -789,7 +799,7 @@ export struct NeoDashboardPanel {
         .onChange((value: string) => { this.llmModelInput = value })
 
       Row() {
-        Button('保存配置')
+        Button(I18n.t('saveConfig'))
           .fontSize(12)
           .height(32)
           .backgroundColor('#2E6FE8')
@@ -801,13 +811,13 @@ export struct NeoDashboardPanel {
               llmApiKey: this.llmApiKeyInput,
               llmModel: this.llmModelInput
             } as AppConfigUpdate)
-            this.llmSaveHint = ok ? '已保存' : '保存失败：配置校验未通过'
+            this.llmSaveHint = ok ? I18n.t('saved') : I18n.t('saveFailedCfg')
             console.info('NeoDashboardPanel llm config saved: ' + this.llmSaveHint)
           })
         if (this.llmSaveHint.length > 0) {
           Text(this.llmSaveHint)
             .fontSize(11)
-            .fontColor(this.llmSaveHint === '已保存' ? '#22A06B' : '#C43E3E')
+            .fontColor(this.llmSaveHint === I18n.t('saved') ? '#22A06B' : '#C43E3E')
             .margin({ left: 10 })
         }
       }
@@ -818,25 +828,25 @@ export struct NeoDashboardPanel {
         .color(this.pal().border)
         .margin({ top: 14, bottom: 12 })
 
-      Text('创建并启动代理')
+      Text(I18n.t('ndCreateAgent'))
         .fontSize(14)
         .fontWeight(FontWeight.Bold)
         .fontColor(this.pal().text)
         .alignSelf(ItemAlign.Start)
 
-      Text('代理名称')
+      Text(I18n.t('ndAgentName'))
         .fontSize(11)
         .fontColor(this.pal().text2)
         .margin({ top: 10, bottom: 4 })
         .alignSelf(ItemAlign.Start)
-      TextInput({ text: this.newAgentName, placeholder: '如 p8c-e2e' }).fontColor(this.pal().text).placeholderColor(this.pal().text2)
+      TextInput({ text: this.newAgentName, placeholder: I18n.t('ndAgentNamePh') }).fontColor(this.pal().text).placeholderColor(this.pal().text2)
         .width('100%')
         .height(36)
         .backgroundColor(this.pal().surfaceInput)
         .borderRadius(8)
         .onChange((value: string) => { this.newAgentName = value })
 
-      Text('目标 URL')
+      Text(I18n.t('ndTargetUrl'))
         .fontSize(11)
         .fontColor(this.pal().text2)
         .margin({ top: 8, bottom: 4 })
@@ -848,7 +858,7 @@ export struct NeoDashboardPanel {
         .borderRadius(8)
         .onChange((value: string) => { this.newAgentUrl = value })
 
-      Text('任务描述')
+      Text(I18n.t('ndTaskDesc'))
         .fontSize(11)
         .fontColor(this.pal().text2)
         .margin({ top: 8, bottom: 4 })
@@ -860,7 +870,7 @@ export struct NeoDashboardPanel {
         .borderRadius(8)
         .onChange((value: string) => { this.newAgentTask = value })
 
-      Button('创建代理')
+      Button(I18n.t('ndCreateBtn'))
         .fontSize(13)
         .width('100%')
         .height(38)
@@ -876,14 +886,14 @@ export struct NeoDashboardPanel {
               this.newAgentTask,
               RunStrategy.ONCE
             )
-            this.agentFormHint = '代理已创建并启动，见上方磁贴'
+            this.agentFormHint = I18n.t('ndAgentCreated')
             this.newAgentName = ''
             this.newAgentUrl = ''
             this.newAgentTask = ''
             this.agentStatuses = AgentEngine.getAllAgentStatus()
             console.info('NeoDashboardPanel agent created (P8c form)')
           } else {
-            this.agentFormHint = '请填写代理名称和目标 URL'
+            this.agentFormHint = I18n.t('ndAgentFormErr')
           }
         })
 
@@ -911,17 +921,17 @@ export struct NeoDashboardPanel {
   @Builder
   ConnectorCatalog(): void {
     Column() {
-      Text(`连接器目录 (${CONNECTORS.length})`)
+      Text(I18n.t('ndConnectorDir') + `${CONNECTORS_LIST().length})`)
         .fontSize(14)
         .fontWeight(FontWeight.Bold)
         .fontColor(this.pal().text)
-      Text('更多品牌连接器陆续接入 —— 点击卡片复制连接器名')
+      Text(I18n.t('ndConnectorHint'))
         .fontSize(10)
         .fontColor(this.pal().text2)
         .margin({ top: 2 })
 
       GridRow({ columns: 4, gutter: { x: 8, y: 8 } }) {
-        ForEach(CONNECTORS, (c: ConnectorItem) => {
+        ForEach(CONNECTORS_LIST(), (c: ConnectorItem) => {
           GridCol() {
             Column() {
               Text(connectorInitial(c.name))
@@ -971,7 +981,7 @@ export struct NeoDashboardPanel {
     } catch (e) {
       console.error('ConnectorCatalog copy error: ' + e)
     }
-    this.connectorToast = name + ' · 即将支持'
+    this.connectorToast = name + I18n.t('ndComingSoon')
     setTimeout(() => {
       this.connectorToast = ''
     }, 1500)
@@ -993,7 +1003,7 @@ export struct NeoDashboardPanel {
               .width(14).height(14)
               .fillColor(this.pal().text)
               .draggable(false)
-            Text('返回驾驶舱')
+            Text(I18n.t('ndBackCockpit'))
               .fontSize(12)
               .fontColor(this.pal().text)
               .margin({ left: 4 })
@@ -1014,11 +1024,11 @@ export struct NeoDashboardPanel {
           Column() {
             // 深灰 hero 卡：本地 MCP 端点
             Column() {
-              Text('本地 MCP 端点')
+              Text(I18n.t('ndMcpEndpoint'))
                 .fontSize(15)
                 .fontWeight(FontWeight.Bold)
                 .fontColor('#FFFFFF')
-              Text('把 AI 工具接到 BrowserOS —— MCP 标准协议')
+              Text(I18n.t('ndMcpDesc'))
                 .fontSize(11)
                 .fontColor('#BDC1C6')
                 .margin({ top: 4 })
@@ -1150,7 +1160,7 @@ export struct NeoDashboardPanel {
       // Connect 弹层：居中显示 harness JSON 配置 + 复制反馈
       if (this.connectHarness.length > 0) {
         Column() {
-          Text(`${this.connectHarness} — MCP 配置`)
+          Text(`${this.connectHarness}` + I18n.t('ndMcpCfg'))
             .fontSize(14)
             .fontWeight(FontWeight.Bold)
             .fontColor('#FFFFFF')
@@ -1168,7 +1178,7 @@ export struct NeoDashboardPanel {
           .margin({ top: 10 })
 
           Row() {
-            Button(this.copiedHint.length > 0 ? this.copiedHint : '复制 JSON')
+            Button(this.copiedHint.length > 0 ? this.copiedHint : I18n.t('ndCopyJson'))
               .fontSize(12)
               .height(32)
               .backgroundColor('#2E6FE8')
@@ -1178,7 +1188,7 @@ export struct NeoDashboardPanel {
                 this.copyToClipboard(this.connectJson, 1)
               })
 
-            Button('关闭')
+            Button(I18n.t('close'))
               .fontSize(12)
               .height(32)
               .backgroundColor('#3C4043')
@@ -1216,17 +1226,17 @@ export struct NeoDashboardPanel {
   private getStatusText(status: AgentStatus): string {
     switch (status) {
       case AgentStatus.IDLE:
-        return '空闲'
+        return I18n.t('ndIdle')
       case AgentStatus.RUNNING:
-        return '运行中'
+        return I18n.t('ndRunning')
       case AgentStatus.COMPLETED:
-        return '已完成'
+        return I18n.t('ndCompleted')
       case AgentStatus.ERROR:
-        return '错误'
+        return I18n.t('ndError')
       case AgentStatus.STOPPED:
-        return '已停止'
+        return I18n.t('ndStopped')
       case AgentStatus.PAUSED:
-        return '已暂停'
+        return I18n.t('ndPaused')
       default:
         return status
     }

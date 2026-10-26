@@ -1,0 +1,14 @@
+[
+  ["Text('敏感操作确认')", "Text(I18n.t('dlgSensitiveTitle'))"],
+  ["Text('代理: ')", "Text(I18n.t('dlgAgent'))"],
+  ["Text('目标URL: ')", "Text(I18n.t('dlgTargetUrl'))"],
+  ["Text('目标元素: ')", "Text(I18n.t('dlgTargetEl'))"],
+  ["Button('拒绝')", "Button(I18n.t('dlgDeny'))"],
+  ["Button('确认')", "Button(I18n.t('confirm'))"],
+  ["return 'AI代理尝试提交表单，请确认是否允许此操作'", "return I18n.getLocale() === 'en' ? 'The AI agent is trying to submit a form. Allow this operation?' : 'AI代理尝试提交表单，请确认是否允许此操作'"],
+  ["return 'AI代理尝试执行支付操作，请确认是否允许此操作'", "return I18n.getLocale() === 'en' ? 'The AI agent is trying to make a payment. Allow this operation?' : 'AI代理尝试执行支付操作，请确认是否允许此操作'"],
+  ["return 'AI代理尝试执行删除操作，请确认是否允许此操作'", "return I18n.getLocale() === 'en' ? 'The AI agent is trying to delete something. Allow this operation?' : 'AI代理尝试执行删除操作，请确认是否允许此操作'"],
+  ["return 'AI代理尝试修改安全设置，请确认是否允许此操作'", "return I18n.getLocale() === 'en' ? 'The AI agent is trying to change security settings. Allow this operation?' : 'AI代理尝试修改安全设置，请确认是否允许此操作'"],
+  ["return 'AI代理尝试导航到未指定的URL，请确认是否允许此操作'", "return I18n.getLocale() === 'en' ? 'The AI agent is trying to navigate to an unspecified URL. Allow this operation?' : 'AI代理尝试导航到未指定的URL，请确认是否允许此操作'"],
+  ["return 'AI代理尝试执行敏感操作，请确认是否允许'", "return I18n.getLocale() === 'en' ? 'The AI agent is trying to perform a sensitive operation. Allow it?' : 'AI代理尝试执行敏感操作，请确认是否允许'"]
+]

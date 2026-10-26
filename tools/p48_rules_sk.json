@@ -1,0 +1,22 @@
+[
+  ["this.showToast('已启动 ' + this.displayName(skill.name))", "this.showToast(I18n.t('skStarted') + this.displayName(skill.name))"],
+  ["this.showToast('代理创建失败（已达上限？）')", "this.showToast(I18n.t('skStartFail'))"],
+  ["this.showToast('已删除 ' + this.displayName(name))", "this.showToast(I18n.t('skDeleted') + this.displayName(name))"],
+  ["this.formHint = '请填写技能名'", "this.formHint = I18n.t('skNameRequired')"],
+  ["this.formHint = '同名技能已存在'", "this.formHint = I18n.t('skExists')"],
+  ["this.formHint = '请填写 prompt 指令'", "this.formHint = I18n.t('skPromptRequired')"],
+  ["this.showToast('已保存 ' + name)", "this.showToast(I18n.t('skSaved') + name)"],
+  ["Text('暂无技能')", "Text(I18n.t('skEmpty'))"],
+  ["Text('点击右上「New skill」创建第一条')", "Text(I18n.t('skEmptyHint'))"],
+  ["Button('← 返回')", "Button(I18n.t('skBack'))"],
+  ["Text('描述')", "Text(I18n.t('skDesc'))"],
+  ["Text('技能名（自动补 / 前缀）')", "Text(I18n.t('skNameLabel'))"],
+  ["Text('描述（中文一句话）')", "Text(I18n.t('skDescLabel'))"],
+  ["TextInput({ text: this.formDesc, placeholder: '这个技能做什么' })", "TextInput({ text: this.formDesc, placeholder: I18n.t('skDescPh') })"],
+  ["Text('Prompt（可执行任务指令）')", "Text(I18n.t('skPromptLabel'))"],
+  ["Button('保存')", "Button(I18n.t('save'))"],
+  ["Button('取消')", "Button(I18n.t('cancel'))"],
+  ["Text('删除技能')", "Text(I18n.t('skDeleteSkill'))"],
+  ["Text(`确定删除 ${this.displayName(this.confirmDeleteName)} 吗？此操作不可恢复。`)", "Text(I18n.t('skDeletePre') + this.displayName(this.confirmDeleteName) + I18n.t('skDeleteConfirm'))"],
+  ["Button('删除')", "Button(I18n.t('delete'))"]
+]

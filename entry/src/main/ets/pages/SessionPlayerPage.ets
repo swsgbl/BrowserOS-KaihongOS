@@ -1,4 +1,5 @@
 import { SessionManager, SessionReplayer } from '../service/SessionManager'
+import { I18n } from '../common/I18n'
 import { SessionRecord, ScreenshotEntry, OperationLog } from '../model/SessionRecord'
 import { Constants } from '../common/Constants'
 import { router } from '@kit.ArkUI'
@@ -13,6 +14,13 @@ interface TimelineMark {
 @Entry
 @Component
 struct SessionPlayerPage {
+  // P48: locale 刷新锚
+  @StorageProp('app_locale') @Watch('onLocaleFlip') appLocale: string = 'zh'
+  @State localeVersion: number = 0
+
+  onLocaleFlip(): void {
+    this.localeVersion++
+  }
   @State sessionId: string = ''
   @State session: SessionRecord | null = null
   @State isPlaying: boolean = false
@@ -138,10 +146,10 @@ struct SessionPlayerPage {
     Column() {
       if (this.showNotice) {
         Row() {
-          Text('此为录制时截图，实际页面可能已变化')
+          Text(I18n.t('spRecording'))
             .fontSize(12)
             .fontColor('#FF9800')
-          Button('关闭')
+          Button(I18n.t('close'))
             .fontSize(10)
             .height(20)
             .onClick(() => {
@@ -165,7 +173,7 @@ struct SessionPlayerPage {
             .objectFit(ImageFit.Contain)
         } else {
           Column() {
-            Text('无截图数据')
+            Text(I18n.t('spNoShot'))
               .fontSize(16)
               .fontColor('#999999')
           }
@@ -202,9 +210,9 @@ struct SessionPlayerPage {
   @Builder
   TabBar(): void {
     Row() {
-      this.TabItem('回放', 0)
-      this.TabItem('时间线', 1)
-      this.TabItem('标签页', 2)
+      this.TabItem(I18n.t('spReplay'), 0)
+      this.TabItem(I18n.t('spTimeline'), 1)
+      this.TabItem(I18n.t('spTabs'), 2)
     }
     .width('100%')
     .padding({ left: 16 })
@@ -239,7 +247,7 @@ struct SessionPlayerPage {
   PlaybackControls(): void {
     Column() {
       Row() {
-        Button(this.isPlaying ? '暂停' : '播放')
+        Button(this.isPlaying ? I18n.t('spPause') : I18n.t('spPlay'))
           .fontSize(14)
           .width(80)
           .onClick(() => {
@@ -254,7 +262,7 @@ struct SessionPlayerPage {
             }
           })
 
-        Button('停止')
+        Button(I18n.t('asStop'))
           .fontSize(14)
           .width(80)
           .margin({ left: 8 })
@@ -339,14 +347,14 @@ struct SessionPlayerPage {
   @Builder
   TabsView(): void {
     Column() {
-      Text('会话标签页')
+      Text(I18n.t('spSessionTabs'))
         .fontSize(14)
         .fontWeight(FontWeight.Medium)
         .fontColor('#333333')
         .margin({ top: 8, bottom: 4 })
 
       if (this.tabUrls.length === 0) {
-        Text('本会话未记录标签页数据')
+        Text(I18n.t('spNoTabData'))
           .fontSize(12)
           .fontColor('#999999')
           .margin({ top: 20 })
@@ -381,7 +389,7 @@ struct SessionPlayerPage {
   @Builder
   OperationTimeline(): void {
     Column() {
-      Text('操作时间线')
+      Text(I18n.t('spOpTimeline'))
         .fontSize(14)
         .fontWeight(FontWeight.Medium)
         .fontColor('#333333')

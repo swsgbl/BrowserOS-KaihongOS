@@ -7,12 +7,19 @@
  * 红线: 每标签 layoutWeight(1) 等宽(历史验收行为) 保留
  */
 import { TabInfo } from '../model/TabInfo'
+import { I18n } from '../common/I18n'
 import { Palette } from '../common/Palette'
 import { ContextMenu, CtxEntry } from './ContextMenu'
 
 @Component
 export struct TabStrip {
-  @StorageProp('darkMode') @Watch('onThemeFlip') darkMode: boolean = false // P44
+  // P48: locale 刷新锚 —— @StorageProp 变化时递增 version 驱动本 struct 重渲染
+  @StorageProp('app_locale') @Watch('onLocaleFlip') appLocale: string = 'zh'
+  @State localeVersion: number = 0
+
+  onLocaleFlip(): void {
+    this.localeVersion++
+  }  @StorageProp('darkMode') @Watch('onThemeFlip') darkMode: boolean = false // P44
   @State themeVersion: number = 0 // P44
   @State hoverTabId: string = ''
   @Prop tabs: TabInfo[] = []
@@ -89,7 +96,7 @@ export struct TabStrip {
                 .backgroundColor(tab.tabId === this.activeTabId
                   ? (this.darkMode ? '#3C4043' : '#F1F3F4') : '#12000000')
 
-                Text(tab.title || (tab.agentId ? '代理 ' + tab.agentId.substring(0, 12) : '新标签页'))
+                Text(tab.title || (tab.agentId ? I18n.t('tabAgent') + ' ' + tab.agentId.substring(0, 12) : I18n.t('tabNewTab')))
                   .fontSize(12)
                   .maxLines(1)
                   .textOverflow({ overflow: TextOverflow.Ellipsis })
@@ -108,7 +115,7 @@ export struct TabStrip {
                 .backgroundColor(Color.Transparent)
                 .hitTestBehavior(HitTestMode.Default)
                 .zIndex(10)
-                .accessibilityText('关闭标签页 ' + (tab.title || '新标签页'))
+                .accessibilityText(I18n.t('tabCloseTab') + ' ' + (tab.title || I18n.t('tabNewTab')))
                 .onClick(() => {
                   console.info('[P45] TabStrip close clicked: ' + tab.tabId)
                   if (this.onTabClose) {
@@ -149,7 +156,7 @@ export struct TabStrip {
           .alignSelf(ItemAlign.Center)
           .borderRadius(14)
           .backgroundColor(Color.Transparent)
-          .accessibilityText('新建标签页')
+          .accessibilityText(I18n.t('menuNewTab'))
           .onClick(() => {
             if (this.onTabCreate) {
               this.onTabCreate()
@@ -175,7 +182,7 @@ export struct TabStrip {
         }
         .width(28).height(28)
         .backgroundColor(Color.Transparent)
-        .accessibilityText('搜索标签页')
+        .accessibilityText(I18n.t('tabSearchTabs'))
         .onClick(() => {
           if (this.onSearchToggle) {
             this.onSearchToggle()
@@ -210,7 +217,7 @@ export struct TabStrip {
             .backgroundColor(tab.tabId === this.activeTabId
               ? (this.darkMode ? '#3C4043' : '#F1F3F4') : '#12000000')
 
-            Text(tab.title || (tab.agentId ? '代理 ' + tab.agentId.substring(0, 12) : '新标签页'))
+            Text(tab.title || (tab.agentId ? I18n.t('tabAgent') + ' ' + tab.agentId.substring(0, 12) : I18n.t('tabNewTab')))
               .fontSize(12)
               .maxLines(1)
               .textOverflow({ overflow: TextOverflow.Ellipsis })
@@ -227,7 +234,7 @@ export struct TabStrip {
             .height(22)
             .opacity(1)
             .backgroundColor(Color.Transparent)
-            .accessibilityText('关闭标签页 ' + (tab.title || '新标签页'))
+            .accessibilityText(I18n.t('tabCloseTab') + ' ' + (tab.title || I18n.t('tabNewTab')))
             .onClick(() => {
               if (this.onTabClose) {
                 this.onTabClose(tab.tabId)
@@ -266,7 +273,7 @@ export struct TabStrip {
       .height(30)
       .margin({ left: 2 })
       .backgroundColor(Color.Transparent)
-      .accessibilityText('新建标签页')
+      .accessibilityText(I18n.t('menuNewTab'))
       .onClick(() => {
         if (this.onTabCreate) {
           this.onTabCreate()
@@ -283,7 +290,7 @@ export struct TabStrip {
       .width(30)
       .height(30)
       .backgroundColor(Color.Transparent)
-      .accessibilityText('搜索标签页')
+      .accessibilityText(I18n.t('tabSearchTabs'))
       .onClick(() => {
         if (this.onSearchToggle) {
           this.onSearchToggle()
@@ -300,7 +307,13 @@ export struct TabStrip {
 /** tab-search 面板:打开的标签页列表(favicon+标题+关闭),点击切换 */
 @Component
 export struct TabSearchPanel {
-  @StorageProp('darkMode') @Watch('onThemeFlip') darkMode: boolean = false // P44
+  // P48: locale 刷新锚 —— @StorageProp 变化时递增 version 驱动本 struct 重渲染
+  @StorageProp('app_locale') @Watch('onLocaleFlip') appLocale: string = 'zh'
+  @State localeVersion: number = 0
+
+  onLocaleFlip(): void {
+    this.localeVersion++
+  }  @StorageProp('darkMode') @Watch('onThemeFlip') darkMode: boolean = false // P44
   @State themeVersion: number = 0 // P44
   tabs: TabInfo[] = []
   activeTabId: string = ''
@@ -335,7 +348,7 @@ export struct TabSearchPanel {
         })
 
       Column() {
-        Text('打开的标签页')
+        Text(I18n.t('tabOpenTabs'))
           .fontSize(11)
           .fontColor(this.pal().text2)
           .padding({ left: 12, top: 8, bottom: 4 })
@@ -350,7 +363,7 @@ export struct TabSearchPanel {
                   .fillColor(tab.agentId ? '#8AB4F8' : this.pal().text2)
                   .margin({ right: 8 })
                   .draggable(false)
-                Text(tab.title || '新标签页')
+                Text(tab.title || I18n.t('tabNewTab'))
                   .fontSize(13)
                   .fontColor(this.pal().text)
                   .maxLines(1)
@@ -364,7 +377,7 @@ export struct TabSearchPanel {
                 }
                 .width(22).height(22)
                 .backgroundColor(Color.Transparent)
-                .accessibilityText('关闭标签页 ' + (tab.title || '新标签页'))
+                .accessibilityText(I18n.t('tabCloseTab') + ' ' + (tab.title || I18n.t('tabNewTab')))
                 .onClick(() => {
                   this.onCloseTab(tab.tabId)
                 })
@@ -392,7 +405,7 @@ export struct TabSearchPanel {
             .fillColor(this.pal().text2)
             .margin({ right: 8 })
             .draggable(false)
-          Text('新建标签页')
+          Text(I18n.t('menuNewTab'))
             .fontSize(13)
             .fontColor(this.pal().text)
         }

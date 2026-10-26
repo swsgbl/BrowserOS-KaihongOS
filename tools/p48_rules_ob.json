@@ -1,0 +1,15 @@
+[
+  ["Text('欢迎使用 BrowserOS KaihongOS')", "Text(I18n.t('obWelcome'))"],
+  ["Text('AI代理浏览器 - 深开鸿版本')", "Text(I18n.t('obSubtitle'))"],
+  ["Text('让AI代理使用你已登录的账户浏览网页，并行运行多个代理，实时监控和回放每个会话。')", "Text(I18n.t('obIntro'))"],
+  ["Text('核心功能:')", "Text(I18n.t('obFeatures'))"],
+  ["this.FeatureRow('AI代理驱动浏览器，使用你的真实登录状态')", "this.FeatureRow(I18n.t('obFeat1'))"],
+  ["this.FeatureRow('并行运行多个代理，各自独立标签页')", "this.FeatureRow(I18n.t('obFeat2'))"],
+  ["this.FeatureRow('实时仪表盘监控，会话录制与回放')", "this.FeatureRow(I18n.t('obFeat3'))"],
+  ["this.FeatureRow('MCP协议兼容，支持Claude Code/Codex/Cursor')", "this.FeatureRow(I18n.t('obFeat4'))"],
+  ["this.FeatureRow('本地运行，隐私优先，数据不离机')", "this.FeatureRow(I18n.t('obFeat5'))"],
+  ["Button('开始使用')", "Button(I18n.t('obStart'))"],
+  ["Button('上一步')", "Button(I18n.t('obPrev'))"],
+  ["Button('下一步')", "Button(I18n.t('obNext'))"],
+  ["Button('跳过')", "Button(I18n.t('obSkip'))"]
+]

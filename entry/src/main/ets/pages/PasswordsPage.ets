@@ -2,6 +2,7 @@
  * P47-B: 密码管理器页面 —— 列表(按域名分组)/搜索/编辑/删除/全部清除/Bitwarden 导入导出
  */
 import { CredentialStore, Credential } from '../service/CredentialStore'
+import { I18n } from '../common/I18n'
 import { router } from '@kit.ArkUI'
 import { pasteboard } from '@kit.BasicServicesKit'
 
@@ -13,6 +14,13 @@ interface DomainGroup {
 @Entry
 @Component
 struct PasswordsPage {
+  // P48: locale 刷新锚
+  @StorageProp('app_locale') @Watch('onLocaleFlip') appLocale: string = 'zh'
+  @State localeVersion: number = 0
+
+  onLocaleFlip(): void {
+    this.localeVersion++
+  }
   @StorageProp('darkMode') @Watch('onThemeFlip') darkMode: boolean = false
   @State themeVersion: number = 0
   @State groups: DomainGroup[] = []
@@ -126,10 +134,10 @@ struct PasswordsPage {
   private doImport(): void {
     const r: number = CredentialStore.importBitwardenJson(this.importText)
     if (r < 0) {
-      this.importResult = '导入失败：非 Bitwarden JSON 格式'
+      this.importResult = I18n.t('pwdImportFail')
       return
     }
-    this.importResult = '已导入 ' + r + ' 条'
+    this.importResult = I18n.t('pwdImportedN') + r + I18n.t('pwdImportedEnd')
     this.refresh()
   }
 
@@ -138,7 +146,7 @@ struct PasswordsPage {
     const json = CredentialStore.exportBitwardenJson()
     const data = pasteboard.createData(pasteboard.MIMETYPE_TEXT_PLAIN, json)
     pasteboard.getSystemPasteboard().setData(data)
-    this.importResult = '已复制 ' + json.length + ' 字节到剪贴板'
+    this.importResult = I18n.t('pwdCopiedN') + json.length + I18n.t('pwdCopiedEnd')
   }
 
   build(): void {
@@ -158,17 +166,17 @@ struct PasswordsPage {
           .width(36).height(36)
           .backgroundColor(Color.Transparent)
           .onClick(() => { router.back() })
-          Text('密码管理器')
+          Text(I18n.t('pwdTitle'))
             .fontSize(18)
             .fontWeight(FontWeight.Bold)
             .fontColor(this.text())
             .layoutWeight(1)
             .margin({ left: 4 })
-          Text(this.totalCount + ' 条')
+          Text(this.totalCount + I18n.t('pwdImportedEnd'))
             .fontSize(12)
             .fontColor(this.text2())
             .margin({ right: 8 })
-          Button('导入')
+          Button(I18n.t('pwdImport'))
             .fontSize(13)
             .height(32)
             .backgroundColor(this.card())
@@ -177,7 +185,7 @@ struct PasswordsPage {
               this.importOpen = true
               this.importResult = ''
             })
-          Button('清空')
+          Button(I18n.t('pwdClearAll'))
             .fontSize(13)
             .height(32)
             .backgroundColor(this.card())
@@ -197,7 +205,7 @@ struct PasswordsPage {
             .fillColor(this.text2())
             .draggable(false)
             .margin({ left: 10 })
-          TextInput({ text: this.query, placeholder: '搜索域名或用户名' })
+          TextInput({ text: this.query, placeholder: I18n.t('pwdSearchPh') })
             .fontSize(13)
             .fontColor(this.text())
             .placeholderColor(this.text2())
@@ -224,11 +232,11 @@ struct PasswordsPage {
                   .width(40).height(40)
                   .fillColor(this.text2())
                   .draggable(false)
-                Text('暂无保存的密码')
+                Text(I18n.t('pwdEmpty'))
                   .fontSize(14)
                   .fontColor(this.text2())
                   .margin({ top: 12 })
-                Text('登录网站时可保存，或从 Bitwarden 导入')
+                Text(I18n.t('pwdEmptyDesc'))
                   .fontSize(12)
                   .fontColor(this.text2())
                   .margin({ top: 4 })
@@ -271,7 +279,7 @@ struct PasswordsPage {
                     }
                     .width(32).height(32)
                     .backgroundColor(Color.Transparent)
-                    .accessibilityText('显示密码')
+                    .accessibilityText(I18n.t('pwdShow'))
                     .onClick(() => { this.showPassword = !this.showPassword })
 
                     Button({ type: ButtonType.Normal }) {
@@ -282,7 +290,7 @@ struct PasswordsPage {
                     }
                     .width(32).height(32)
                     .backgroundColor(Color.Transparent)
-                    .accessibilityText('编辑')
+                    .accessibilityText(I18n.t('edit'))
                     .onClick(() => { this.openEdit(c) })
 
                     Button({ type: ButtonType.Normal }) {
@@ -293,7 +301,7 @@ struct PasswordsPage {
                     }
                     .width(32).height(32)
                     .backgroundColor(Color.Transparent)
-                    .accessibilityText('删除')
+                    .accessibilityText(I18n.t('delete'))
                     .onClick(() => { this.removeCred(c.id) })
                   }
                   .width('100%')
@@ -329,7 +337,7 @@ struct PasswordsPage {
       .borderRadius(26)
       .backgroundColor(this.accent())
       .position({ x: '86%', y: '88%' })
-      .accessibilityText('添加密码')
+      .accessibilityText(I18n.t('pwdAdd'))
       .onClick(() => { this.openAdd() })
 
       // 编辑/新增弹层
@@ -340,12 +348,12 @@ struct PasswordsPage {
           .backgroundColor('#66000000')
           .onClick(() => { this.editOpen = false })
         Column() {
-          Text(this.editId.length > 0 ? '编辑密码' : '添加密码')
+          Text(this.editId.length > 0 ? I18n.t('pwdEdit') : I18n.t('pwdAdd'))
             .fontSize(16)
             .fontWeight(FontWeight.Bold)
             .fontColor(this.text())
             .alignSelf(ItemAlign.Start)
-          Text('域名')
+          Text(I18n.t('pwdDomain'))
             .fontSize(12)
             .fontColor(this.text2())
             .margin({ top: 12, bottom: 4 })
@@ -358,7 +366,7 @@ struct PasswordsPage {
             .backgroundColor(this.card())
             .borderRadius(8)
             .onChange((v: string) => { this.editDomain = v })
-          Text('用户名')
+          Text(I18n.t('pwdUsername'))
             .fontSize(12)
             .fontColor(this.text2())
             .margin({ top: 10, bottom: 4 })
@@ -371,7 +379,7 @@ struct PasswordsPage {
             .backgroundColor(this.card())
             .borderRadius(8)
             .onChange((v: string) => { this.editUsername = v })
-          Text('密码')
+          Text(I18n.t('pwdPassword'))
             .fontSize(12)
             .fontColor(this.text2())
             .margin({ top: 10, bottom: 4 })
@@ -386,14 +394,14 @@ struct PasswordsPage {
             .type(InputType.Password)
             .onChange((v: string) => { this.editPassword = v })
           Row() {
-            Button('取消')
+            Button(I18n.t('cancel'))
               .fontSize(13)
               .height(36)
               .layoutWeight(1)
               .backgroundColor(this.card())
               .fontColor(this.text())
               .onClick(() => { this.editOpen = false })
-            Button('保存')
+            Button(I18n.t('save'))
               .fontSize(13)
               .height(36)
               .layoutWeight(1)
@@ -420,12 +428,12 @@ struct PasswordsPage {
           .backgroundColor('#66000000')
           .onClick(() => { this.importOpen = false })
         Column() {
-          Text('从 Bitwarden 导入')
+          Text(I18n.t('pwdImportBw'))
             .fontSize(16)
             .fontWeight(FontWeight.Bold)
             .fontColor(this.text())
             .alignSelf(ItemAlign.Start)
-          Text('粘贴 Bitwarden 导出的 JSON（未加密格式）')
+          Text(I18n.t('pwdImportBwDesc'))
             .fontSize(12)
             .fontColor(this.text2())
             .margin({ top: 6 })
@@ -442,18 +450,18 @@ struct PasswordsPage {
           if (this.importResult.length > 0) {
             Text(this.importResult)
               .fontSize(12)
-              .fontColor(this.importResult.startsWith('已') ? '#22C55E' : '#C5221F')
+              .fontColor(this.importResult.startsWith(I18n.t('pwdImportedN')) ? '#22C55E' : '#C5221F')
               .margin({ top: 8 })
           }
           Row() {
-            Button('导出到剪贴板')
+            Button(I18n.t('pwdExport'))
               .fontSize(12)
               .height(34)
               .layoutWeight(1)
               .backgroundColor(this.card())
               .fontColor(this.text())
               .onClick(() => { this.doExport() })
-            Button('导入')
+            Button(I18n.t('pwdImport'))
               .fontSize(13)
               .height(34)
               .layoutWeight(1)

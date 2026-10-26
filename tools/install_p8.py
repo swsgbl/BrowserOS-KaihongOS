@@ -4,7 +4,7 @@ import os, subprocess, sys
 HDC = r"C:\Program Files\Huawei\DevEco Studio\sdk\default\openharmony\toolchains\hdc.exe"
 TARGET = "192.168.161.137:10178"
 PROJ = r"D:\BrowserOS - KaihongOS"
-HAP = os.path.join(PROJ, "entry-p8-v1-unsigned.hap")
+HAP = os.path.join(PROJ, "entry-api23-unsigned.hap")
 REMOTE = "/data/local/tmp/p8_entry.hap"
 SIGN = ('/data/local/home/.local/bin/hap-sign-tool sign-app -keyAlias "OpenHarmony Application Release" '
         '-signAlg SHA256withECDSA -mode localSign '

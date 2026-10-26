@@ -1,0 +1,6 @@
+[
+  ["Text('暂无书签 —— 点星标收藏当前页')", "Text(I18n.t('bmEmptyBar'))"],
+  [".accessibilityText('打开书签 ' + (bm.title.length > 0 ? bm.title : bm.url))", ".accessibilityText(I18n.t('bmTitle') + ' ' + (bm.title.length > 0 ? bm.title : bm.url))"],
+  ["Text('全部书签 ' + this.bookmarks.length)", "Text(I18n.t('bmAllBookmarks') + this.bookmarks.length)"],
+  [".accessibilityText('全部书签')", ".accessibilityText(I18n.t('bmAllBookmarks'))"]
+]

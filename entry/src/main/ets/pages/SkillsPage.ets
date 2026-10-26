@@ -8,6 +8,7 @@
  * ArkTS: no any/unknown、no 解构、显式接口。
  */
 import { preferences } from '@kit.ArkData'
+import { I18n } from '../common/I18n'
 import { router } from '@kit.ArkUI'
 import { Palette } from '../common/Palette'
 import { AgentEngine } from '../service/AgentEngine'
@@ -27,21 +28,21 @@ function seedSkills(): SkillEntry[] {
   const arr: SkillEntry[] = []
   arr.push({
     name: '/summarize-page',
-    description: '总结当前页面为三句话要点',
+    description: I18n.t('skDefDesc1'),
     prompt: 'Read the current page and summarize it in exactly three bullet-point sentences in Chinese.',
     runCount: 0,
     savedTokens: 0
   })
   arr.push({
     name: '/watch-price',
-    description: '监控商品页价格并变动提醒',
+    description: I18n.t('skDefDesc2'),
     prompt: 'Open the product page, find the current price, and report it. If the price changed since last check, highlight the change.',
     runCount: 0,
     savedTokens: 0
   })
   arr.push({
     name: '/fill-form',
-    description: '用预存资料自动填当前表单',
+    description: I18n.t('skDefDesc3'),
     prompt: 'Detect form fields on the current page and fill them with the profile data from settings, then stop for review.',
     runCount: 0,
     savedTokens: 0
@@ -52,6 +53,13 @@ function seedSkills(): SkillEntry[] {
 @Entry
 @Component
 struct SkillsPage {
+  // P48: locale 刷新锚
+  @StorageProp('app_locale') @Watch('onLocaleFlip') appLocale: string = 'zh'
+  @State localeVersion: number = 0
+
+  onLocaleFlip(): void {
+    this.localeVersion++
+  }
   @StorageProp('darkMode') @Watch('onThemeFlip') darkMode: boolean = false // P44
   @State themeVersion: number = 0 // P44
   @State skills: SkillEntry[] = []
@@ -156,13 +164,13 @@ struct SkillsPage {
       // P34-F: AppStorage 信号（BrowserShell @StorageLink @Watch）+ 返回 shell 展示侧栏运行
       const prev: number = AppStorage.get<number>('p34_skills_run_signal') ?? 0
       AppStorage.setOrCreate('p34_skills_run_signal', prev + 1)
-      this.showToast('已启动 ' + this.displayName(skill.name))
+      this.showToast(I18n.t('skStarted') + this.displayName(skill.name))
       setTimeout(() => {
         router.back()
       }, 600)
       console.info('[P34] skill agent created, runCount=' + skill.runCount)
     } else {
-      this.showToast('代理创建失败（已达上限？）')
+      this.showToast(I18n.t('skStartFail'))
     }
   }
 
@@ -174,25 +182,25 @@ struct SkillsPage {
       this.detailName = ''
     }
     this.confirmDeleteName = ''
-    this.showToast('已删除 ' + this.displayName(name))
+    this.showToast(I18n.t('skDeleted') + this.displayName(name))
   }
 
   private saveNewSkill(): void {
     let name = this.formName.trim()
     if (name.length === 0) {
-      this.formHint = '请填写技能名'
+      this.formHint = I18n.t('skNameRequired')
       return
     }
     if (!name.startsWith('/')) {
       name = '/' + name
     }
     if (this.skills.some((s: SkillEntry) => s.name === name)) {
-      this.formHint = '同名技能已存在'
+      this.formHint = I18n.t('skExists')
       return
     }
     const prompt = this.formPrompt.trim()
     if (prompt.length === 0) {
-      this.formHint = '请填写 prompt 指令'
+      this.formHint = I18n.t('skPromptRequired')
       return
     }
     const item: SkillEntry = {
@@ -209,7 +217,7 @@ struct SkillsPage {
     this.formDesc = ''
     this.formPrompt = ''
     this.formHint = ''
-    this.showToast('已保存 ' + name)
+    this.showToast(I18n.t('skSaved') + name)
     console.info('[P34] skill saved: ' + name)
   }
 
@@ -250,11 +258,11 @@ struct SkillsPage {
           .justifyContent(FlexAlign.Center)
         } else if (this.skills.length === 0) {
           Column() {
-            Text('暂无技能')
+            Text(I18n.t('skEmpty'))
               .fontSize(14)
               .fontWeight(FontWeight.Medium)
               .fontColor(this.pal().text2)
-            Text('点击右上「New skill」创建第一条')
+            Text(I18n.t('skEmptyHint'))
               .fontSize(11)
               .fontColor(this.pal().text2)
               .margin({ top: 6 })
@@ -463,7 +471,7 @@ struct SkillsPage {
         Scroll() {
           Column() {
             Row() {
-              Button('← 返回')
+              Button(I18n.t('skBack'))
                 .fontSize(12)
                 .height(30)
                 .backgroundColor(this.pal().surfaceInput)
@@ -496,7 +504,7 @@ struct SkillsPage {
               .margin({ top: 16 })
               .alignSelf(ItemAlign.Start)
 
-            Text('描述')
+            Text(I18n.t('skDesc'))
               .fontSize(11)
               .fontColor(this.pal().text2)
               .margin({ top: 14 })
@@ -570,7 +578,7 @@ struct SkillsPage {
           .fontWeight(FontWeight.Bold)
           .fontColor(this.pal().text)
 
-        Text('技能名（自动补 / 前缀）')
+        Text(I18n.t('skNameLabel'))
           .fontSize(11)
           .fontColor(this.pal().text2)
           .margin({ top: 12 })
@@ -584,12 +592,12 @@ struct SkillsPage {
           .borderRadius(8)
           .onChange((v: string) => { this.formName = v })
 
-        Text('描述（中文一句话）')
+        Text(I18n.t('skDescLabel'))
           .fontSize(11)
           .fontColor(this.pal().text2)
           .margin({ top: 10 })
           .alignSelf(ItemAlign.Start)
-        TextInput({ text: this.formDesc, placeholder: '这个技能做什么' })
+        TextInput({ text: this.formDesc, placeholder: I18n.t('skDescPh') })
           .fontColor(this.pal().text)
           .placeholderColor(this.pal().text2)
           .width('100%')
@@ -598,7 +606,7 @@ struct SkillsPage {
           .borderRadius(8)
           .onChange((v: string) => { this.formDesc = v })
 
-        Text('Prompt（可执行任务指令）')
+        Text(I18n.t('skPromptLabel'))
           .fontSize(11)
           .fontColor(this.pal().text2)
           .margin({ top: 10 })
@@ -621,7 +629,7 @@ struct SkillsPage {
         }
 
         Row() {
-          Button('保存')
+          Button(I18n.t('save'))
             .fontSize(12)
             .height(32)
             .backgroundColor('#2E6FE8')
@@ -630,7 +638,7 @@ struct SkillsPage {
             .onClick(() => {
               this.saveNewSkill()
             })
-          Button('取消')
+          Button(I18n.t('cancel'))
             .fontSize(12)
             .height(32)
             .backgroundColor(this.pal().surfaceInput)
@@ -662,17 +670,17 @@ struct SkillsPage {
         .backgroundColor('#66000000')
 
       Column() {
-        Text('删除技能')
+        Text(I18n.t('skDeleteSkill'))
           .fontSize(15)
           .fontWeight(FontWeight.Bold)
           .fontColor(this.pal().text)
-        Text(`确定删除 ${this.displayName(this.confirmDeleteName)} 吗？此操作不可恢复。`)
+        Text(I18n.t('skDeletePre') + this.displayName(this.confirmDeleteName) + I18n.t('skDeleteConfirm'))
           .fontSize(12)
           .fontColor(this.pal().text2)
           .margin({ top: 10 })
 
         Row() {
-          Button('取消')
+          Button(I18n.t('cancel'))
             .fontSize(12)
             .height(32)
             .backgroundColor(this.pal().surfaceInput)
@@ -681,7 +689,7 @@ struct SkillsPage {
             .onClick(() => {
               this.confirmDeleteName = ''
             })
-          Button('删除')
+          Button(I18n.t('delete'))
             .fontSize(12)
             .height(32)
             .backgroundColor('#C5221F')

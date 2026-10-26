@@ -13,6 +13,7 @@ import { DownloadManager } from '../service/DownloadManager'
 import { TabManager } from '../service/TabManager'
 import { ScheduleManager } from '../service/ScheduleManager'
 import { JSBridgeInjector } from '../protocol/JSBridgeInjector'
+import { I18n } from '../common/I18n'
 
 export default class EntryAbility extends UIAbility {
   /** P36-B: 冷启动计时锚点（onCreate 首行），BrowserShell aboutToAppear 收口算 cold_start_ms */
@@ -51,6 +52,12 @@ export default class EntryAbility extends UIAbility {
       console.info('EntryAbility session index reconciled: ' + SessionManager.getSessionList().length)
     }).catch((e: BusinessError) => {
       console.error('EntryAbility session reconcile error: ' + e.message)
+    })
+    // P48: i18n 初始化（读持久化 locale；完成前 t() 返回默认 zh）
+    I18n.init(this.context).then(() => {
+      console.info('EntryAbility I18n ready locale=' + I18n.getLocale() + ' bundle=' + I18n.getBundleSize())
+    }).catch((e: BusinessError) => {
+      console.error('EntryAbility I18n init error: ' + e.message)
     })
     // P36: 配置装载链 —— asset 探活(计时) → config.json 读取 → 明文密钥一次性迁移 asset → asset 真值回灌
     const p36T0 = Date.now()

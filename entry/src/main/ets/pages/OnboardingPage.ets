@@ -1,4 +1,5 @@
 import { ConnectionManager } from '../service/ConnectionManager'
+import { I18n } from '../common/I18n'
 import { LoginStateManager } from '../service/LoginStateManager'
 import { ConfigManager } from '../storage/ConfigManager'
 import { EventBus, EventBusEvents } from '../infra/EventBus'
@@ -9,6 +10,13 @@ import { Palette } from '../common/Palette'
 @Entry
 @Component
 struct OnboardingPage {
+  // P48: locale 刷新锚
+  @StorageProp('app_locale') @Watch('onLocaleFlip') appLocale: string = 'zh'
+  @State localeVersion: number = 0
+
+  onLocaleFlip(): void {
+    this.localeVersion++
+  }
   /** p16c: AppStorage darkMode */
   @StorageProp('darkMode') @Watch('onThemeFlip') darkMode: boolean = false // P44
   @State themeVersion: number = 0 // P44
@@ -82,35 +90,35 @@ struct OnboardingPage {
   @Builder
   WelcomeStep(): void {
     Column() {
-      Text('欢迎使用 BrowserOS KaihongOS')
+      Text(I18n.t('obWelcome'))
         .fontSize(24)
         .fontWeight(FontWeight.Bold)
         .fontColor(this.pal().text)
         .margin({ top: 40 })
 
-      Text('AI代理浏览器 - 深开鸿版本')
+      Text(I18n.t('obSubtitle'))
         .fontSize(16)
         .fontColor(this.pal().text2)
         .margin({ top: 12 })
 
-      Text('让AI代理使用你已登录的账户浏览网页，并行运行多个代理，实时监控和回放每个会话。')
+      Text(I18n.t('obIntro'))
         .fontSize(14)
         .fontColor(this.pal().text2)
         .margin({ top: 24 })
         .textAlign(TextAlign.Center)
 
       Column() {
-        Text('核心功能:')
+        Text(I18n.t('obFeatures'))
           .fontSize(14)
           .fontWeight(FontWeight.Medium)
           .fontColor(this.pal().text)
           .margin({ bottom: 8 })
 
-        this.FeatureRow('AI代理驱动浏览器，使用你的真实登录状态')
-        this.FeatureRow('并行运行多个代理，各自独立标签页')
-        this.FeatureRow('实时仪表盘监控，会话录制与回放')
-        this.FeatureRow('MCP协议兼容，支持Claude Code/Codex/Cursor')
-        this.FeatureRow('本地运行，隐私优先，数据不离机')
+        this.FeatureRow(I18n.t('obFeat1'))
+        this.FeatureRow(I18n.t('obFeat2'))
+        this.FeatureRow(I18n.t('obFeat3'))
+        this.FeatureRow(I18n.t('obFeat4'))
+        this.FeatureRow(I18n.t('obFeat5'))
       }
       .margin({ top: 32 })
       .padding(16)
@@ -126,25 +134,25 @@ struct OnboardingPage {
   @Builder
   AIToolConnectStep(): void {
     Column() {
-      Text('连接AI工具')
+      Text(I18n.t('obConnectTools'))
         .fontSize(20)
         .fontWeight(FontWeight.Bold)
         .fontColor(this.pal().text)
         .margin({ top: 20 })
 
-      Text('BrowserOS会自动检测本地已安装的AI工具，一键连接即可使用。')
+      Text(I18n.t('obConnectDesc'))
         .fontSize(14)
         .fontColor(this.pal().text2)
         .margin({ top: 12 })
 
       if (this.detectedTools.length === 0) {
         Column() {
-          Text('未检测到已安装的AI工具')
+          Text(I18n.t('obNoTools'))
             .fontSize(14)
             .fontColor(this.pal().text2)
             .margin({ top: 24 })
 
-          Text('请先安装 Claude Code、Codex 或 Cursor')
+          Text(I18n.t('obInstallFirst'))
             .fontSize(12)
             .fontColor(this.pal().text2)
             .margin({ top: 8 })
@@ -165,11 +173,11 @@ struct OnboardingPage {
                   .layoutWeight(1)
 
                 if (this.connectedTools.includes(tool)) {
-                  Text('已连接')
+                  Text(I18n.t('obConnected'))
                     .fontSize(12)
                     .fontColor('#4CAF50')
                 } else {
-                  Button('连接')
+                  Button(I18n.t('obConnectBtn'))
                     .fontSize(12)
                     .height(28)
                     .backgroundColor(this.pal().accent)
@@ -200,13 +208,13 @@ struct OnboardingPage {
   @Builder
   LoginImportStep(): void {
     Column() {
-      Text('导入登录状态')
+      Text(I18n.t('obImportLoginTitle'))
         .fontSize(20)
         .fontWeight(FontWeight.Bold)
         .fontColor(this.pal().text)
         .margin({ top: 20 })
 
-      Text('一键导入Chrome的登录状态，让AI代理使用你的真实账户。')
+      Text(I18n.t('obImportDesc'))
         .fontSize(14)
         .fontColor(this.pal().text2)
         .margin({ top: 12 })
@@ -217,12 +225,12 @@ struct OnboardingPage {
           .height(48)
           .margin({ top: 24 })
 
-        Text('正在导入...')
+        Text(I18n.t('obImporting'))
           .fontSize(14)
           .fontColor(this.pal().text2)
           .margin({ top: 8 })
       } else if (this.importedDomains.length > 0) {
-        Text(`已导入 ${this.importedDomains.length} 个网站的登录状态`)
+        Text(`${I18n.t('obImportedN')}${this.importedDomains.length}${I18n.t('obImportedEnd')}`)
           .fontSize(14)
           .fontColor('#4CAF50')
           .margin({ top: 16 })
@@ -241,7 +249,7 @@ struct OnboardingPage {
         .height(120)
         .margin({ top: 8 })
       } else {
-        Button('导入Chrome登录状态')
+        Button(I18n.t('obImportChromeBtn'))
           .fontSize(14)
           .width(200)
           .backgroundColor('#FF9800')
@@ -261,50 +269,50 @@ struct OnboardingPage {
   @Builder
   DemoStep(): void {
     Column() {
-      Text('功能演示')
+      Text(I18n.t('obDemo'))
         .fontSize(20)
         .fontWeight(FontWeight.Bold)
         .fontColor(this.pal().text)
         .margin({ top: 20 })
 
-      Text('以下是BrowserOS KaihongOS的核心功能演示：')
+      Text(I18n.t('obDemoDesc'))
         .fontSize(14)
         .fontColor(this.pal().text2)
         .margin({ top: 12 })
 
       Column() {
-        Text('1. AI代理浏览网页')
+        Text(I18n.t('obDemo1'))
           .fontSize(14)
           .fontColor(this.pal().text)
           .margin({ bottom: 8 })
-        Text('   代理在独立标签页中自动浏览网页，执行点击、输入等操作')
+        Text(I18n.t('obDemo1d'))
           .fontSize(12)
           .fontColor(this.pal().text2)
           .margin({ bottom: 12 })
 
-        Text('2. 实时仪表盘')
+        Text(I18n.t('obDemo2'))
           .fontSize(14)
           .fontColor(this.pal().text)
           .margin({ bottom: 8 })
-        Text('   新标签页展示所有代理的实时工作状态')
+        Text(I18n.t('obDemo2d'))
           .fontSize(12)
           .fontColor(this.pal().text2)
           .margin({ bottom: 12 })
 
-        Text('3. 会话回放')
+        Text(I18n.t('obDemo3'))
           .fontSize(14)
           .fontColor(this.pal().text)
           .margin({ bottom: 8 })
-        Text('   每个会话自动录制，可随时回放查看代理操作过程')
+        Text(I18n.t('obDemo3d'))
           .fontSize(12)
           .fontColor(this.pal().text2)
           .margin({ bottom: 12 })
 
-        Text('4. MCP协议')
+        Text(I18n.t('obDemo4'))
           .fontSize(14)
           .fontColor(this.pal().text)
           .margin({ bottom: 8 })
-        Text('   10个标准工具：navigate/click/type/screenshot/snapshot等')
+        Text(I18n.t('obDemo4d'))
           .fontSize(12)
           .fontColor(this.pal().text2)
       }
@@ -320,23 +328,23 @@ struct OnboardingPage {
   @Builder
   CompleteStep(): void {
     Column() {
-      Text('设置完成!')
+      Text(I18n.t('obSetupDone'))
         .fontSize(24)
         .fontWeight(FontWeight.Bold)
         .fontColor('#4CAF50')
         .margin({ top: 40 })
 
-      Text('BrowserOS KaihongOS 已准备就绪')
+      Text(I18n.t('obReady'))
         .fontSize(16)
         .fontColor(this.pal().text)
         .margin({ top: 12 })
 
-      Text('现在你可以开始使用AI代理浏览网页了')
+      Text(I18n.t('obReadyDesc'))
         .fontSize(14)
         .fontColor(this.pal().text2)
         .margin({ top: 8 })
 
-      Button('开始使用')
+      Button(I18n.t('obStart'))
         .fontSize(16)
         .width(200)
         .height(48)
@@ -377,7 +385,7 @@ struct OnboardingPage {
   NavigationButtons(): void {
     Row() {
       if (this.currentStep > 0) {
-        Button('上一步')
+        Button(I18n.t('obPrev'))
           .fontSize(14)
           .width(100)
           .backgroundColor(this.pal().surfaceInput)
@@ -388,7 +396,7 @@ struct OnboardingPage {
       }
 
       if (this.currentStep < this.totalSteps - 1) {
-        Button('下一步')
+        Button(I18n.t('obNext'))
           .fontSize(14)
           .width(100)
           .backgroundColor(this.pal().accent)
@@ -397,7 +405,7 @@ struct OnboardingPage {
             this.currentStep++
           })
 
-        Button('跳过')
+        Button(I18n.t('obSkip'))
           .fontSize(14)
           .width(80)
           .backgroundColor(this.pal().surfaceInput)

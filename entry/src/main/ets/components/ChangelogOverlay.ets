@@ -5,19 +5,27 @@
  * (EntryAbility 侧 setOrCreate 无法驱动页面 @StorageProp 刷新,实测 KaihongOS 上断链)。
  */
 import { bundleManager } from '@kit.AbilityKit'
+import { I18n } from '../common/I18n'
 import { preferences } from '@kit.ArkData'
 import { BusinessError } from '@kit.BasicServicesKit'
 
 @Component
 export struct ChangelogOverlay {
+  // P48: locale 刷新锚
+  @StorageProp('app_locale') @Watch('onLocaleFlip') appLocale: string = 'zh'
+  @State localeVersion: number = 0
+
+  onLocaleFlip(): void {
+    this.localeVersion++
+  }
   @State visible: boolean = false
   @State version: string = ''
   /** 版本要点(本版写死:对标上游 CHANGELOG 内容条目) */
   private readonly bullets: string[] = [
-    '支持 Chrome 书签导入,一次迁移所有收藏',
-    '新增聊天模式:侧栏可切换只读问答,不占用代理',
-    '页面选中文本自动进入聊天上下文',
-    '垂直标签栏滚动与恢复修复'
+    I18n.t('clLine1'),
+    I18n.t('clLine2'),
+    I18n.t('clLine3'),
+    I18n.t('clLine4')
   ]
 
   aboutToAppear(): void {
@@ -74,7 +82,7 @@ export struct ChangelogOverlay {
 
         // 弹层卡(Stack 默认居中,叠在遮罩上)
         Column() {
-          Text('更新内容')
+          Text(I18n.t('dlgUpdateTitle'))
             .fontSize(18)
             .fontWeight(FontWeight.Bold)
             .fontColor(this.textColor())
@@ -109,7 +117,7 @@ export struct ChangelogOverlay {
           .alignItems(HorizontalAlign.Start)
           .padding({ left: 22, right: 22 })
 
-          Button('知道了')
+          Button(I18n.t('gotIt'))
             .fontSize(14)
             .height(38)
             .width(140)

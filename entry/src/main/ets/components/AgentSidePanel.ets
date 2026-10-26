@@ -4,6 +4,7 @@
  * + 底部多行输入 + 发送。发送 = AgentEngine.createAgent（与 Dashboard 磁贴联动）。
  */
 import { AgentEngine } from '../service/AgentEngine'
+import { I18n } from '../common/I18n'
 import { SessionManager } from '../service/SessionManager'
 import { SessionRecord } from '../model/SessionRecord'
 import { ConfigManager } from '../storage/ConfigManager'
@@ -51,14 +52,21 @@ class AttachedTabInfo {
 
 function defaultStarterPrompts(): StarterPrompt[] {
   return [
-    new StarterPrompt('总结本页', 'Read the current tab and summarize it in bullet points'),
-    new StarterPrompt('本页讲了什么', 'Read the current tab and describe what it is about in 1-2 lines'),
-    new StarterPrompt('提取本页评论', 'Read the current tab and extract comments as bullet points')
+    new StarterPrompt(I18n.t('asSummary'), 'Read the current tab and summarize it in bullet points'),
+    new StarterPrompt(I18n.t('asWhatIs'), 'Read the current tab and describe what it is about in 1-2 lines'),
+    new StarterPrompt(I18n.t('asComments'), 'Read the current tab and extract comments as bullet points')
   ]
 }
 
 @Component
 export struct AgentSidePanel {
+  // P48: locale 刷新锚
+  @StorageProp('app_locale') @Watch('onLocaleFlip') appLocale: string = 'zh'
+  @State localeVersion: number = 0
+
+  onLocaleFlip(): void {
+    this.localeVersion++
+  }
   /** p10a: AppStorage('darkMode') 消费 —— EntryAbility 启动时与设置页开关写入 */
   @StorageProp('darkMode') @Watch('onThemeFlip') darkMode: boolean = false // P44
   @State themeVersion: number = 0 // P44
@@ -124,13 +132,15 @@ export struct AgentSidePanel {
   /** P19a: 消息列表滚动控制器（答案回流后滚底） */
   private scroller: Scroller = new Scroller()
 
-  private readonly modelOptions: string[] = ['agnes-3.0-flash', 'agnes-3.0-pro', 'glm-4.7', '自定义(取配置)', '管理供应商…']
+  private get modelOptions(): string[] {
+    return ['agnes-3.0-flash', 'agnes-3.0-pro', 'glm-4.7', I18n.t('asCustomCfg'), I18n.t('asManageProviders')]
+  }
 
   aboutToAppear(): void {
     this.agents = AgentEngine.getAllAgentStatus()
     this.messages.push({
       role: 'hint',
-      text: '给代理描述任务，如：打开 example.com 并告诉我页面标题',
+      text: I18n.t('asInputPh'),
       agentId: ''
     })
     console.info('AgentSidePanel mounted, agents=' + this.agents.length)
@@ -362,7 +372,7 @@ export struct AgentSidePanel {
   private async sendChatSingleTurn(task: string): Promise<void> {
     const cfg = ConfigManager.get()
     if (cfg.llmBaseUrl.length === 0 || cfg.llmModel.length === 0) {
-      this.messages.push({ role: 'hint', text: 'LLM 未配置,请先在设置中填写 Base URL / 模型', agentId: '' })
+      this.messages.push({ role: 'hint', text: I18n.t('asLlmHint'), agentId: '' })
       return
     }
     const ctxBlock = this.buildContextBlock()
@@ -390,12 +400,12 @@ export struct AgentSidePanel {
         this.messages.push({ role: 'agent', text: resp.content, agentId: '' })
         console.info('[P33] chat single-turn answer: ' + resp.content.length + ' chars')
       } else {
-        const reason = LLMClient.lastError.length > 0 ? LLMClient.lastError : 'LLM 无返回'
-        this.messages.push({ role: 'hint', text: '聊天失败: ' + reason, agentId: '' })
+        const reason = LLMClient.lastError.length > 0 ? LLMClient.lastError : I18n.t('asLlmNoResp')
+        this.messages.push({ role: 'hint', text: I18n.t('asChatFail') + reason, agentId: '' })
         console.warn('[P33] chat single-turn failed: ' + reason)
       }
     } catch (e) {
-      this.messages.push({ role: 'hint', text: '聊天异常: ' + e, agentId: '' })
+      this.messages.push({ role: 'hint', text: I18n.t('asChatError') + e, agentId: '' })
       console.warn('[P33] chat single-turn exception: ' + e)
     } finally {
       this.chatBusy = false
@@ -428,13 +438,13 @@ export struct AgentSidePanel {
       }
       if (st.status === AgentStatus.COMPLETED) {
         const ans = AgentEngine.getFinalAnswer(id)
-        const text = ans !== null ? (ans.length > 500 ? ans.substring(0, 500) + '…' : ans) : '(已完成)'
+        const text = ans !== null ? (ans.length > 500 ? ans.substring(0, 500) + '…' : ans) : I18n.t('asDone')
         this.messages.push({ role: 'agent', text: text, agentId: id })
         this.settledAgents.add(id)
         changed = true
         console.info('AgentSidePanel answer reflux agent=' + id + ' len=' + text.length)
       } else if (st.status === AgentStatus.ERROR || st.status === AgentStatus.STOPPED) {
-        const reason = st.errorMessage.length > 0 ? st.errorMessage : (AgentEngine.getFinalAnswer(id) ?? '任务已终止')
+        const reason = st.errorMessage.length > 0 ? st.errorMessage : (AgentEngine.getFinalAnswer(id) ?? I18n.t('asTerminated'))
         this.messages.push({ role: 'hint', text: '⚠ ' + reason, agentId: id })
         this.settledAgents.add(id)
         changed = true
@@ -523,11 +533,11 @@ export struct AgentSidePanel {
 
   /** P24b: 保存编辑(空 prompt 行忽略→回默认该行) */
   private applyStarterEdits(): void {
-    const d0 = this.edDisplay0.trim().length > 0 ? this.edDisplay0.trim() : '提示词 1'
+    const d0 = this.edDisplay0.trim().length > 0 ? this.edDisplay0.trim() : I18n.t('asPromptN') + '1'
     const p0 = this.edPrompt0.trim().length > 0 ? this.edPrompt0.trim() : defaultStarterPrompts()[0].prompt
-    const d1 = this.edDisplay1.trim().length > 0 ? this.edDisplay1.trim() : '提示词 2'
+    const d1 = this.edDisplay1.trim().length > 0 ? this.edDisplay1.trim() : I18n.t('asPromptN') + '2'
     const p1 = this.edPrompt1.trim().length > 0 ? this.edPrompt1.trim() : defaultStarterPrompts()[1].prompt
-    const d2 = this.edDisplay2.trim().length > 0 ? this.edDisplay2.trim() : '提示词 3'
+    const d2 = this.edDisplay2.trim().length > 0 ? this.edDisplay2.trim() : I18n.t('asPromptN') + '3'
     const p2 = this.edPrompt2.trim().length > 0 ? this.edPrompt2.trim() : defaultStarterPrompts()[2].prompt
     const list: StarterPrompt[] = [new StarterPrompt(d0, p0), new StarterPrompt(d1, p1), new StarterPrompt(d2, p2)]
     this.starters = list
@@ -589,7 +599,7 @@ export struct AgentSidePanel {
     if (agent) {
       this.messages.push({
         role: 'hint',
-        text: '代理已启动 (' + agent.agentId.substring(0, 12) + ') — 驾驶舱磁贴与活动 tab 实时联动',
+        text: I18n.t('asStarted') + agent.agentId.substring(0, 12) + I18n.t('asStartedEnd'),
         agentId: agent.agentId
       })
       this.agents = AgentEngine.getAllAgentStatus()
@@ -600,7 +610,7 @@ export struct AgentSidePanel {
       }
       console.info('AgentSidePanel task dispatched: ' + task + ' agent=' + agent.agentId)
     } else {
-      this.messages.push({ role: 'hint', text: '代理创建失败（已达上限或 LLM 未配置）', agentId: '' })
+      this.messages.push({ role: 'hint', text: I18n.t('asCreateFail'), agentId: '' })
       console.warn('AgentSidePanel createAgent returned null')
     }
     // P33-A: 发送后清空选中文本 chip(已消费)
@@ -651,10 +661,10 @@ export struct AgentSidePanel {
       a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
     const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1)
     if (sameDay(d, now)) {
-      return `今天 ${pad(d.getHours())}:${pad(d.getMinutes())}`
+      return `${I18n.t('ntToday')} ${pad(d.getHours())}:${pad(d.getMinutes())}`
     }
     if (sameDay(d, yesterday)) {
-      return `昨天 ${pad(d.getHours())}:${pad(d.getMinutes())}`
+      return `${I18n.t('ntYesterday')} ${pad(d.getHours())}:${pad(d.getMinutes())}`
     }
     if (d.getFullYear() === now.getFullYear()) {
       return `${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
@@ -695,7 +705,7 @@ export struct AgentSidePanel {
             .fillColor(this.pal().text2)
             .draggable(false)
             .width(28)
-            .accessibilityText('查看历史会话')
+            .accessibilityText(I18n.t('asViewHistory'))
             .onClick(() => {
               this.switchToHistory()
             })
@@ -705,7 +715,7 @@ export struct AgentSidePanel {
             .fillColor(this.pal().text2)
             .draggable(false)
             .width(28)
-            .accessibilityText('新建对话')
+            .accessibilityText(I18n.t('asNewChat'))
             .onClick(() => {
               this.panelView = 'chat'
             })
@@ -725,7 +735,7 @@ export struct AgentSidePanel {
           .backgroundColor(this.pal().selected)
           .onClick(() => {
             this.modelSelection = (this.modelSelection + 1) % this.modelOptions.length
-            if (this.modelOptions[this.modelSelection] === '管理供应商…') {
+            if (this.modelOptions[this.modelSelection] === I18n.t('asManageProviders')) {
               // p23b: 循环到管理项 = 跳 LLM Hub，选择回退保持原模型显示
               router.pushUrl({ url: 'pages/LlmHubPage' })
               this.modelSelection = 0
@@ -745,7 +755,7 @@ export struct AgentSidePanel {
           .fillColor(this.pal().text2)
           .draggable(false)
           .width(28)
-          .accessibilityText('关闭代理侧栏')
+          .accessibilityText(I18n.t('asClosePanel'))
           .onClick(() => {
             this.onClose()
           })
@@ -767,12 +777,12 @@ export struct AgentSidePanel {
               .fillColor('#FB6618')
               .draggable(false)
               .margin({ top: 36 })
-            Text('代理随时待命')
+            Text(I18n.t('asReady'))
               .fontSize(16)
               .fontWeight(FontWeight.Bold)
               .fontColor(this.pal().text)
               .margin({ top: 12 })
-            Text('给代理一个任务，或从下面快速开始')
+            Text(I18n.t('asReadyDesc'))
               .fontSize(11)
               .fontColor(this.pal().text2)
               .margin({ top: 4 })
@@ -796,7 +806,7 @@ export struct AgentSidePanel {
             .width('100%')
             .constraintSize({ maxWidth: 320 })
             .margin({ top: 16 })
-            Text('自定义提示词')
+            Text(I18n.t('asCustomPrompts'))
               .fontSize(11)
               .fontColor('#FB6618')
               .margin({ top: 14 })
@@ -812,18 +822,18 @@ export struct AgentSidePanel {
           // P24b: 内联编辑器(3 对 display+prompt 输入 + 保存/取消)
           Scroll() {
             Column() {
-              Text('自定义起手提示词')
+              Text(I18n.t('asCustomPromptsTitle'))
                 .fontSize(14)
                 .fontWeight(FontWeight.Bold)
                 .fontColor(this.pal().text)
                 .margin({ top: 16 })
-              Text('显示为按钮的短标签 / 实际发给代理的完整指令')
+              Text(I18n.t('asCustomPromptsHint'))
                 .fontSize(10)
                 .fontColor(this.pal().text2)
                 .margin({ top: 4, bottom: 8 })
               ForEach([0, 1, 2], (idx: number) => {
                 Column() {
-                  TextInput({ text: idx === 0 ? this.edDisplay0 : idx === 1 ? this.edDisplay1 : this.edDisplay2, placeholder: '按钮标签 ' + (idx + 1) })
+                  TextInput({ text: idx === 0 ? this.edDisplay0 : idx === 1 ? this.edDisplay1 : this.edDisplay2, placeholder: I18n.t('asBtnLabel') + (idx + 1) })
                     .fontSize(12)
                     .height(36)
                     .backgroundColor(this.pal().surface)
@@ -831,7 +841,7 @@ export struct AgentSidePanel {
                     .onChange((v: string) => {
                       if (idx === 0) { this.edDisplay0 = v } else if (idx === 1) { this.edDisplay1 = v } else { this.edDisplay2 = v }
                     })
-                  TextArea({ text: idx === 0 ? this.edPrompt0 : idx === 1 ? this.edPrompt1 : this.edPrompt2, placeholder: '发送给代理的指令 ' + (idx + 1) })
+                  TextArea({ text: idx === 0 ? this.edPrompt0 : idx === 1 ? this.edPrompt1 : this.edPrompt2, placeholder: I18n.t('asCmdLabel') + (idx + 1) })
                     .fontSize(12)
                     .height(56)
                     .backgroundColor(this.pal().surface)
@@ -845,7 +855,7 @@ export struct AgentSidePanel {
                 .margin({ top: 10 })
               }, (idx: number) => 'ed_' + idx)
               Row() {
-                Button('取消')
+                Button(I18n.t('cancel'))
                   .fontSize(12)
                   .height(32)
                   .backgroundColor(this.pal().surface)
@@ -856,7 +866,7 @@ export struct AgentSidePanel {
                     this.editingStarters = false
                   })
                 Blank()
-                Button('保存')
+                Button(I18n.t('save'))
                   .fontSize(12)
                   .height(32)
                   .backgroundColor('#FB6618')
@@ -940,7 +950,7 @@ export struct AgentSidePanel {
                     .width(13).height(13)
                     .fillColor(this.pal().text2)
                     .draggable(false)
-                    .accessibilityText('关闭调查弹窗')
+                    .accessibilityText(I18n.t('asCloseSurvey'))
                     .onClick(() => {
                       this.dismissJtbd(this.jtbdCheckboxChecked)
                     })
@@ -958,7 +968,7 @@ export struct AgentSidePanel {
                       .onChange((v: boolean) => {
                         this.jtbdCheckboxChecked = v
                       })
-                    Text('不再显示')
+                    Text(I18n.t('asNoSurvey'))
                       .fontSize(11)
                       .fontColor(this.pal().text2)
                       .margin({ left: 6 })
@@ -1023,7 +1033,7 @@ export struct AgentSidePanel {
                   .fontSize(11)
                   .fontWeight(FontWeight.Medium)
                   .fontColor('#F28B82')
-                Text(' · 只读')
+                Text(I18n.t('asReadOnly'))
                   .fontSize(9)
                   .fontColor('#F28B82')
                   .opacity(0.8)
@@ -1034,7 +1044,7 @@ export struct AgentSidePanel {
               .border({ width: 1, color: '#F28B82' })
               .backgroundColor('#33F28B82')
               .alignItems(VerticalAlign.Center)
-              .accessibilityText('聊天模式开启:AI 只能读取,不能点击或导航。点击切回代理模式')
+              .accessibilityText(I18n.t('asChatMode'))
               .onClick(() => {
                 this.toggleChatMode()
               })
@@ -1056,7 +1066,7 @@ export struct AgentSidePanel {
               .border({ width: 1, color: this.pal().border })
               .backgroundColor(this.pal().surfaceAlt)
               .alignItems(VerticalAlign.Center)
-              .accessibilityText('代理模式开启:AI 可以浏览、点击和导航。点击切到聊天模式')
+              .accessibilityText(I18n.t('asAgentMode'))
               .onClick(() => {
                 this.toggleChatMode()
               })
@@ -1069,7 +1079,7 @@ export struct AgentSidePanel {
           // P33-A: 选中文本 chip(对标上游 selectedTextStorage 提示)
           if (this.pageSelection !== null) {
             Row() {
-              Text('已选 ' + this.pageSelection.text.length + ' 字')
+              Text(I18n.t('asSelectedN') + this.pageSelection.text.length + I18n.t('asChars'))
                 .fontSize(10)
                 .fontColor(this.pal().text2)
                 .maxLines(1)
@@ -1080,7 +1090,7 @@ export struct AgentSidePanel {
                 .fillColor(this.pal().text2)
                 .draggable(false)
                 .margin({ left: 6 })
-                .accessibilityText('丢弃选中文本')
+                .accessibilityText(I18n.t('asDiscardSel'))
                 .onClick(() => {
                   this.pageSelection = null
                   console.info('[P33] selection chip dismissed')
@@ -1113,7 +1123,7 @@ export struct AgentSidePanel {
                 .fillColor(this.pal().text2)
                 .draggable(false)
                 .margin({ left: 6 })
-                .accessibilityText('移除附加标签页')
+                .accessibilityText(I18n.t('asRemoveTab'))
                 .onClick(() => {
                   this.attachedTab = null
                   this.suppressAutoAttach = true
@@ -1128,7 +1138,7 @@ export struct AgentSidePanel {
             .margin({ bottom: 6 })
           }
 
-          TextArea({ text: this.inputText, placeholder: '描述代理任务…' })
+          TextArea({ text: this.inputText, placeholder: I18n.t('asInputPh') })
             .width('100%')
             .height(72)
             .fontSize(13)
@@ -1138,7 +1148,7 @@ export struct AgentSidePanel {
               this.inputText = v
             })
           Row() {
-            Text(`${this.agents.length} 个代理在跑`)
+            Text(`${this.agents.length}${I18n.t('asAgentsRunning')}`)
               .fontSize(10)
               .fontColor('#9AA0A6')
               .layoutWeight(1)
@@ -1151,7 +1161,7 @@ export struct AgentSidePanel {
                   .fillColor('#FFFFFF')
                   .draggable(false)
                   .margin({ right: 6 })
-                Text('停止')
+                Text(I18n.t('asStop'))
                   .fontSize(13)
                   .fontColor('#FFFFFF')
               }
@@ -1163,7 +1173,7 @@ export struct AgentSidePanel {
                 this.stopRunningAgent()
               })
             } else {
-              Button('发送')
+              Button(I18n.t('tbSend'))
                 .fontSize(13)
                 .height(32)
                 .backgroundColor('#1A73E8')
@@ -1190,7 +1200,7 @@ export struct AgentSidePanel {
               .width(28)
               .height(28)
               .color(this.pal().text2)
-            Text('正在获取会话…')
+            Text(I18n.t('asFetching'))
               .fontSize(12)
               .fontColor(this.pal().text2)
               .margin({ top: 8 })
@@ -1207,11 +1217,11 @@ export struct AgentSidePanel {
               .fillColor(this.pal().text2)
               .opacity(0.5)
               .draggable(false)
-            Text('暂无历史会话')
+            Text(I18n.t('asNoHistory'))
               .fontSize(14)
               .fontColor(this.pal().text2)
               .margin({ top: 12 })
-            Text('开始新对话')
+            Text(I18n.t('asNewSession'))
               .fontSize(13)
               .fontColor('#1A73E8')
               .margin({ top: 8 })
@@ -1238,7 +1248,7 @@ export struct AgentSidePanel {
                       .fontColor(this.pal().text)
                       .maxLines(1)
                       .textOverflow({ overflow: TextOverflow.Ellipsis })
-                    Text(this.sessionTimeLabel(s.startTime) + ' · ' + s.operationLogs.length + ' 步')
+                    Text(this.sessionTimeLabel(s.startTime) + ' · ' + s.operationLogs.length + I18n.t('asSteps'))
                       .fontSize(10)
                       .fontColor(this.pal().text2)
                       .margin({ top: 2 })

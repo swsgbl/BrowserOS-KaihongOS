@@ -1,4 +1,5 @@
 import { TabManager } from '../service/TabManager'
+import { I18n } from '../common/I18n'
 import { IWebviewController } from '../common/IWebviewController'
 import { WebViewAdapter } from '../protocol/WebViewAdapter'
 import { HistoryManager, HistoryEntry } from '../service/HistoryManager'
@@ -75,6 +76,9 @@ struct BrowserShell {
   /** p10a: AppStorage('darkMode') 消费 —— EntryAbility 启动时与设置页开关写入
    * P26: @Watch 强制重渲染（@StorageProp 更新不触发 @Builder 重调——设置页切主题时壳不跟随的根因） */
   @StorageProp('darkMode') @Watch('onThemeFlip') darkMode: boolean = false
+  // P48: locale 刷新锚（语言切换时全树重渲染，同 themeVersion 模式）
+  @StorageProp('app_locale') @Watch('onLocaleFlip') appLocale: string = 'zh'
+  @State localeVersion: number = 0
   @State themeVersion: number = 0
 
   /** P35-C: 新标签页 agent-command 形态状态 */
@@ -110,7 +114,7 @@ struct BrowserShell {
       }
     }
     if (name.length === 0 && cur.llmBaseUrl.length > 0) {
-      name = cur.llmModel.length > 0 ? cur.llmModel : '自定义'
+      name = cur.llmModel.length > 0 ? cur.llmModel : I18n.t('ntCustomModel')
     }
     this.dashCurProviderName = name
     console.info('[P35] dash providers loaded: ' + list.length + ' cur=' + name)
@@ -172,7 +176,13 @@ struct BrowserShell {
     console.info('[P35] sched results: ' + this.schedResults.length)
   }
 
-  onThemeFlip(): void {
+  
+
+  // P48: 语言切换钩子 —— 递增 localeVersion 驱动全树重渲染
+  onLocaleFlip(): void {
+    this.localeVersion++
+    console.info('BrowserShell locale flipped: ' + this.appLocale)
+  }onThemeFlip(): void {
     this.themeVersion++
     console.info('BrowserShell theme flipped: darkMode=' + this.darkMode + ' v=' + this.themeVersion)
     // P35-C: 主题翻转时刷新新标签页数据（providers 可能在设置页变动）
@@ -248,18 +258,18 @@ struct BrowserShell {
   /** P19c: ProtectedResourceType -> 中文说明 */
   private permResLabel(res: string): string {
     if (res.includes('VIDEO')) {
-      return '摄像头'
+      return I18n.t('permCamera')
     }
     if (res.includes('AUDIO')) {
-      return '麦克风'
+      return I18n.t('permMic')
     }
     if (res.includes('MIDI')) {
-      return 'MIDI 设备'
+      return I18n.t('permMidi')
     }
     if (res.includes('SENSOR')) {
-      return '运动传感器'
+      return I18n.t('permMotion')
     }
-    return '设备资源'
+    return I18n.t('permDevice')
   }
 
   /** P19c: 权限弹层显隐 */
@@ -472,6 +482,10 @@ struct BrowserShell {
         if (this.themeVersion < 0) {
           Text('').fontSize(0)
         }
+        // P48: localeVersion 渲染依赖锚（语言切换全树重渲染）
+        if (this.localeVersion < 0) {
+          Text('').fontSize(0)
+        }
         this.AddressBar()
         // P11d: 书签条 —— 仅新标签页(dashboard)/驾驶舱(neo)显示
         if (this.showDashboard || this.showNeo) {
@@ -662,17 +676,17 @@ struct BrowserShell {
             .fontColor(this.pal().text)
             .maxLines(1)
             .textOverflow({ overflow: TextOverflow.Ellipsis })
-          Text('想要使用' + this.permKinds)
+          Text(I18n.t('permWantUse') + ' ' + this.permKinds)
             .fontSize(13)
             .fontColor(this.pal().text)
             .margin({ top: 8 })
-          Text('允许后该站点可在你使用浏览器时访问' + this.permKinds + '。')
+          Text(I18n.t('permAllowDesc') + ' ' + this.permKinds)
             .fontSize(11)
             .fontColor(this.pal().text2)
             .margin({ top: 6 })
             .textAlign(TextAlign.Center)
           Row({ space: 10 }) {
-            Button('阻止')
+            Button(I18n.t('permBlock'))
               .fontSize(13)
               .height(34)
               .layoutWeight(1)
@@ -681,7 +695,7 @@ struct BrowserShell {
               .onClick(() => {
                 this.grantPerm(false)
               })
-            Button('允许')
+            Button(I18n.t('permAllow'))
               .fontSize(13)
               .height(34)
               .layoutWeight(1)
@@ -720,7 +734,7 @@ struct BrowserShell {
               .layoutWeight(1)
               .maxLines(1)
               .textOverflow({ overflow: TextOverflow.Ellipsis })
-            Text('阅读模式')
+            Text(I18n.t('rmTitle'))
               .fontSize(11)
               .fontColor(this.pal().text2)
               .margin({ right: 12 })
@@ -749,13 +763,13 @@ struct BrowserShell {
             .width(16).height(16)
             .fillColor('#F9AB00')
             .draggable(false)
-          Text('密码管理器可填充 ' + this.p47FillDomain + ' 的登录信息')
+          Text(I18n.t('pwCanFill') + this.p47FillDomain + I18n.t('pwOf'))
             .fontSize(12)
             .fontColor(this.pal().text)
             .layoutWeight(1)
             .maxLines(1)
             .textOverflow({ overflow: TextOverflow.Ellipsis })
-          Button('填充')
+          Button(I18n.t('pwFill'))
             .fontSize(12)
             .height(30)
             .backgroundColor('#1A73E8')
@@ -788,7 +802,7 @@ struct BrowserShell {
           .backgroundColor('#66000000')
           .onClick(() => { this.p47SaveOpen = false })
         Column() {
-          Text('保存密码？')
+          Text(I18n.t('pwSaveQ'))
             .fontSize(15)
             .fontWeight(FontWeight.Bold)
             .fontColor(this.pal().text)
@@ -801,14 +815,14 @@ struct BrowserShell {
             .maxLines(1)
             .textOverflow({ overflow: TextOverflow.Ellipsis })
           Row() {
-            Button('不保存')
+            Button(I18n.t('pwNotSave'))
               .fontSize(13)
               .height(36)
               .layoutWeight(1)
               .backgroundColor(this.pal().surfaceAlt)
               .fontColor(this.pal().text)
               .onClick(() => { this.p47SaveOpen = false })
-            Button('保存')
+            Button(I18n.t('pwSave'))
               .fontSize(13)
               .height(36)
               .layoutWeight(1)
@@ -845,7 +859,7 @@ struct BrowserShell {
       .width(36)
       .height(36)
       .backgroundColor(Color.Transparent)
-      .accessibilityText('后退')
+      .accessibilityText(I18n.t('tbBack'))
       .onClick(() => {
         console.info('BrowserShell back button clicked, tabId=' + this.activeTabId)
         const controller = this.getActiveController()
@@ -866,7 +880,7 @@ struct BrowserShell {
       .width(36)
       .height(36)
       .backgroundColor(Color.Transparent)
-      .accessibilityText('前进')
+      .accessibilityText(I18n.t('tbForward'))
       .onClick(() => {
         console.info('BrowserShell forward button clicked, tabId=' + this.activeTabId)
         const controller = this.getActiveController()
@@ -888,7 +902,7 @@ struct BrowserShell {
       .width(36)
       .height(36)
       .backgroundColor(Color.Transparent)
-      .accessibilityText(this.isLoading ? '停止加载' : '刷新')
+      .accessibilityText(this.isLoading ? I18n.t('tbStopLoad') : I18n.t('tbReload'))
       .onClick(() => {
         if (this.isLoading) {
           this.stopActiveLoad()
@@ -986,7 +1000,7 @@ struct BrowserShell {
       .width(36)
       .height(36)
       .backgroundColor(Color.Transparent)
-      .accessibilityText(this.isBookmarked ? '编辑书签' : '添加书签')
+      .accessibilityText(this.isBookmarked ? I18n.t('tbEditBookmark') : I18n.t('tbAddBookmark'))
       .onClick(() => {
         this.openBookmarkBubble()
       })
@@ -1000,7 +1014,7 @@ struct BrowserShell {
       .width(36)
       .height(36)
       .backgroundColor(Color.Transparent)
-      .accessibilityText('历史记录')
+      .accessibilityText(I18n.t('tbHistory'))
       .onClick(() => {
         // P22: 统一历史入口 —— 工具栏与 ⋮ 菜单同走 Chromium 风格路由页（旧内嵌面板删除）
         router.pushUrl({ url: 'pages/HistoryPage' })
@@ -1015,7 +1029,7 @@ struct BrowserShell {
       .width(36)
       .height(36)
       .backgroundColor(Color.Transparent)
-      .accessibilityText('回到主页')
+      .accessibilityText(I18n.t('tbHome'))
       .onClick(() => {
         this.goHome()
       })
@@ -1030,7 +1044,7 @@ struct BrowserShell {
       .width(36)
       .height(36)
       .backgroundColor(Color.Transparent)
-      .accessibilityText('AI 代理侧栏')
+      .accessibilityText(I18n.t('tbAgentPanel'))
       .onClick(() => {
         console.info('BrowserShell agent panel toggled: ' + !this.showAgentPanel)
         this.showAgentPanel = !this.showAgentPanel
@@ -1046,7 +1060,7 @@ struct BrowserShell {
       .width(36)
       .height(36)
       .backgroundColor(Color.Transparent)
-      .accessibilityText('主菜单')
+      .accessibilityText(I18n.t('tbMainMenu'))
       .onClick(() => {
         console.info('BrowserShell three-dot menu toggled: ' + !this.showMenu)
         this.showMenu = !this.showMenu
@@ -1106,7 +1120,7 @@ struct BrowserShell {
   private doImport(): void {
     const path = this.importPath.trim()
     if (path.length === 0) {
-      this.importResult = '请输入 cookies.json 的沙盒相对路径'
+      this.importResult = I18n.t('impEnterPath')
       return
     }
     LoginStateManager.importFromCookieFile(path).then((states) => {
@@ -1115,11 +1129,11 @@ struct BrowserShell {
       if (n > 0) {
         // 注入 WebView cookies
         LoginStateManager.injectCookiesToWebview().then((count) => {
-          this.importResult = `已导入 ${n} 个域 / 注入 ${count} 条 cookie`
+          this.importResult = `${I18n.t('impOk')}${n}${I18n.t('impOkMid')}${count}${I18n.t('impOkEnd')}`
           console.info('BrowserShell import-login: domains=' + n + ' injected=' + count)
         })
       } else {
-        this.importResult = '未解析到 cookie（文件不存在或格式不符）'
+        this.importResult = I18n.t('impParseFail')
         console.info('BrowserShell import-login: 0 domains parsed from ' + path)
       }
       this.showImportPanel = false
@@ -1132,11 +1146,11 @@ struct BrowserShell {
   @Builder
   ImportLoginPanel(): void {
     Column() {
-      Text('导入登录态 (cookies.json)')
+      Text(I18n.t('impTitle'))
         .fontSize(16)
         .fontWeight(FontWeight.Bold)
         .fontColor('#E6EDF3')
-      Text('输入应用沙盒 files/ 下的相对路径，如 files/cookies.json')
+      Text(I18n.t('impHint'))
         .fontSize(12)
         .fontColor('#8B949E')
         .margin({ top: 8 })
@@ -1152,14 +1166,14 @@ struct BrowserShell {
           .margin({ top: 8 })
       }
       Row() {
-        Button('取消')
+        Button(I18n.t('cancel'))
           .fontSize(14)
           .width(80)
           .height(36)
           .backgroundColor('#30363D')
           .fontColor('#E6EDF3')
           .onClick(() => { this.showImportPanel = false })
-        Button('导入')
+        Button(I18n.t('impBtn'))
           .fontSize(14)
           .width(80)
           .height(36)
@@ -1321,27 +1335,27 @@ struct BrowserShell {
     const pageUrl = linkUrl && linkUrl.length > 0 ? linkUrl : this.currentUrl
     const entries: CtxEntry[] = [
       {
-        icon: $rawfile('ic_back.svg'), label: '后退', shortcut: 'Alt+左箭头', enabled: canBack, divider: false,
+        icon: $rawfile('ic_back.svg'), label: I18n.t('tbBack'), shortcut: 'Alt+←', enabled: canBack, divider: false,
         onTap: () => { this.getActiveController()?.backward() }
       },
       {
-        icon: $rawfile('ic_forward.svg'), label: '前进', shortcut: 'Alt+右箭头', enabled: canFwd, divider: false,
+        icon: $rawfile('ic_forward.svg'), label: I18n.t('tbForward'), shortcut: 'Alt+→', enabled: canFwd, divider: false,
         onTap: () => { this.getActiveController()?.forward() }
       },
       {
-        icon: $rawfile('ic_reload.svg'), label: '重新加载', shortcut: 'Ctrl+R', enabled: true, divider: true,
+        icon: $rawfile('ic_reload.svg'), label: I18n.t('cmReload'), shortcut: 'Ctrl+R', enabled: true, divider: true,
         onTap: () => { this.getActiveController()?.refresh() }
       },
       {
-        icon: $rawfile('ic_star_outline.svg'), label: '将页面添加到书签', enabled: true, divider: true,
+        icon: $rawfile('ic_star_outline.svg'), label: I18n.t('cmAddBookmark'), enabled: true, divider: true,
         onTap: () => { this.addBookmarkSilently(pageUrl) }
       },
       {
-        icon: $rawfile('ic_content_copy.svg'), label: '复制网址', enabled: pageUrl.length > 0, divider: false,
+        icon: $rawfile('ic_content_copy.svg'), label: I18n.t('cmCopyUrl'), enabled: pageUrl.length > 0, divider: false,
         onTap: () => { this.copyUrl(pageUrl) }
       },
       {
-        icon: $rawfile('ic_code.svg'), label: '查看网页源码', enabled: pageUrl.startsWith('http'), divider: false,
+        icon: $rawfile('ic_code.svg'), label: I18n.t('cmViewSource'), enabled: pageUrl.startsWith('http'), divider: false,
         onTap: () => { this.openViewSource(pageUrl) }
       }
     ]
@@ -1356,24 +1370,24 @@ struct BrowserShell {
     const tab = TabManager.getTab(tabId)
     const entries: CtxEntry[] = [
       {
-        icon: $rawfile('ic_add.svg'), label: '向右新建标签页', enabled: true, divider: false,
+        icon: $rawfile('ic_add.svg'), label: I18n.t('cmNewTabRight'), enabled: true, divider: false,
         onTap: () => { this.createNewTab() }
       },
-      { label: '重新打开已关闭的标签页', enabled: false, divider: true },
+      { label: I18n.t('cmReopenClosed'), enabled: false, divider: true },
       {
-        icon: $rawfile('ic_content_copy.svg'), label: '复制标签页网址', enabled: !!(tab && tab.currentUrl), divider: false,
+        icon: $rawfile('ic_content_copy.svg'), label: I18n.t('cmCopyTabUrl'), enabled: !!(tab && tab.currentUrl), divider: false,
         onTap: () => { if (tab && tab.currentUrl) { this.copyUrl(tab.currentUrl) } }
       },
       {
-        icon: $rawfile('ic_close.svg'), label: '关闭', enabled: true, divider: true,
+        icon: $rawfile('ic_close.svg'), label: I18n.t('cmClose'), enabled: true, divider: true,
         onTap: () => { this.closeTabById(tabId) }
       },
       {
-        icon: $rawfile('ic_close.svg'), label: '关闭其他标签页', enabled: hasOther, divider: false,
+        icon: $rawfile('ic_close.svg'), label: I18n.t('cmCloseOthers'), enabled: hasOther, divider: false,
         onTap: () => { this.closeOtherTabs(tabId) }
       },
       {
-        icon: $rawfile('ic_close.svg'), label: '关闭右侧标签页', enabled: hasRight, divider: false,
+        icon: $rawfile('ic_close.svg'), label: I18n.t('cmCloseRight'), enabled: hasRight, divider: false,
         onTap: () => { this.closeRightTabs(tabId) }
       }
     ]
@@ -1384,15 +1398,15 @@ struct BrowserShell {
   private buildDashboardCtxEntries(): CtxEntry[] {
     return [
       {
-        icon: $rawfile('ic_reload.svg'), label: '刷新', enabled: true, divider: false,
+        icon: $rawfile('ic_reload.svg'), label: I18n.t('tbReload'), enabled: true, divider: false,
         onTap: () => { this.getActiveController()?.refresh() }
       },
       {
-        icon: $rawfile('ic_back.svg'), label: '后退', enabled: this.getActiveController() ? this.getActiveController()!.accessBackward() : false, divider: false,
+        icon: $rawfile('ic_back.svg'), label: I18n.t('tbBack'), enabled: this.getActiveController() ? this.getActiveController()!.accessBackward() : false, divider: false,
         onTap: () => { this.getActiveController()?.backward() }
       },
       {
-        icon: $rawfile('ic_star_outline.svg'), label: '书签管理', enabled: true, divider: true,
+        icon: $rawfile('ic_star_outline.svg'), label: I18n.t('cmBookmarkMgr'), enabled: true, divider: true,
         onTap: () => { router.pushUrl({ url: 'pages/BookmarksPage' }) }
       }
     ]
@@ -1482,7 +1496,7 @@ struct BrowserShell {
 
   private joinUltrafast(): void {
     this.ultrafastHidden = true
-    this.ultrafastToast = '已加入 Ultrafast 等待列表'
+    this.ultrafastToast = I18n.t('ntJoinWaitlist')
     setTimeout(() => { this.ultrafastToast = '' }, 2000)
     const p = this.ultraPrefs
     if (p !== null) {
@@ -1539,11 +1553,11 @@ struct BrowserShell {
         // P45-D: 搜索引擎常驻指示 —— 用户反馈"找不到搜索引擎入口"（原入口藏在建议下拉底行，
         // 须先点地址栏才出现）。hero 卡右上角常驻显示当前引擎，点击直达设置页搜索节。
         Row() {
-          Text('搜索引擎 · ' + getEngineById(ConfigManager.getSearchEngineId()).name)
+          Text(I18n.t('ntSearchEngine') + getEngineById(ConfigManager.getSearchEngineId()).name)
             .fontSize(11)
             .fontColor('#FFFFFFE6')
             .maxLines(1)
-          Text('切换')
+          Text(I18n.t('ntSwitch'))
             .fontSize(11)
             .fontColor('#FFFFFF')
             .fontWeight(FontWeight.Medium)
@@ -1624,7 +1638,7 @@ struct BrowserShell {
           .height(28)
           .backgroundColor(Color.Transparent)
           .margin({ top: 6, right: 6 })
-          .accessibilityText('关闭横幅')
+          .accessibilityText(I18n.t('ntCloseBanner'))
           .onClick(() => {
             this.dismissUltrafast()
           })
@@ -1653,8 +1667,8 @@ struct BrowserShell {
             .fillColor('#7CB1FF')
             .draggable(false)
           Text(this.dashProviders.length > 0 || this.dashCurProviderName.length > 0
-            ? (this.dashCurProviderName.length > 0 ? this.dashCurProviderName : '选择模型')
-            : '未配置模型')
+            ? (this.dashCurProviderName.length > 0 ? this.dashCurProviderName : I18n.t('ntPickModel'))
+            : I18n.t('ntNoModel'))
             .fontSize(11)
             .fontColor(this.dashProviders.length > 0 || this.dashCurProviderName.length > 0 ? (this.darkMode ? '#7CB1FF' : '#1A73E8') : '#F0983F')
             .maxLines(1)
@@ -1681,7 +1695,7 @@ struct BrowserShell {
           Column() {
             if (this.dashProviders.length === 0) {
               // 无 providers：引导去 LLM Hub
-              Text('未配置模型 — 去配置')
+              Text(I18n.t('ntNoModelGo'))
                 .fontSize(11)
                 .fontColor('#F0983F')
                 .padding({ left: 12, right: 12, top: 9, bottom: 9 })
@@ -1773,7 +1787,7 @@ struct BrowserShell {
       // P29: 聊天输入框（对标上游新标签页 ConversationInput——大圆角搜索/提问框+发送）
       Row() {
         Row() {
-          TextInput({ text: this.chatInput, placeholder: '问点什么，或让代理帮你浏览...' })
+          TextInput({ text: this.chatInput, placeholder: I18n.t('ntAskSomething') })
             .fontSize(14)
             .fontColor(this.pal().text)
             .placeholderColor(this.pal().text2)
@@ -1806,7 +1820,7 @@ struct BrowserShell {
         .borderRadius(22)
         .backgroundColor('#1A73E8')
         .margin({ left: 10 })
-        .accessibilityText('发送')
+        .accessibilityText(I18n.t('tbSend'))
         .onClick(() => {
           this.sendChatInput()
         })
@@ -1817,7 +1831,7 @@ struct BrowserShell {
       // P35-C: ScheduleResults 卡（定时任务最近 3 条执行结果；无数据整卡不显示）
       if (this.schedResults.length > 0) {
         Column() {
-          Text('定时任务执行结果')
+          Text(I18n.t('ntScheduleResults'))
             .fontSize(12)
             .fontWeight(FontWeight.Bold)
             .fontColor(this.pal().text)
@@ -1830,7 +1844,7 @@ struct BrowserShell {
                   .maxLines(1)
                   .constraintSize({ maxWidth: 240 })
                   .textOverflow({ overflow: TextOverflow.Ellipsis })
-                Text(t.lastResult.length > 0 ? t.lastResult : '(无结果)')
+                Text(t.lastResult.length > 0 ? t.lastResult : I18n.t('ntNoResult'))
                   .fontSize(10)
                   .fontColor(this.pal().text2)
                   .maxLines(2)
@@ -1860,7 +1874,7 @@ struct BrowserShell {
       }
 
       Row() {
-        Button('新建标签页')
+        Button(I18n.t('ntNewTabBtn'))
           .fontSize(14)
           .backgroundColor('#238636')
           .fontColor('#FFFFFF')
@@ -1872,7 +1886,7 @@ struct BrowserShell {
             }
           })
 
-        Button('查看代理')
+        Button(I18n.t('ntViewAgent'))
           .fontSize(14)
           .backgroundColor('#1F6FEB')
           .fontColor('#FFFFFF')
@@ -1882,7 +1896,7 @@ struct BrowserShell {
             this.showNeo = true
           })
 
-        Button('导入登录态')
+        Button(I18n.t('ntImportLogin'))
           .fontSize(14)
           .backgroundColor('#9E6A03')
           .fontColor('#FFFFFF')
@@ -1893,7 +1907,7 @@ struct BrowserShell {
       }
       .margin({ top: 24 })
 
-      Text('书签 ' + this.bookmarkCount + ' 条 · 历史 ' + this.historyCount + ' 条')
+      Text(I18n.t('ntBmCount') + this.bookmarkCount + I18n.t('ntHistCount') + this.historyCount + I18n.t('ntCountEnd'))
         .fontSize(12)
         .fontColor('#8B949E')
         .margin({ top: 16 })
@@ -2091,7 +2105,7 @@ struct BrowserShell {
                 + ' reqUrl=' + reqUrl + ' navTarget=' + navTarget + ' lastNavUrl=' + this.lastNavUrl
                 + ' eq=' + (norm(reqUrl) === norm(navTarget)))
               if (reqUrl.length > 0 && navTarget.length > 0 && norm(reqUrl) === norm(navTarget)) {
-                this.navError = event.error ? event.error.getErrorInfo() : '无法打开页面'
+                this.navError = event.error ? event.error.getErrorInfo() : I18n.t('navCannotOpen')
                 this.navErrorUrl = reqUrl
                 console.warn('BrowserShell navError banner: ' + reqUrl + ' ' + this.navError)
               }
@@ -2154,7 +2168,7 @@ struct BrowserShell {
           .width(16).height(16)
           .fillColor(this.pal().text2)
           .draggable(false)
-        TextInput({ text: this.findQuery, placeholder: '查找页面内容' }).id('p17c_findinput')
+        TextInput({ text: this.findQuery, placeholder: I18n.t('findPlaceholder') }).id('p17c_findinput')
           .fontColor(this.pal().text)
           .placeholderColor(this.pal().text2)
           .layoutWeight(1)
@@ -2185,7 +2199,7 @@ struct BrowserShell {
         .height(28)
         .backgroundColor(Color.Transparent)
         .margin({ left: 4 })
-        .accessibilityText('查找上一个')
+        .accessibilityText(I18n.t('findPrev'))
         .onClick(() => { this.doFind('prev') })
         Button({ type: ButtonType.Normal }) {
           Image($rawfile('ic_arrow_down.svg'))
@@ -2196,7 +2210,7 @@ struct BrowserShell {
         .width(28)
         .height(28)
         .backgroundColor(Color.Transparent)
-        .accessibilityText('查找下一个')
+        .accessibilityText(I18n.t('findNext'))
         .onClick(() => { this.doFind('next') })
         Button({ type: ButtonType.Normal }) {
           Image($rawfile('ic_close.svg'))
@@ -2234,11 +2248,11 @@ struct BrowserShell {
     console.info('BrowserShell doFind: mode=' + mode + ' q=' + q)
     BCPEngine.findText(q, forward).then((v: string) => {
       if (v === 'found') {
-        this.findStatus = '有匹配'
+        this.findStatus = I18n.t('findMatched')
       } else if (v === 'none') {
-        this.findStatus = '无匹配'
+        this.findStatus = I18n.t('findNoMatch')
       } else {
-        this.findStatus = '此页面不支持查找'
+        this.findStatus = I18n.t('findUnsupported')
       }
     })
   }
@@ -2266,13 +2280,13 @@ struct BrowserShell {
   ErrorBanner(): void {
     if (this.navError.length > 0) {
       Row() {
-        Text(this.navErrorUrl + '\n加载失败：' + this.navError)
+        Text(this.navErrorUrl + '\n' + I18n.t('navLoadFail') + this.navError)
           .fontSize(12)
           .fontColor('#FFFFFF')
           .layoutWeight(1)
           .maxLines(2)
           .textOverflow({ overflow: TextOverflow.Ellipsis })
-        Button('重试')
+        Button(I18n.t('retry'))
           .fontSize(12)
           .height(28)
           .backgroundColor('#FFFFFF')
@@ -2299,7 +2313,7 @@ struct BrowserShell {
         .width(28)
         .height(28)
         .backgroundColor(Color.Transparent)
-        .accessibilityText('关闭错误提示')
+        .accessibilityText(I18n.t('close'))
         .margin({ left: 4 })
         .onClick(() => {
           this.navError = ''
@@ -2500,7 +2514,7 @@ struct BrowserShell {
     if (kw.length > 0) {
       // P11d: 首行「搜索 kw」——走搜索引擎 fallback(onPick kind=search)
       // P18: 首行带引擎名（如「百度 搜索 xx」），ChromeWidgets 直接渲染 title
-      items.push({ kind: 'search', title: getEngineById(ConfigManager.getSearchEngineId()).name + ' 搜索 ' + kw, url: kw })
+      items.push({ kind: 'search', title: getEngineById(ConfigManager.getSearchEngineId()).name + (I18n.getLocale() === 'en' ? ' Search ' : ' 搜索 ') + kw, url: kw })
       const his = HistoryManager.getAllHistory(100).filter((e: HistoryEntry) =>
         e.url.toLowerCase().includes(kw) || (e.title || '').toLowerCase().includes(kw))
       for (const e of his.slice(0, 5)) {
@@ -2655,7 +2669,7 @@ struct BrowserShell {
     const now = new Date()
     const pad = (n: number): string => (n < 10 ? '0' + n : '' + n)
     if (d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate()) {
-      return `今天 ${pad(d.getHours())}:${pad(d.getMinutes())}`
+      return `${I18n.t('ntToday')} ${pad(d.getHours())}:${pad(d.getMinutes())}`
     }
     if (d.getFullYear() === now.getFullYear()) {
       return `${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
@@ -2696,7 +2710,7 @@ struct BrowserShell {
     }
     try {
       native.zoom(1)
-      this.p47FlashToast('重置缩放 100%')
+      this.p47FlashToast(I18n.t('rmResetZoom'))
     } catch (e) {
       console.warn('[P47] zoom reset fail: ' + e)
     }
@@ -2726,7 +2740,7 @@ struct BrowserShell {
         const obj = JSON.parse(s) as Record<string, Object>
         const ps = obj['p'] as string[] | undefined
         if (!ps || ps.length === 0) {
-          this.p47FlashToast('未找到可读正文')
+          this.p47FlashToast(I18n.t('rmNoContent'))
           return
         }
         this.p47ReaderTitle = this.asStr(obj['h'])
@@ -2738,10 +2752,10 @@ struct BrowserShell {
         this.p47ReaderOpen = true
         console.info('[P47] reader: ' + ps.length + ' paragraphs')
       } catch (e) {
-        this.p47FlashToast('阅读模式提取失败')
+        this.p47FlashToast(I18n.t('rmExtractFail'))
       }
     }).catch(() => {
-      this.p47FlashToast('当前页面不支持阅读')
+      this.p47FlashToast(I18n.t('rmUnsupported'))
     })
   }
 
@@ -2761,10 +2775,10 @@ struct BrowserShell {
     const p = cred.length > 0 ? JSON.stringify(cred[0].password) : '"P47SamplePass!"'
     const js = "(function(){function sv(el,v){var pr=Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype,'value');if(pr&&pr.set){pr.set.call(el,v)}else{el.value=v}el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}))}var n=0;var ins=document.querySelectorAll('input');for(var i=0;i<ins.length;i++){var el=ins[i];var t=el.type||'text';if(t==='hidden'||t==='file'||t==='checkbox'||t==='radio'||t==='submit'||t==='button')continue;var key=((el.name||'')+' '+(el.id||'')+' '+(el.placeholder||'')+' '+(el.autocomplete||'')+' '+t).toLowerCase();var v=null;if(t==='email'||key.indexOf('email')>=0||key.indexOf('mail')>=0){v=" + u + "}else if(t==='password'||key.indexOf('pass')>=0||key.indexOf('pwd')>=0){v=" + p + "}else if(t==='tel'||key.indexOf('phone')>=0||key.indexOf('mobile')>=0){v='13800138000'}else if(key.indexOf('name')>=0&&key.indexOf('user')<0&&key.indexOf('file')<0){v='张三'}else if(key.indexOf('user')>=0||key.indexOf('account')>=0||key.indexOf('login')>=0){v=" + u + "}if(v!==null){sv(el,String(v));n++}}return String(n)})()"
     ctrl.runJavaScript(js).then((r: string) => {
-      this.p47FlashToast('已填充 ' + r.replace(/\"/g, '') + ' 个字段')
+      this.p47FlashToast(I18n.t('pwFilled') + r.replace(/\"/g, '') + I18n.t('pwFilledEnd'))
       console.info('[P47] form filled: ' + r)
     }).catch(() => {
-      this.p47FlashToast('表单填充失败')
+      this.p47FlashToast(I18n.t('pwFillFailed'))
     })
   }
 
@@ -2824,7 +2838,7 @@ struct BrowserShell {
             const p = cred['p'] ?? ''
             if (p.length > 0 && !CredentialStore.hasCredentialFor(domain)) {
               this.p47SaveDomain = domain
-              this.p47SaveUser = u.length > 0 ? u : '(未知用户名)'
+              this.p47SaveUser = u.length > 0 ? u : I18n.t('pwUnknownUser')
               this.p47SavePass = p
               this.p47SaveOpen = true
               console.info('[P47] save prompt: ' + domain + ' user=' + u)
@@ -2863,7 +2877,7 @@ struct BrowserShell {
 
   /** P47-B: 保存单凭凭据 */
   private p47DoSave(): void {
-    const user = this.p47SaveUser === '(未知用户名)' ? '' : this.p47SaveUser
+    const user = this.p47SaveUser === '(未知用户名)' || this.p47SaveUser === '(unknown username)' ? '' : this.p47SaveUser
     CredentialStore.add(this.p47SaveDomain, user, this.p47SavePass)
     console.info('[P47] credential saved: ' + this.p47SaveDomain)
     this.p47SaveOpen = false

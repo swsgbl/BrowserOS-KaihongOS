@@ -1,0 +1,9 @@
+[
+  ["tab.title || (tab.agentId ? '代理 ' + tab.agentId.substring(0, 12) : '新标签页')", "tab.title || (tab.agentId ? I18n.t('tabAgent') + ' ' + tab.agentId.substring(0, 12) : I18n.t('tabNewTab'))"],
+  [".accessibilityText('关闭标签页 ' + (tab.title || '新标签页'))", ".accessibilityText(I18n.t('tabCloseTab') + ' ' + (tab.title || I18n.t('tabNewTab')))"],
+  [".accessibilityText('新建标签页')", ".accessibilityText(I18n.t('menuNewTab'))"],
+  [".accessibilityText('搜索标签页')", ".accessibilityText(I18n.t('tabSearchTabs'))"],
+  ["Text('打开的标签页')", "Text(I18n.t('tabOpenTabs'))"],
+  ["Text(tab.title || '新标签页')", "Text(tab.title || I18n.t('tabNewTab'))"],
+  ["Text('新建标签页')", "Text(I18n.t('menuNewTab'))"]
+]

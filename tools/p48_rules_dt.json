@@ -1,0 +1,18 @@
+[
+  ["this.infoUrl = tab && tab.currentUrl ? tab.currentUrl : '(无)'", "this.infoUrl = tab && tab.currentUrl ? tab.currentUrl : I18n.t('dtNone')"],
+  ["this.infoTitle = tab && tab.title ? tab.title : '(无)'", "this.infoTitle = tab && tab.title ? tab.title : I18n.t('dtNone')"],
+  ["this.infoUa = '(不可用)'", "this.infoUa = I18n.t('dtNa')"],
+  ["this.infoLoadMs = 'Console 消息数: ' + logs.length", "this.infoLoadMs = I18n.t('dtConsoleN') + logs.length"],
+  ["this.infoLoadMs = 'Console 消息数: 0（页面未产生日志）'", "this.infoLoadMs = I18n.t('dtConsole0')"],
+  ["this.evalHistory.unshift('< 错误: 无活动 WebView')", "this.evalHistory.unshift(I18n.t('dtErrNoWebview'))"],
+  ["this.evalHistory.unshift('< 错误: ' + e)", "this.evalHistory.unshift(I18n.t('dtErrPre') + e)"],
+  ["Text('开发者工具')", "Text(I18n.t('dtTitle'))"],
+  ["Button('清空')", "Button(I18n.t('dtClear'))"],
+  ["Text('暂无 Console 消息。\\n页面运行 console.log/warn/error 后在此显示。')", "Text(I18n.t('dtNoConsole'))"],
+  ["TextInput({ text: this.evalInput, placeholder: '输入 JS 表达式，如 1+1 或 document.title' })", "TextInput({ text: this.evalInput, placeholder: I18n.t('dtEvalPh') })"],
+  ["Text('暂无网络请求记录。\\n页面加载后请求将在此显示。')", "Text(I18n.t('dtNoNet'))"],
+  ["Text('Headers: ' + (net.headers.length > 0 ? net.headers : '(无)'))", "Text('Headers: ' + (net.headers.length > 0 ? net.headers : I18n.t('dtNone')))"],
+  ["this.InfoRow('标题', this.infoTitle)", "this.InfoRow(I18n.t('dtTitleRow'), this.infoTitle)"],
+  ["this.InfoRow('统计', this.infoLoadMs)", "this.InfoRow(I18n.t('dtStats'), this.infoLoadMs)"],
+  ["this.InfoRow('网络请求数', '' + this.networkLogs.length)", "this.InfoRow(I18n.t('dtNetCount'), '' + this.networkLogs.length)"]
+]

@@ -1,0 +1,15 @@
+[
+  ["promptAction.showToast({ message: `导入 ${result.added} 条，跳过 ${result.skipped} 条重复`, duration: 2500 })", "promptAction.showToast({ message: `${I18n.t('bmImported')}${result.added}${I18n.t('bmSkipped')}${result.skipped}${I18n.t('bmDupEnd')}`, duration: 2500 })"],
+  ["promptAction.showToast({ message: '导入失败：无法读取文件' })", "promptAction.showToast({ message: I18n.t('bmImportFail') })"],
+  [".accessibilityText('返回')", ".accessibilityText(I18n.t('back'))"],
+  ["Text('书签')", "Text(I18n.t('bmTitle'))"],
+  ["Text('导入')", "Text(I18n.t('bmImport'))"],
+  [".accessibilityText('导入书签')", ".accessibilityText(I18n.t('bmImportA11y'))"],
+  ["TextInput({ text: this.keyword, placeholder: '搜索书签' })", "TextInput({ text: this.keyword, placeholder: I18n.t('bmSearchPh') })"],
+  [".accessibilityText('清除搜索')", ".accessibilityText(I18n.t('bmClearSearch'))"],
+  ["Text('暂无书签 —— 在页面点击地址栏旁星标添加')", "Text(I18n.t('bmEmpty'))"],
+  ["Text('无匹配书签')", "Text(I18n.t('bmNoMatch'))"],
+  ["Text('保存')", "Text(I18n.t('save'))"],
+  ["Text('编辑')", "Text(I18n.t('edit'))"],
+  ["Text('删除')", "Text(I18n.t('delete'))"]
+]

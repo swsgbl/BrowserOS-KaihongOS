@@ -5,6 +5,7 @@
  * 设计语言沿用 Palette(surface/surfaceAlt/text/text2/border)
  */
 import { router } from '@kit.ArkUI'
+import { I18n } from '../common/I18n'
 import { Palette } from '../common/Palette'
 import { BookmarkManager } from '../service/BookmarkManager'
 
@@ -16,6 +17,13 @@ interface BookmarkPill {
 
 @Component
 export struct BookmarkBar {
+  // P48: locale 刷新锚
+  @StorageProp('app_locale') @Watch('onLocaleFlip') appLocale: string = 'zh'
+  @State localeVersion: number = 0
+
+  onLocaleFlip(): void {
+    this.localeVersion++
+  }
   /** p10a: AppStorage('darkMode') 消费 */
   @StorageProp('darkMode') @Watch('onThemeFlip') darkMode: boolean = false // P44
   @State themeVersion: number = 0 // P44
@@ -43,7 +51,7 @@ export struct BookmarkBar {
       Scroll() {
         Row() {
           if (this.bookmarks.length === 0) {
-            Text('暂无书签 —— 点星标收藏当前页')
+            Text(I18n.t('bmEmptyBar'))
               .fontSize(11)
               .fontColor(this.pal().text2)
               .padding({ left: 4, right: 8 })
@@ -67,7 +75,7 @@ export struct BookmarkBar {
             .borderRadius(12)
             .backgroundColor(this.pal().surfaceAlt)
             .margin({ right: 6 })
-            .accessibilityText('打开书签 ' + (bm.title.length > 0 ? bm.title : bm.url))
+            .accessibilityText(I18n.t('bmTitle') + ' ' + (bm.title.length > 0 ? bm.title : bm.url))
             .onClick(() => {
               this.onOpenBookmark(bm.url)
             })
@@ -87,7 +95,7 @@ export struct BookmarkBar {
           .width(14).height(14)
           .fillColor(this.pal().text2)
           .draggable(false)
-        Text('全部书签 ' + this.bookmarks.length)
+        Text(I18n.t('bmAllBookmarks') + this.bookmarks.length)
           .fontSize(11)
           .fontColor(this.pal().text2)
           .margin({ left: 4 })
@@ -96,7 +104,7 @@ export struct BookmarkBar {
       .padding({ left: 10, right: 10 })
       .borderRadius(12)
       .margin({ left: 8 })
-      .accessibilityText('全部书签')
+      .accessibilityText(I18n.t('bmAllBookmarks'))
       .onClick(() => {
         router.pushUrl({ url: 'pages/BookmarksPage' })
       })

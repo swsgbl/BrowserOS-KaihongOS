@@ -1,0 +1,10 @@
+[
+  ["Text(this.pinned ? '收起' : '展开')", "Text(this.pinned ? I18n.t('railCollapse') : I18n.t('railExpand'))"],
+  ["this.pinned ? '收起' : '展开'", "this.pinned ? I18n.t('railCollapse') : I18n.t('railExpand')"],
+  ["'收起侧栏' : '展开侧栏'", "I18n.t('railCollapseSide') : I18n.t('railExpandSide')"],
+  ["$rawfile('ic_home.svg'), '主页', 'home'", "$rawfile('ic_home.svg'), I18n.t('railHome'), 'home'"],
+  ["$rawfile('ic_schedule.svg'), '定时', 'scheduled'", "$rawfile('ic_schedule.svg'), I18n.t('railScheduled'), 'scheduled'"],
+  ["$rawfile('ic_agent.svg'), '连接', 'connect'", "$rawfile('ic_agent.svg'), I18n.t('railConnect'), 'connect'"],
+  ["$rawfile('ic_settings.svg'), '设置', 'settings'", "$rawfile('ic_settings.svg'), I18n.t('railSettings'), 'settings'"],
+  ["$rawfile('ic_help.svg'), '帮助', 'help'", "$rawfile('ic_help.svg'), I18n.t('railHelp'), 'help'"]
+]

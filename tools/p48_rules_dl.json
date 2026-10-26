@@ -1,0 +1,8 @@
+[
+  ["Text('下载内容')", "Text(I18n.t('dlTitle'))"],
+  ["Text('暂无下载内容')", "Text(I18n.t('dlEmpty'))"],
+  ["Text('网页中的下载链接将自动保存到应用沙盒 files/downloads/')", "Text(I18n.t('dlEmptyDesc'))"],
+  ["Button('重试')", "Button(I18n.t('retry'))"],
+  ["Button(this.copiedId === item.id ? '已复制' : '复制路径')", "Button(this.copiedId === item.id ? I18n.t('copied') : I18n.t('dlCopyPath'))"],
+  ["Text('失败：' + (item.error.length > 0 ? item.error : '网络错误'))", "Text(I18n.t('dlFailed') + (item.error.length > 0 ? item.error : I18n.t('dlNetError')))"]
+]

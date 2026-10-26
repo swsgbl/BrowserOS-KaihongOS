@@ -2,6 +2,7 @@
  * P9-C3: 书签管理页 —— 列表（favicon+标题+URL+编辑/删除）
  */
 import { BookmarkManager, ImportEntry } from '../service/BookmarkManager'
+import { I18n } from '../common/I18n'
 import { EventBus, EventBusEvents } from '../infra/EventBus'
 import { router, promptAction } from '@kit.ArkUI'
 import { Palette } from '../common/Palette'
@@ -18,6 +19,13 @@ interface BookmarkRow {
 @Entry
 @Component
 struct BookmarksPage {
+  // P48: locale 刷新锚
+  @StorageProp('app_locale') @Watch('onLocaleFlip') appLocale: string = 'zh'
+  @State localeVersion: number = 0
+
+  onLocaleFlip(): void {
+    this.localeVersion++
+  }
   /** p10a: AppStorage('darkMode') 消费 —— EntryAbility 启动时与设置页开关写入 */
   @StorageProp('darkMode') @Watch('onThemeFlip') darkMode: boolean = false // P44
   @State themeVersion: number = 0 // P44
@@ -76,7 +84,7 @@ struct BookmarksPage {
       const entries = this.parseNetscapeBookmarks(text)
       const result = BookmarkManager.importBookmarks(entries)
       this.reload()
-      promptAction.showToast({ message: `导入 ${result.added} 条，跳过 ${result.skipped} 条重复`, duration: 2500 })
+      promptAction.showToast({ message: `${I18n.t('bmImported')}${result.added}${I18n.t('bmSkipped')}${result.skipped}${I18n.t('bmDupEnd')}`, duration: 2500 })
     } catch (e) {
       if (file !== null) {
         try {
@@ -85,7 +93,7 @@ struct BookmarksPage {
         }
       }
       console.error('BookmarksPage import read failed: ' + e)
-      promptAction.showToast({ message: '导入失败：无法读取文件' })
+      promptAction.showToast({ message: I18n.t('bmImportFail') })
     }
   }
 
@@ -152,24 +160,24 @@ struct BookmarksPage {
           .fillColor(this.pal().text2)
           .draggable(false)
           .width(36)
-          .accessibilityText('返回')
+          .accessibilityText(I18n.t('back'))
           .onClick(() => {
             router.back()
           })
-        Text('书签')
+        Text(I18n.t('bmTitle'))
           .fontSize(17)
           .fontWeight(FontWeight.Bold)
           .fontColor(this.pal().text)
           .layoutWeight(1)
-        Text('导入')
+        Text(I18n.t('bmImport'))
           .fontSize(12)
           .fontColor('#1A73E8')
           .padding({ left: 8, right: 4 })
-          .accessibilityText('导入书签')
+          .accessibilityText(I18n.t('bmImportA11y'))
           .onClick(() => {
             this.startImport()
           })
-        Text(`${this.filtered().length} 条`)
+        Text(`${this.filtered().length}` + I18n.t('ntCountEnd'))
           .fontSize(11)
           .fontColor(this.pal().text2)
       }
@@ -184,7 +192,7 @@ struct BookmarksPage {
           .width(16).height(16)
           .fillColor(this.pal().text2)
           .draggable(false)
-        TextInput({ text: this.keyword, placeholder: '搜索书签' })
+        TextInput({ text: this.keyword, placeholder: I18n.t('bmSearchPh') })
           .fontColor(this.pal().text)
           .placeholderColor(this.pal().text2)
           .layoutWeight(1)
@@ -206,7 +214,7 @@ struct BookmarksPage {
           .width(26)
           .height(26)
           .backgroundColor(Color.Transparent)
-          .accessibilityText('清除搜索')
+          .accessibilityText(I18n.t('bmClearSearch'))
           .onClick(() => {
             this.keyword = ''
           })
@@ -225,7 +233,7 @@ struct BookmarksPage {
             .width(36).height(36)
             .fillColor('#DADCE0')
             .draggable(false)
-          Text('暂无书签 —— 在页面点击地址栏旁星标添加')
+          Text(I18n.t('bmEmpty'))
             .fontSize(13)
             .fontColor(this.pal().text2)
             .margin({ top: 8 })
@@ -235,7 +243,7 @@ struct BookmarksPage {
       } else if (this.filtered().length === 0) {
         // P20-B: 有关键词但无命中
         Column() {
-          Text('无匹配书签')
+          Text(I18n.t('bmNoMatch'))
             .fontSize(13)
             .fontColor(this.pal().text2)
             .margin({ top: 60 })
@@ -260,7 +268,7 @@ struct BookmarksPage {
                       .backgroundColor(this.pal().surfaceAlt)
                       .borderRadius(6)
                       .onChange((v: string) => { this.editTitle = v })
-                    Text('保存')
+                    Text(I18n.t('save'))
                       .fontSize(12)
                       .fontColor('#1A73E8')
                       .padding({ left: 10 })
@@ -285,7 +293,7 @@ struct BookmarksPage {
                     }
                     .alignItems(HorizontalAlign.Start)
                     .layoutWeight(1)
-                    Text('编辑')
+                    Text(I18n.t('edit'))
                       .fontSize(12)
                       .fontColor('#1A73E8')
                       .margin({ left: 8 })
@@ -294,7 +302,7 @@ struct BookmarksPage {
                         this.editTitle = b.title
                       })
                   }
-                  Text('删除')
+                  Text(I18n.t('delete'))
                     .fontSize(12)
                     .fontColor('#C5221F')
                     .margin({ left: 10 })

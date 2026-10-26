@@ -4,12 +4,20 @@
  * document.documentElement.outerHTML → 只读等宽文本展示(截断 120k 字符)
  */
 import { webview } from '@kit.ArkWeb'
+import { I18n } from '../common/I18n'
 import { router } from '@kit.ArkUI'
 import { Palette } from '../common/Palette'
 
 @Entry
 @Component
 struct ViewSourcePage {
+  // P48: locale 刷新锚
+  @StorageProp('app_locale') @Watch('onLocaleFlip') appLocale: string = 'zh'
+  @State localeVersion: number = 0
+
+  onLocaleFlip(): void {
+    this.localeVersion++
+  }
   @StorageProp('darkMode') @Watch('onThemeFlip') darkMode: boolean = false // P44
   @State themeVersion: number = 0 // P44
   @State srcUrl: string = ''
@@ -65,13 +73,13 @@ struct ViewSourcePage {
             })
             .catch((err: Object) => {
               console.error('ViewSourcePage runJavaScript error: ' + err)
-              this.failed = '源码获取失败: ' + err
+              this.failed = I18n.t('vsFetchFail') + err
               this.ready = true
             })
         })
         .onErrorReceive((event) => {
           if (!this.ready) {
-            this.failed = '页面加载失败: ' + (event.error ? event.error.getErrorInfo() : 'unknown')
+            this.failed = I18n.t('vsLoadFail') + (event.error ? event.error.getErrorInfo() : 'unknown')
             this.ready = true
           }
         })
@@ -99,7 +107,7 @@ struct ViewSourcePage {
             .layoutWeight(1)
             .margin({ left: 4 })
 
-          Text('关闭')
+          Text(I18n.t('close'))
             .fontSize(13)
             .fontColor('#1A73E8')
             .padding({ left: 12, right: 12 })
@@ -117,7 +125,7 @@ struct ViewSourcePage {
         if (!this.ready) {
           Column() {
             LoadingProgress().width(28).height(28)
-            Text('正在获取源码…')
+            Text(I18n.t('vsLoading'))
               .fontSize(12)
               .fontColor(this.pal().text2)
               .margin({ top: 8 })

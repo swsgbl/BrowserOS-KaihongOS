@@ -1,8 +1,16 @@
 import { SensitiveOperationType } from '../common/Types'
+import { I18n } from '../common/I18n'
 import { EventBus, EventBusEvents } from '../infra/EventBus'
 
 @Component
 export struct ConfirmDialog {
+  // P48: locale 刷新锚
+  @StorageProp('app_locale') @Watch('onLocaleFlip') appLocale: string = 'zh'
+  @State localeVersion: number = 0
+
+  onLocaleFlip(): void {
+    this.localeVersion++
+  }
   @State isVisible: boolean = false
   @State agentId: string = ''
   @State operationType: SensitiveOperationType = SensitiveOperationType.FORM_SUBMIT
@@ -54,7 +62,7 @@ export struct ConfirmDialog {
     if (this.isVisible) {
       Column() {
         Column() {
-          Text('敏感操作确认')
+          Text(I18n.t('dlgSensitiveTitle'))
             .fontSize(18)
             .fontWeight(FontWeight.Bold)
             .fontColor('#333333')
@@ -67,7 +75,7 @@ export struct ConfirmDialog {
 
           Column() {
             Row() {
-              Text('代理: ')
+              Text(I18n.t('dlgAgent'))
                 .fontSize(12)
                 .fontColor('#999999')
               Text(this.agentId.substring(0, 20))
@@ -77,7 +85,7 @@ export struct ConfirmDialog {
 
             if (this.targetUrl) {
               Row() {
-                Text('目标URL: ')
+                Text(I18n.t('dlgTargetUrl'))
                   .fontSize(12)
                   .fontColor('#999999')
                 Text(this.targetUrl)
@@ -92,7 +100,7 @@ export struct ConfirmDialog {
 
             if (this.targetElement) {
               Row() {
-                Text('目标元素: ')
+                Text(I18n.t('dlgTargetEl'))
                   .fontSize(12)
                   .fontColor('#999999')
                 Text(this.targetElement)
@@ -112,7 +120,7 @@ export struct ConfirmDialog {
           .margin({ top: 16 })
 
           Row() {
-            Button('拒绝')
+            Button(I18n.t('dlgDeny'))
               .fontSize(14)
               .width(100)
               .height(40)
@@ -124,7 +132,7 @@ export struct ConfirmDialog {
                 this.hide()
               })
 
-            Button('确认')
+            Button(I18n.t('confirm'))
               .fontSize(14)
               .width(100)
               .height(40)
@@ -155,17 +163,17 @@ export struct ConfirmDialog {
   private getOperationDescription(): string {
     switch (this.operationType) {
       case SensitiveOperationType.FORM_SUBMIT:
-        return 'AI代理尝试提交表单，请确认是否允许此操作'
+        return I18n.getLocale() === 'en' ? 'The AI agent is trying to submit a form. Allow this operation?' : 'AI代理尝试提交表单，请确认是否允许此操作'
       case SensitiveOperationType.PAYMENT:
-        return 'AI代理尝试执行支付操作，请确认是否允许此操作'
+        return I18n.getLocale() === 'en' ? 'The AI agent is trying to make a payment. Allow this operation?' : 'AI代理尝试执行支付操作，请确认是否允许此操作'
       case SensitiveOperationType.DELETE:
-        return 'AI代理尝试执行删除操作，请确认是否允许此操作'
+        return I18n.getLocale() === 'en' ? 'The AI agent is trying to delete something. Allow this operation?' : 'AI代理尝试执行删除操作，请确认是否允许此操作'
       case SensitiveOperationType.SETTINGS_CHANGE:
-        return 'AI代理尝试修改安全设置，请确认是否允许此操作'
+        return I18n.getLocale() === 'en' ? 'The AI agent is trying to change security settings. Allow this operation?' : 'AI代理尝试修改安全设置，请确认是否允许此操作'
       case SensitiveOperationType.UNSPECIFIED_NAVIGATION:
-        return 'AI代理尝试导航到未指定的URL，请确认是否允许此操作'
+        return I18n.getLocale() === 'en' ? 'The AI agent is trying to navigate to an unspecified URL. Allow this operation?' : 'AI代理尝试导航到未指定的URL，请确认是否允许此操作'
       default:
-        return 'AI代理尝试执行敏感操作，请确认是否允许'
+        return I18n.getLocale() === 'en' ? 'The AI agent is trying to perform a sensitive operation. Allow it?' : 'AI代理尝试执行敏感操作，请确认是否允许'
     }
   }
 }

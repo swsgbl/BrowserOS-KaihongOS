@@ -7,6 +7,7 @@
  */
 
 import { Palette } from '../common/Palette'
+import { I18n } from '../common/I18n'
 
 export interface SuggestItem {
   kind: string // 'search' | 'history' | 'bookmark'
@@ -23,7 +24,13 @@ interface MenuEntry {
 /** ⋮ 三点主菜单（自绘下拉，右上下锚定） */
 @Component
 export struct ThreeDotMenu {
-  onAction: (action: string) => void = (action: string) => {}
+  // P48: locale 刷新锚 —— @StorageProp 变化时递增 version 驱动本 struct 重渲染
+  @StorageProp('app_locale') @Watch('onLocaleFlip') appLocale: string = 'zh'
+  @State localeVersion: number = 0
+
+  onLocaleFlip(): void {
+    this.localeVersion++
+  }  onAction: (action: string) => void = (action: string) => {}
   onClose: () => void = () => {}
   @StorageProp('darkMode') @Watch('onThemeFlip') darkMode: boolean = false // P44
   @State themeVersion: number = 0 // P44
@@ -32,30 +39,36 @@ export struct ThreeDotMenu {
     return Palette.of(this.darkMode)
   }
 
-  private readonly group1: MenuEntry[] = [
-    { icon: $rawfile('ic_add.svg'), label: '新建标签页', action: 'new_tab' },
-    { icon: $rawfile('ic_content_copy.svg'), label: '新窗口', action: 'new_window' },
-    { icon: $rawfile('ic_incognito.svg'), label: '新建无痕标签页', action: 'new_incognito' }
-  ]
-  private readonly group2: MenuEntry[] = [
-    { icon: $rawfile('ic_history.svg'), label: '历史', action: 'history' },
-    { icon: $rawfile('ic_star_outline.svg'), label: '书签', action: 'bookmarks' },
-    { icon: $rawfile('ic_download.svg'), label: '下载', action: 'downloads' },
-    { icon: $rawfile('ic_key.svg'), label: '密码管理器', action: 'passwords' }
-  ]
-  private readonly group3: MenuEntry[] = [
-    { icon: $rawfile('ic_schedule.svg'), label: '定时任务', action: 'scheduled_tasks' },
-    { icon: $rawfile('ic_robot.svg'), label: 'Skills', action: 'skills' },
-    { icon: $rawfile('ic_zoom_search.svg'), label: '放大', action: 'zoom_in' },
-    { icon: $rawfile('ic_zoom_out.svg'), label: '缩小', action: 'zoom_out' },
-    { icon: $rawfile('ic_reload.svg'), label: '重置缩放', action: 'zoom_reset' },
-    { icon: $rawfile('ic_reader.svg'), label: '阅读模式', action: 'reader' },
-    { icon: $rawfile('ic_edit.svg'), label: '填充表单', action: 'fill_form' },
-    { icon: $rawfile('ic_bug.svg'), label: '开发者工具', action: 'devtools' },
-    { icon: $rawfile('ic_settings.svg'), label: '设置', action: 'settings' },
-    { icon: $rawfile('ic_find.svg'), label: '查找', action: 'find' },
-    { icon: $rawfile('ic_help.svg'), label: '帮助', action: 'help' }
-  ]
+  private get group1(): MenuEntry[] {
+    return [
+      { icon: $rawfile('ic_add.svg'), label: I18n.t('menuNewTab'), action: 'new_tab' },
+      { icon: $rawfile('ic_content_copy.svg'), label: I18n.t('menuNewWindow'), action: 'new_window' },
+      { icon: $rawfile('ic_incognito.svg'), label: I18n.t('menuNewIncognito'), action: 'new_incognito' }
+    ]
+  }
+  private get group2(): MenuEntry[] {
+    return [
+      { icon: $rawfile('ic_history.svg'), label: I18n.t('menuHistory'), action: 'history' },
+      { icon: $rawfile('ic_star_outline.svg'), label: I18n.t('menuBookmarks'), action: 'bookmarks' },
+      { icon: $rawfile('ic_download.svg'), label: I18n.t('menuDownloads'), action: 'downloads' },
+      { icon: $rawfile('ic_key.svg'), label: I18n.t('menuPasswords'), action: 'passwords' }
+    ]
+  }
+  private get group3(): MenuEntry[] {
+    return [
+      { icon: $rawfile('ic_schedule.svg'), label: I18n.t('menuScheduled'), action: 'scheduled_tasks' },
+      { icon: $rawfile('ic_robot.svg'), label: 'Skills', action: 'skills' },
+      { icon: $rawfile('ic_zoom_search.svg'), label: I18n.t('menuZoomIn'), action: 'zoom_in' },
+      { icon: $rawfile('ic_zoom_out.svg'), label: I18n.t('menuZoomOut'), action: 'zoom_out' },
+      { icon: $rawfile('ic_reload.svg'), label: I18n.t('menuZoomReset'), action: 'zoom_reset' },
+      { icon: $rawfile('ic_reader.svg'), label: I18n.t('menuReader'), action: 'reader' },
+      { icon: $rawfile('ic_edit.svg'), label: I18n.t('menuFillForm'), action: 'fill_form' },
+      { icon: $rawfile('ic_bug.svg'), label: I18n.t('menuDevtools'), action: 'devtools' },
+      { icon: $rawfile('ic_settings.svg'), label: I18n.t('menuSettings'), action: 'settings' },
+      { icon: $rawfile('ic_find.svg'), label: I18n.t('menuFind'), action: 'find' },
+      { icon: $rawfile('ic_help.svg'), label: I18n.t('menuHelp'), action: 'help' }
+    ]
+  }
 
   // P44: 主题翻转钩子——@StorageProp 变更不触发 @Builder 重调,靠 themeVersion 递增驱动全树重渲染
   onThemeFlip(): void {
@@ -92,7 +105,7 @@ export struct ThreeDotMenu {
             .width(18).height(18)
             .fillColor('#C5221F')
             .draggable(false)
-          Text('退出')
+          Text(I18n.t('menuExit'))
             .fontSize(14)
             .fontColor('#C5221F')
         }
@@ -143,7 +156,13 @@ export struct ThreeDotMenu {
 /** omnibox 聚焦建议下拉（历史+书签匹配，图标+标题+URL） */
 @Component
 export struct OmniboxSuggestions {
-  @StorageProp('darkMode') @Watch('onThemeFlip') darkMode: boolean = false // P44
+  // P48: locale 刷新锚 —— @StorageProp 变化时递增 version 驱动本 struct 重渲染
+  @StorageProp('app_locale') @Watch('onLocaleFlip') appLocale: string = 'zh'
+  @State localeVersion: number = 0
+
+  onLocaleFlip(): void {
+    this.localeVersion++
+  }  @StorageProp('darkMode') @Watch('onThemeFlip') darkMode: boolean = false // P44
   @State themeVersion: number = 0 // P44
 
   private pal(): Palette {
@@ -182,7 +201,7 @@ export struct OmniboxSuggestions {
           ForEach(this.items, (item: SuggestItem, index: number) => {
             // P11d: kind 变化处插组头(历史记录/书签)
             if (index > 0 && item.kind !== this.items[index - 1].kind) {
-              Text(item.kind === 'bookmark' ? '书签' : '历史记录')
+              Text(item.kind === 'bookmark' ? I18n.t('menuBookmarks') : I18n.t('tbHistory'))
                 .fontSize(11)
                 .fontColor(this.pal().text2)
                 .margin({ top: 4, bottom: 2, left: 8 })
@@ -241,12 +260,12 @@ export struct OmniboxSuggestions {
               .width(12).height(12)
               .fillColor(this.pal().text2)
               .draggable(false)
-            Text('搜索引擎 · ' + this.engineName)
+            Text(I18n.t('ntSearchEngine') + this.engineName)
               .fontSize(11)
               .fontColor(this.pal().text2)
               .layoutWeight(1)
               .margin({ left: 6 })
-            Text('切换')
+            Text(I18n.t('ntSwitch'))
               .fontSize(11)
               .fontColor('#1A73E8')
           }
@@ -275,7 +294,13 @@ export struct OmniboxSuggestions {
 /** 星标书签气泡：名称可编辑 + 完成/删除 */
 @Component
 export struct BookmarkBubble {
-  @StorageProp('darkMode') @Watch('onThemeFlip') darkMode: boolean = false // P44
+  // P48: locale 刷新锚 —— @StorageProp 变化时递增 version 驱动本 struct 重渲染
+  @StorageProp('app_locale') @Watch('onLocaleFlip') appLocale: string = 'zh'
+  @State localeVersion: number = 0
+
+  onLocaleFlip(): void {
+    this.localeVersion++
+  }  @StorageProp('darkMode') @Watch('onThemeFlip') darkMode: boolean = false // P44
   @State themeVersion: number = 0 // P44
 
   private pal(): Palette {
@@ -312,7 +337,7 @@ export struct BookmarkBubble {
         })
 
       Column() {
-        Text(this.editingExisting ? '修改书签' : '已添加书签')
+        Text(this.editingExisting ? I18n.t('bmEdited') : I18n.t('bmAdded'))
           .fontSize(14)
           .fontWeight(FontWeight.Medium)
           .fontColor(this.pal().text)
@@ -326,7 +351,7 @@ export struct BookmarkBubble {
           .margin({ top: 4 })
           .alignSelf(ItemAlign.Start)
 
-        Text('名称')
+        Text(I18n.t('bmName'))
           .fontSize(11)
           .fontColor(this.pal().text2)
           .margin({ top: 10, bottom: 4 })
@@ -342,7 +367,7 @@ export struct BookmarkBubble {
           })
 
         // P11d: 文件夹只读行(书签数据模型无层级,固定「书签栏」)
-        Text('文件夹')
+        Text(I18n.t('bmFolder'))
           .fontSize(11)
           .fontColor(this.pal().text2)
           .margin({ top: 10, bottom: 4 })
@@ -352,7 +377,7 @@ export struct BookmarkBubble {
             .width(16).height(16)
             .fillColor(this.pal().text2)
             .draggable(false)
-          Text('书签栏')
+          Text(I18n.t('bmBar'))
             .fontSize(13)
             .fontColor(this.pal().text)
             .margin({ left: 6 })
@@ -371,7 +396,7 @@ export struct BookmarkBubble {
 
         Row() {
           if (this.editingExisting) {
-            Button('删除')
+            Button(I18n.t('delete'))
               .fontSize(13)
               .height(34)
               .backgroundColor(this.pal().surface)
@@ -383,7 +408,7 @@ export struct BookmarkBubble {
               })
           }
           Blank()
-          Button('完成')
+          Button(I18n.t('done'))
             .fontSize(13)
             .height(34)
             .backgroundColor('#1A73E8')

@@ -6,6 +6,7 @@
  * - 完成卡：感谢 + 返回浏览器（router.back）
  */
 import { router } from '@kit.ArkUI'
+import { I18n } from '../common/I18n'
 import { preferences } from '@kit.ArkData'
 import { Palette } from '../common/Palette'
 
@@ -57,6 +58,13 @@ export class JtbdStore {
 @Entry
 @Component
 struct JtbdSurveyPage {
+  // P48: locale 刷新锚
+  @StorageProp('app_locale') @Watch('onLocaleFlip') appLocale: string = 'zh'
+  @State localeVersion: number = 0
+
+  onLocaleFlip(): void {
+    this.localeVersion++
+  }
   @StorageProp('darkMode') @Watch('onThemeFlip') darkMode: boolean = false // P44
   @State themeVersion: number = 0 // P44
   /** idle=Welcome / active=问答 / done=完成卡 */
@@ -67,11 +75,13 @@ struct JtbdSurveyPage {
   @State qIndex: number = 0
   @State answers: string[] = []
 
-  private readonly QUESTIONS: string[] = [
-    '你主要用 BrowserOS 做什么？',
-    '你最想要什么改进？',
-    '你愿意把 BrowserOS 推荐给朋友吗？'
-  ]
+  private get QUESTIONS(): string[] {
+    return [
+      I18n.t('jtQ1'),
+      I18n.t('jtQ2'),
+      I18n.t('jtQ3')
+    ]
+  }
 
   private pal(): Palette {
     return Palette.of(this.darkMode)
@@ -147,7 +157,7 @@ struct JtbdSurveyPage {
           .onClick(() => {
             router.back()
           })
-        Text('BrowserOS 调查')
+        Text(I18n.t('jtTitle'))
           .fontSize(15)
           .fontWeight(FontWeight.Bold)
           .fontColor(this.pal().text)
@@ -288,7 +298,7 @@ struct JtbdSurveyPage {
                 .lineHeight(19)
                 .margin({ top: 8, left: 24, right: 24 })
 
-              Button('返回浏览器')
+              Button(I18n.t('stBackBrowser'))
                 .fontSize(14)
                 .height(40)
                 .padding({ left: 26, right: 26 })
@@ -320,7 +330,7 @@ struct JtbdSurveyPage {
       // 底部输入区（仅 active 阶段）
       if (this.phase === 'active') {
         Row() {
-          TextInput({ text: this.inputText, placeholder: '输入你的回答…' })
+          TextInput({ text: this.inputText, placeholder: I18n.t('jtInputPh') })
             .fontSize(13)
             .layoutWeight(1)
             .height(40)
@@ -332,7 +342,7 @@ struct JtbdSurveyPage {
             .onSubmit(() => {
               this.sendAnswer()
             })
-          Button('发送')
+          Button(I18n.t('tbSend'))
             .fontSize(13)
             .height(36)
             .backgroundColor('#F0983F')

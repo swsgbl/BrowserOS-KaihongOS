@@ -6,10 +6,17 @@
  * - 底部帮助;背景 pal().surfaceAlt;展开时右缘 1px hairline
  */
 import { Palette } from '../common/Palette'
+import { I18n } from '../common/I18n'
 
 @Component
 export struct SidebarRail {
-  @StorageProp('darkMode') @Watch('onThemeFlip') darkMode: boolean = false // P44
+  // P48: locale 刷新锚 —— @StorageProp 变化时递增 version 驱动本 struct 重渲染
+  @StorageProp('app_locale') @Watch('onLocaleFlip') appLocale: string = 'zh'
+  @State localeVersion: number = 0
+
+  onLocaleFlip(): void {
+    this.localeVersion++
+  }  @StorageProp('darkMode') @Watch('onThemeFlip') darkMode: boolean = false // P44
   @State themeVersion: number = 0 // P44
   /** hover 展开态(受控于 onHover;P46-A 手动展开时锁定) */
   @State expanded: boolean = false
@@ -68,7 +75,7 @@ export struct SidebarRail {
           .fillColor(this.pal().text2)
           .draggable(false)
         if (this.expanded) {
-          Text(this.pinned ? '收起' : '展开')
+          Text(this.pinned ? I18n.t('railCollapse') : I18n.t('railExpand'))
             .fontSize(9)
             .maxLines(1)
             .margin({ top: 2 })
@@ -83,7 +90,7 @@ export struct SidebarRail {
     .margin({ top: 6 })
     .borderRadius(8)
     .backgroundColor(Color.Transparent)
-    .accessibilityText(this.expanded ? '收起侧栏' : '展开侧栏')
+    .accessibilityText(this.expanded ? I18n.t('railCollapseSide') : I18n.t('railExpandSide'))
     .onClick(() => {
       this.pinned = !this.pinned
       this.expanded = this.pinned
@@ -115,10 +122,10 @@ export struct SidebarRail {
 
       // 四项导航(收起=竖排居中,展开=竖排 48px 方块)
       Column({ space: this.expanded ? 2 : 12 }) {
-        this.RailIcon($rawfile('ic_home.svg'), '主页', 'home')
-        this.RailIcon($rawfile('ic_schedule.svg'), '定时', 'scheduled')
-        this.RailIcon($rawfile('ic_agent.svg'), '连接', 'connect')
-        this.RailIcon($rawfile('ic_settings.svg'), '设置', 'settings')
+        this.RailIcon($rawfile('ic_home.svg'), I18n.t('railHome'), 'home')
+        this.RailIcon($rawfile('ic_schedule.svg'), I18n.t('railScheduled'), 'scheduled')
+        this.RailIcon($rawfile('ic_agent.svg'), I18n.t('railConnect'), 'connect')
+        this.RailIcon($rawfile('ic_settings.svg'), I18n.t('railSettings'), 'settings')
       }
       .width('100%')
       .layoutWeight(1)
@@ -128,7 +135,7 @@ export struct SidebarRail {
 
       // 底部帮助 + P46-A 收纳/展开切换
       Column() {
-        this.RailIcon($rawfile('ic_help.svg'), '帮助', 'help')
+        this.RailIcon($rawfile('ic_help.svg'), I18n.t('railHelp'), 'help')
         this.RailToggle()
       }
       .margin({ bottom: 6 })

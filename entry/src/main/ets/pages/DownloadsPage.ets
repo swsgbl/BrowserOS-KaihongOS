@@ -3,6 +3,7 @@
  * 进行中(文件名+进度条+大小+取消) / 已完成(文件名+大小+时间+复制路径) / 失败(重试)
  */
 import { router } from '@kit.ArkUI'
+import { I18n } from '../common/I18n'
 import { Palette } from '../common/Palette'
 import { DownloadManager, DownloadItem, DownloadStatus } from '../service/DownloadManager'
 import { EventBus, EventBusEvents } from '../infra/EventBus'
@@ -11,6 +12,13 @@ import { pasteboard } from '@kit.BasicServicesKit'
 @Entry
 @Component
 struct DownloadsPage {
+  // P48: locale 刷新锚
+  @StorageProp('app_locale') @Watch('onLocaleFlip') appLocale: string = 'zh'
+  @State localeVersion: number = 0
+
+  onLocaleFlip(): void {
+    this.localeVersion++
+  }
   /** p10a: AppStorage('darkMode') 消费 —— EntryAbility 启动时与设置页开关写入 */
   @StorageProp('darkMode') @Watch('onThemeFlip') darkMode: boolean = false // P44
   @State themeVersion: number = 0 // P44
@@ -97,12 +105,12 @@ struct DownloadsPage {
           .onClick(() => {
             router.back()
           })
-        Text('下载内容')
+        Text(I18n.t('dlTitle'))
           .fontSize(17)
           .fontWeight(FontWeight.Bold)
           .fontColor(this.pal().text)
           .layoutWeight(1)
-        Text(this.items.length + ' 项')
+        Text(this.items.length + I18n.t('dlItem'))
           .fontSize(11)
           .fontColor(this.pal().text2)
       }
@@ -117,11 +125,11 @@ struct DownloadsPage {
             .width(40).height(40)
             .fillColor(this.pal().text2)
             .draggable(false)
-          Text('暂无下载内容')
+          Text(I18n.t('dlEmpty'))
             .fontSize(14)
             .fontColor(this.pal().text2)
             .margin({ top: 10 })
-          Text('网页中的下载链接将自动保存到应用沙盒 files/downloads/')
+          Text(I18n.t('dlEmptyDesc'))
             .fontSize(11)
             .fontColor(this.pal().text2)
             .textAlign(TextAlign.Center)
@@ -184,7 +192,7 @@ struct DownloadsPage {
             DownloadManager.cancel(item.id)
           })
         } else if (item.status === DownloadStatus.FAILED) {
-          Button('重试')
+          Button(I18n.t('retry'))
             .fontSize(12)
             .height(28)
             .backgroundColor(this.pal().accent)
@@ -193,7 +201,7 @@ struct DownloadsPage {
               DownloadManager.retry(item.id)
             })
         } else if (item.status === DownloadStatus.COMPLETED) {
-          Button(this.copiedId === item.id ? '已复制' : '复制路径')
+          Button(this.copiedId === item.id ? I18n.t('copied') : I18n.t('dlCopyPath'))
             .fontSize(12)
             .height(28)
             .backgroundColor(this.copiedId === item.id ? '#137333' : this.pal().accent)
@@ -218,7 +226,7 @@ struct DownloadsPage {
           .fontColor(this.pal().text2)
           .margin({ top: 3 })
       } else if (item.status === DownloadStatus.FAILED) {
-        Text('失败：' + (item.error.length > 0 ? item.error : '网络错误'))
+        Text(I18n.t('dlFailed') + (item.error.length > 0 ? item.error : I18n.t('dlNetError')))
           .fontSize(10)
           .fontColor('#D93025')
           .margin({ top: 3 })
