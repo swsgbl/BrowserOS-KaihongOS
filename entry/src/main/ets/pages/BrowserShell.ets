@@ -905,12 +905,19 @@ struct BrowserShell {
         }
       })
 
-      // P9-A: omnibox —— 安全锁图标（https 绿锁 / 普通灰）+ 输入框胶囊
+      // P9-A: omnibox —— 新标签空地址=放大镜 / https=绿锁 / 普通=灰信息
       Row() {
-        Image(this.currentUrl.startsWith('https://') ? $rawfile('ic_lock.svg') : $rawfile('ic_info.svg'))
-          .width(16).height(16)
-          .fillColor(this.currentUrl.startsWith('https://') ? '#137333' : '#5F6368')
-          .draggable(false)
+        if (this.currentUrl.length === 0 || this.currentUrl === 'about:blank') {
+          Image($rawfile('ic_search.svg'))
+            .width(16).height(16)
+            .fillColor(this.pal().text2)
+            .draggable(false)
+        } else {
+          Image(this.currentUrl.startsWith('https://') ? $rawfile('ic_lock.svg') : $rawfile('ic_info.svg'))
+            .width(16).height(16)
+            .fillColor(this.currentUrl.startsWith('https://') ? '#137333' : '#5F6368')
+            .draggable(false)
+        }
         TextInput({ text: this.urlInput, placeholder: '输入URL或搜索关键词', controller: this.omniController }).id('p11f_omnibox').fontColor(this.pal().text).placeholderColor(this.pal().text2)
           .layoutWeight(1)
           .height(32)
