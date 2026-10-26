@@ -1,1 +1,1 @@
-844ae14313633db7acbc380a92bb5f8542385247ef320e181c91c98df2bff971  BrowserOS-KaihongOS-v0.1.0-alpha-signed.hap
+0dacabad921bd03b81d74c29944497204feb518a45aafa5e742018e3d4c1bd2d  BrowserOS-KaihongOS-v0.1.0-alpha-signed.hap
