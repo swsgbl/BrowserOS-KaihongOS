@@ -416,7 +416,8 @@ struct BrowserShell {
       if (activeTab) {
         this.showDashboard = activeTab.isDashboard
         if (activeTab.currentUrl) {
-          this.urlInput = activeTab.currentUrl
+          // P48: about:blank 在地址栏显示为空（原生浏览器行为——新标签页地址栏无文字）
+          this.urlInput = activeTab.currentUrl === 'about:blank' ? '' : activeTab.currentUrl
           this.currentUrl = activeTab.currentUrl
           this.refreshBookmarkState()
         }
@@ -444,7 +445,7 @@ struct BrowserShell {
         this.activeTabId = activeId
         const tab = TabManager.getTab(activeId)
         this.showDashboard = tab ? tab.isDashboard : this.showDashboard
-        this.urlInput = tab && tab.currentUrl ? tab.currentUrl : this.urlInput
+        this.urlInput = tab && tab.currentUrl && tab.currentUrl !== 'about:blank' ? tab.currentUrl : ''
       }
     } catch (e) {
       console.error('BrowserShell onTabStatusChange error: ' + e)
@@ -1250,7 +1251,7 @@ struct BrowserShell {
           const tab = TabManager.getTab(tabId)
           this.showDashboard = tab ? tab.isDashboard : false
           this.currentUrl = tab && tab.currentUrl ? tab.currentUrl : ''
-          this.urlInput = this.currentUrl
+          this.urlInput = this.currentUrl === 'about:blank' ? '' : this.currentUrl
           this.refreshBookmarkState()
           console.info('BrowserShell tab switched: ' + tabId)
         },
