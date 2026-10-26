@@ -46,7 +46,8 @@ class TabManagerImpl {
     const tab = new TabInfo(tabId, '', isDashboard)
 
     if (isDashboard) {
-      tab.title = 'Dashboard'
+      // P46-B: 新标签页默认标题 = BrowserOS(上游 SidebarBranding selectedFolder?.name || 'BrowserOS')
+      tab.title = 'BrowserOS'
     }
 
     this.tabs.set(tabId, tab)
@@ -257,7 +258,7 @@ class TabManagerImpl {
       if (cleaned > 0) {
         console.info(`[P45] cleaned ${cleaned} blank tabs on restore`)
       }
-      const source = nonBlank.length > 0 ? nonBlank : [{ id: 'auto_dash_' + Date.now(), title: 'Dashboard', url: '', isDashboard: true, agentId: '' } as PersistTab]
+      const source = nonBlank.length > 0 ? nonBlank : [{ id: 'auto_dash_' + Date.now(), title: 'BrowserOS', url: '', isDashboard: true, agentId: '' } as PersistTab]
       this.tabs.clear()
       this.webviews.clear()
       this.activeTabId = ''
@@ -268,7 +269,8 @@ class TabManagerImpl {
           idToUse = this.generateTabId()
         }
         const tab = new TabInfo(idToUse, item.agentId ? item.agentId : '', !!item.isDashboard)
-        tab.title = item.title ? item.title : (item.isDashboard ? 'Dashboard' : '')
+        // P46-B: dashboard 标签标题统一 BrowserOS(兼容旧持久化的 'Dashboard')
+        tab.title = item.isDashboard ? 'BrowserOS' : (item.title ? item.title : '')
         tab.currentUrl = item.url ? item.url : ''
         this.tabs.set(idToUse, tab)
         if (!this.activeTabId) {

@@ -11,8 +11,10 @@ import { Palette } from '../common/Palette'
 export struct SidebarRail {
   @StorageProp('darkMode') @Watch('onThemeFlip') darkMode: boolean = false // P44
   @State themeVersion: number = 0 // P44
-  /** hover 展开态(受控于 onHover) */
+  /** hover 展开态(受控于 onHover;P46-A 手动展开时锁定) */
   @State expanded: boolean = false
+  /** P46-A: 手动展开锁定位 —— 点击底部切换按钮置位;置位后 hover 离开不收回 */
+  @State pinned: boolean = false
   /** 当前激活项 id: home|scheduled|connect|settings|help */
   @Prop activeId: string = 'home'
   onNav?: (target: string) => void
@@ -56,6 +58,39 @@ export struct SidebarRail {
     }
   }
 
+  /** P46-A: 手动收纳/展开切换按钮(上游 expanded prop 的本地控制位;上游收起 w-14/展开 w-64) */
+  @Builder
+  RailToggle(): void {
+    Button({ type: ButtonType.Normal }) {
+      Column() {
+        Image($rawfile('ic_menu.svg'))
+          .width(16).height(16)
+          .fillColor(this.pal().text2)
+          .draggable(false)
+        if (this.expanded) {
+          Text(this.pinned ? '收起' : '展开')
+            .fontSize(9)
+            .maxLines(1)
+            .margin({ top: 2 })
+            .fontColor(this.pal().text2)
+        }
+      }
+      .justifyContent(FlexAlign.Center)
+      .alignItems(HorizontalAlign.Center)
+    }
+    .width(this.expanded ? 48 : 14)
+    .height(this.expanded ? 44 : 26)
+    .margin({ top: 6 })
+    .borderRadius(8)
+    .backgroundColor(Color.Transparent)
+    .accessibilityText(this.expanded ? '收起侧栏' : '展开侧栏')
+    .onClick(() => {
+      this.pinned = !this.pinned
+      this.expanded = this.pinned
+      console.info('P46 rail toggle: pinned=' + this.pinned)
+    })
+  }
+
   // P44: 主题翻转钩子——@StorageProp 变更不触发 @Builder 重调,靠 themeVersion 递增驱动全树重渲染
   onThemeFlip(): void {
     this.themeVersion++
@@ -91,9 +126,10 @@ export struct SidebarRail {
       .padding({ top: this.expanded ? 4 : 10 })
       .alignItems(HorizontalAlign.Center)
 
-      // 底部帮助
+      // 底部帮助 + P46-A 收纳/展开切换
       Column() {
         this.RailIcon($rawfile('ic_help.svg'), '帮助', 'help')
+        this.RailToggle()
       }
       .margin({ bottom: 6 })
     }
@@ -104,7 +140,10 @@ export struct SidebarRail {
     .border({ width: { right: 1 }, color: this.pal().border })
     .alignItems(HorizontalAlign.Center)
     .onHover((isHover: boolean) => {
-      this.expanded = isHover
+      // P46-A: 手动展开(pinned)时 hover 不改变状态;未锁定时保留 hover 临时展开
+      if (!this.pinned) {
+        this.expanded = isHover
+      }
     })
     .animation({ duration: 200, curve: Curve.EaseInOut })
   }
