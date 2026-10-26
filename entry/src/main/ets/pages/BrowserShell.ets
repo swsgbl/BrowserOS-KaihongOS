@@ -924,7 +924,7 @@ struct BrowserShell {
       Row() {
         if (this.currentUrl.length === 0 || this.currentUrl === 'about:blank') {
           Image($rawfile('ic_search.svg'))
-            .width(16).height(16)
+            .width(32).height(32)
             .fillColor(this.pal().text2)
             .draggable(false)
         } else {
