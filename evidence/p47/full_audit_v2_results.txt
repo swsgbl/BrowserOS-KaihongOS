@@ -1,0 +1,67 @@
+[PASS] Menu item: 新建标签页 — in code
+[PASS] Menu item: 新建无痕标签页 — in code
+[PASS] Menu item: 历史 — in code
+[PASS] Menu item: 书签 — in code
+[PASS] Menu item: 下载 — in code
+[PASS] Menu item: 密码管理器 — in code
+[PASS] Menu item: 定时任务 — in code
+[PASS] Menu item: Skills — in code
+[PASS] Menu item: 放大 — in code
+[PASS] Menu item: 缩小 — in code
+[PASS] Menu item: 重置缩放 — in code
+[PASS] Menu item: 阅读模式 — in code
+[PASS] Menu item: 填充表单 — in code
+[PASS] Menu item: 开发者工具 — in code
+[PASS] Menu item: 设置 — in code
+[PASS] Menu item: 查找 — in code
+[PASS] Menu item: 帮助 — in code
+[PASS] Menu item: 退出 — in code
+[PASS] Sidebar nav: 主页 — 
+[PASS] Sidebar nav: 定时 — 
+[PASS] Sidebar nav: 连接 — 
+[PASS] Sidebar nav: 设置 — 
+[PASS] Sidebar nav: 帮助 — 
+[PASS] Sidebar toggle (expanded state) — 
+[PASS] CredentialStore (Asset encrypted) — 
+[PASS] PasswordsPage (management UI) — 
+[FAIL] Autofill injection in BrowserShell — 
+[PASS] Save password prompt — 
+[PASS] DevToolsCollector service — 
+[PASS] DevToolsPage (console UI) — 
+[FAIL] Console message handler — 
+[PASS] JS eval in DevTools — 
+[PASS] Incognito tab support — 
+[PASS] Incognito Web mode — 
+[PASS] Zoom in/out/reset handlers — 
+[FAIL] Zoom API usage — 
+[PASS] Reader mode handler — 
+[PASS] Network request interception — 
+[PASS] MCP tool: tabs — 
+[PASS] MCP tool: tab_groups — 
+[PASS] MCP tool: history — 
+[PASS] MCP tool: navigate — 
+[PASS] MCP tool: snapshot — 
+[PASS] MCP tool: diff — 
+[PASS] MCP tool: act — 
+[PASS] MCP tool: download — 
+[PASS] MCP tool: upload — 
+[PASS] MCP tool: read — 
+[PASS] MCP tool: grep — 
+[PASS] MCP tool: screenshot — 
+[PASS] MCP tool: pdf — 
+[PASS] MCP tool: wait — 
+[PASS] MCP tool: windows — 
+[PASS] MCP tool: evaluate — 
+[PASS] MCP tool: run — 
+[PASS] Rate limiter — 
+[PASS] CSPRNG (no Math.random for token) — 
+[PASS] Loopback binding — 
+[PASS] Sensitive op gate — 
+[FAIL] Output redaction — 
+[PASS] Credential encryption (Asset) — 
+[PASS] Cold start → dashboard — 
+[PASS] Tab title BrowserOS — 
+[PASS] MCP token exists — 
+[PASS] MCP HTTP listening — 
+
+TOTAL: 61/65 PASS

@@ -49,6 +49,8 @@ export struct ThreeDotMenu {
     { icon: $rawfile('ic_zoom_search.svg'), label: '放大', action: 'zoom_in' },
     { icon: $rawfile('ic_zoom_out.svg'), label: '缩小', action: 'zoom_out' },
     { icon: $rawfile('ic_reload.svg'), label: '重置缩放', action: 'zoom_reset' },
+    { icon: $rawfile('ic_reader.svg'), label: '阅读模式', action: 'reader' },
+    { icon: $rawfile('ic_edit.svg'), label: '填充表单', action: 'fill_form' },
     { icon: $rawfile('ic_bug.svg'), label: '开发者工具', action: 'devtools' },
     { icon: $rawfile('ic_settings.svg'), label: '设置', action: 'settings' },
     { icon: $rawfile('ic_find.svg'), label: '查找', action: 'find' },

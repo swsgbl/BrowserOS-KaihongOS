@@ -700,6 +700,48 @@ struct BrowserShell {
         .backgroundColor(this.pal().surface)
         .alignItems(HorizontalAlign.Center)
       }
+      // P47-E: 阅读模式弹层
+      if (this.p47ReaderOpen) {
+        Column() {
+          Row() {
+            Button({ type: ButtonType.Normal }) {
+              Image($rawfile('ic_back.svg'))
+                .width(20).height(20)
+                .fillColor(this.pal().text)
+                .draggable(false)
+            }
+            .width(40).height(40)
+            .backgroundColor(Color.Transparent)
+            .onClick(() => { this.p47ReaderOpen = false })
+            Text(this.p47ReaderTitle)
+              .fontSize(16)
+              .fontWeight(FontWeight.Bold)
+              .fontColor(this.pal().text)
+              .layoutWeight(1)
+              .maxLines(1)
+              .textOverflow({ overflow: TextOverflow.Ellipsis })
+            Text('阅读模式')
+              .fontSize(11)
+              .fontColor(this.pal().text2)
+              .margin({ right: 12 })
+          }
+          .width('100%')
+          .height(52)
+          .padding({ left: 8, right: 12 })
+          Scroll() {
+            Text(this.p47ReaderHtml.replace(/<\/?p>/g, '\n'))
+              .fontSize(16)
+              .lineHeight(28)
+              .fontColor(this.pal().text)
+              .padding(20)
+          }
+          .layoutWeight(1)
+          .align(Alignment.Top)
+        }
+        .width('100%')
+        .height('100%')
+        .backgroundColor(this.pal().surface)
+      }
       // P47-B: 密码填充提示条（底部悬浮）
       if (this.p47ShowFillBar) {
         Row({ space: 8 }) {
@@ -1168,6 +1210,10 @@ struct BrowserShell {
   // P47-C: 无痕标签集合 / P47-D: 缩放
   private p47IncognitoTabs: Set<string> = new Set()
   @State p47ZoomToast: string = ''
+  // P47-E: 阅读模式
+  @State p47ReaderOpen: boolean = false
+  @State p47ReaderTitle: string = ''
+  @State p47ReaderHtml: string = ''
 
   /** P28-A: 竖排标签区(左侧,固定宽 200) —— TabStrip vertical + chrome 色背景 */
   @Builder
@@ -2560,6 +2606,12 @@ struct BrowserShell {
         // P47-C: 新建无痕标签页
         this.p47CreateIncognitoTab()
         break
+      case 'reader':
+        this.p47OpenReader()
+        break
+      case 'fill_form':
+        this.p47FillForm()
+        break
       case 'zoom_in':
         this.p47Zoom(0.25)
         break
@@ -2631,7 +2683,7 @@ struct BrowserShell {
     }
     try {
       native.zoom(delta)
-NaN    } catch (e) {
+    } catch (e) {
       console.warn('[P47] zoom fail: ' + e)
     }
   }
@@ -2658,6 +2710,61 @@ NaN    } catch (e) {
         this.p47ZoomToast = ''
       }
     }, 1500)
+  }
+
+  /** P47-E: 阅读模式 —— 抽取页面正文（标题+h1~p）渲染干净排版 */
+  private p47OpenReader(): void {
+    const ctrl = this.getActiveController()
+    if (!ctrl) {
+      return
+    }
+    const js = "(function(){function pick(sel){var els=document.querySelectorAll(sel);var best=null;var bl=0;for(var i=0;i<els.length;i++){var t=(els[i].textContent||'').trim();if(t.length>bl){best=t;bl=t.length}}return best}var h1=pick('h1');var ps=[];var pel=document.querySelectorAll('article p,main p,#content p,.content p,p');var seen={};for(var i=0;i<pel.length&&ps.length<200;i++){var t=(pel[i].textContent||'').trim();if(t.length>40&&!seen[t]){seen[t]=1;ps.push(t)}}return JSON.stringify({t:document.title,h:h1||document.title,p:ps})})()"
+    ctrl.runJavaScript(js).then((r: string) => {
+      let s = r.replace(/^"|"$/g, '').replace(/\\"/g, '"')
+      try {
+        const obj = JSON.parse(s) as Record<string, Object>
+        const ps = obj['p'] as string[] | undefined
+        if (!ps || ps.length === 0) {
+          this.p47FlashToast('未找到可读正文')
+          return
+        }
+        this.p47ReaderTitle = this.asStr(obj['h'])
+        let html = ''
+        for (const p of ps) {
+          html += '<p>' + p + '</p>'
+        }
+        this.p47ReaderHtml = html
+        this.p47ReaderOpen = true
+        console.info('[P47] reader: ' + ps.length + ' paragraphs')
+      } catch (e) {
+        this.p47FlashToast('阅读模式提取失败')
+      }
+    }).catch(() => {
+      this.p47FlashToast('当前页面不支持阅读')
+    })
+  }
+
+  private asStr(v: Object | undefined): string {
+    return typeof v === 'string' ? v : ''
+  }
+
+  /** P47-F: 通用表单填充 —— 按 name/id/placeholder/autocomplete/类型启发，已登录网站用密码库，其他用示例数据 */
+  private p47FillForm(): void {
+    const ctrl = this.getActiveController()
+    if (!ctrl) {
+      return
+    }
+    const domain = this.p47DomainOf(this.currentUrl)
+    const cred = domain.length > 0 ? CredentialStore.getByDomain(domain) : []
+    const u = cred.length > 0 ? JSON.stringify(cred[0].username) : '"user@example.com"'
+    const p = cred.length > 0 ? JSON.stringify(cred[0].password) : '"P47SamplePass!"'
+    const js = "(function(){function sv(el,v){var pr=Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype,'value');if(pr&&pr.set){pr.set.call(el,v)}else{el.value=v}el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}))}var n=0;var ins=document.querySelectorAll('input');for(var i=0;i<ins.length;i++){var el=ins[i];var t=el.type||'text';if(t==='hidden'||t==='file'||t==='checkbox'||t==='radio'||t==='submit'||t==='button')continue;var key=((el.name||'')+' '+(el.id||'')+' '+(el.placeholder||'')+' '+(el.autocomplete||'')+' '+t).toLowerCase();var v=null;if(t==='email'||key.indexOf('email')>=0||key.indexOf('mail')>=0){v=" + u + "}else if(t==='password'||key.indexOf('pass')>=0||key.indexOf('pwd')>=0){v=" + p + "}else if(t==='tel'||key.indexOf('phone')>=0||key.indexOf('mobile')>=0){v='13800138000'}else if(key.indexOf('name')>=0&&key.indexOf('user')<0&&key.indexOf('file')<0){v='张三'}else if(key.indexOf('user')>=0||key.indexOf('account')>=0||key.indexOf('login')>=0){v=" + u + "}if(v!==null){sv(el,String(v));n++}}return String(n)})()"
+    ctrl.runJavaScript(js).then((r: string) => {
+      this.p47FlashToast('已填充 ' + r.replace(/\"/g, '') + ' 个字段')
+      console.info('[P47] form filled: ' + r)
+    }).catch(() => {
+      this.p47FlashToast('表单填充失败')
+    })
   }
 
   /** P47-B: 域名提取 */

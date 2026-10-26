@@ -1,0 +1,63 @@
+[PASS] 1a. Cold start reaches dashboard — 
+[PASS] 1b. Tab title = BrowserOS — 
+[PASS] 1c. Address bar present — 
+[PASS] 1d. Search engine entry visible — 
+[FAIL] 2a. Sidebar navigation items present — found: []
+[FAIL] 2b. Sidebar expand/collapse button — 
+[PASS] 3a. Tab list visible — tabs: 4
+[PASS] 3b. + button (verified P45 hilog) — total=2→1→0 confirmed
+[PASS] 3c. × close (verified P45 hilog) — closeTab done confirmed
+[FAIL] 4a. Navigate to example.com — 
+[FAIL] 5a. Menu opens with items — items: ['新建标签页', '书签', '历史']
+[FAIL] 5b. DevTools menu item — 
+[FAIL] 5c. Password manager menu item — 
+[FAIL] 5d. Incognito menu item — 
+[FAIL] 5e. Skills menu item — 
+[FAIL] 6a. Settings (entry not found) — 
+[PASS] 7a. Theme config readable — darkMode=False
+[PASS] 8a. MCP token exists — 
+[PASS] 8b. MCP HTTP listening — 
+[PASS] 9a. PasswordsPage registered — 
+[PASS] 9b. DevToolsPage registered — 
+[PASS] 9c. CredentialStore service exists — 
+[PASS] 10. DownloadManager exists — 
+[PASS] 10. ScheduleManager exists — 
+[PASS] 10. LLMClient exists — 
+[PASS] 10. SessionManager exists — 
+[PASS] 10. HistoryManager exists — 
+[PASS] 10. BookmarkManager exists — 
+[PASS] 10. MCPServer exists — 
+[PASS] 10. AgentEngine exists — 
+[PASS] 10. Redact exists — 
+[PASS] 10. McpRateLimiter exists — 
+[PASS] 10. DevToolsCollector exists — 
+[PASS] 10. CredentialStore exists — 
+[PASS] 11. Page BrowserShell registered — 
+[PASS] 11. Page SessionPlayerPage registered — 
+[PASS] 11. Page OnboardingPage registered — 
+[PASS] 11. Page SettingsPage registered — 
+[PASS] 11. Page HistoryPage registered — 
+[PASS] 11. Page BookmarksPage registered — 
+[PASS] 11. Page DownloadsPage registered — 
+[PASS] 11. Page ViewSourcePage registered — 
+[PASS] 11. Page ScheduledTasksPage registered — 
+[PASS] 11. Page LlmHubPage registered — 
+[PASS] 11. Page SkillsPage registered — 
+[PASS] 11. Page JtbdSurveyPage registered — 
+[PASS] 11. Page UltrafastWaitlistPage registered — 
+[PASS] 11. Page DevToolsPage registered — 
+[PASS] 11. Page PasswordsPage registered — 
+[PASS] 12a. Import button in code — 
+[PASS] 13. File LICENSE — 
+[PASS] 13. File NOTICE — 
+[PASS] 13. File README.md — 
+[PASS] 13. File DEVPLAN.md — 
+[PASS] 13. File CHANGELOG.md — 
+[PASS] 13. File CONTRIBUTING.md — 
+[PASS] 13. File CODE_OF_CONDUCT.md — 
+[PASS] 13. File SECURITY.md — 
+[PASS] 13. File UPSTREAM_BASELINE.md — 
+[PASS] 13. File docs/ARCHITECTURE.md — 
+[PASS] 13. File docs/PERFORMANCE.md — 
+
+TOTAL: 52/61 PASS
