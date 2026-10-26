@@ -194,6 +194,7 @@ const PAIRS: string[][] = [
   ['stConnOkEnd', 'ms)'],
   ['stTestConnBtn', 'Test connection'],
   ['stLangCard', 'Language'],
+  ['stLangCardTitle', '界面语言 / UI Language'],
   ['stLangDesc', 'UI display language'],
   ['stLangZh', '中文'],
   ['stLangEn', 'English'],

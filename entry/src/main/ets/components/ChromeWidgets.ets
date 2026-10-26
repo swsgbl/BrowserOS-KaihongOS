@@ -42,6 +42,8 @@ export struct ThreeDotMenu {
   private group1(): MenuEntry[] {
     return [
       { icon: $rawfile('ic_add.svg'), label: I18n.t('menuNewTab'), action: 'new_tab' },
+      // P50: 设置置顶第 2 位 —— 原在 group3 第 9 行,菜单卡 constraintSize(420) 不可滚,实际被裁剪不可见(用户找不到设置入口根因)
+      { icon: $rawfile('ic_settings.svg'), label: I18n.t('menuSettings'), action: 'settings' },
       { icon: $rawfile('ic_content_copy.svg'), label: I18n.t('menuNewWindow'), action: 'new_window' },
       { icon: $rawfile('ic_incognito.svg'), label: I18n.t('menuNewIncognito'), action: 'new_incognito' }
     ]
@@ -64,7 +66,6 @@ export struct ThreeDotMenu {
       { icon: $rawfile('ic_reader.svg'), label: I18n.t('menuReader'), action: 'reader' },
       { icon: $rawfile('ic_edit.svg'), label: I18n.t('menuFillForm'), action: 'fill_form' },
       { icon: $rawfile('ic_bug.svg'), label: I18n.t('menuDevtools'), action: 'devtools' },
-      { icon: $rawfile('ic_settings.svg'), label: I18n.t('menuSettings'), action: 'settings' },
       { icon: $rawfile('ic_find.svg'), label: I18n.t('menuFind'), action: 'find' },
       { icon: $rawfile('ic_help.svg'), label: I18n.t('menuHelp'), action: 'help' }
     ]

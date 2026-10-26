@@ -75,9 +75,10 @@ struct SettingsPage {
 
   private navItems(): NavItem[] {
     return [
-      { key: 'search', icon: $rawfile('ic_search.svg'), label: I18n.t('stTabSearch') },
-      { key: 'ai', icon: $rawfile('ic_robot.svg'), label: I18n.t('stTabAI') },
+      // P50: 外观置首 —— 默认 navSelection=0 落在外观区,语言切换首屏可见(入口显性化)
       { key: 'appearance', icon: $rawfile('ic_public.svg'), label: I18n.t('stTabAppearance') },
+      { key: 'ai', icon: $rawfile('ic_robot.svg'), label: I18n.t('stTabAI') },
+      { key: 'search', icon: $rawfile('ic_search.svg'), label: I18n.t('stTabSearch') },
       { key: 'privacy', icon: $rawfile('ic_lock.svg'), label: I18n.t('stTabPrivacy') },
       { key: 'mcp', icon: $rawfile('ic_info.svg'), label: 'MCP' },
       { key: 'about', icon: $rawfile('ic_help.svg'), label: I18n.t('stTabAbout') }
@@ -124,10 +125,10 @@ struct SettingsPage {
     this.llmModelInput = cfg.llmModel
     this.sensitiveConfirmOn = ConfigManager.isSensitiveConfirm()
     this.searchEngineId = ConfigManager.getSearchEngineId()
-    // P18: omnibox 「切换」入口深链 —— params.section === 'search' 直达搜索节
+    // P18: omnibox 「切换」入口深链 —— params.section === 'search' 直达搜索节(P50 索引 2)
     const sp = router.getParams() as Record<string, Object>
     if (sp && sp['section'] === 'search') {
-      this.navSelection = 0
+      this.navSelection = 2
     }
     // P17b: About 版本动态化 —— GET_BUNDLE_INFO_DEFAULT(0) 即含 versionName
     try {
@@ -223,11 +224,11 @@ struct SettingsPage {
       Scroll() {
         Column() {
           if (this.navSelection === 0) {
-            this.SearchSection()
+            this.AppearanceSection()
           } else if (this.navSelection === 1) {
             this.AiSection()
           } else if (this.navSelection === 2) {
-            this.AppearanceSection()
+            this.SearchSection()
           } else if (this.navSelection === 3) {
             this.PrivacySection()
           } else if (this.navSelection === 4) {
@@ -481,6 +482,52 @@ struct SettingsPage {
   @Builder
   AppearanceSection(): void {
     Column() {
+      // P50: 语言切换提升为外观区首卡 —— 标题双语常量「界面语言 / UI Language」,选项改为胶囊按钮(原为底部文字链接,用户找不到入口)
+      Row() {
+        Column() {
+          Text(I18n.t('stLangCardTitle'))
+            .fontSize(15)
+            .fontWeight(FontWeight.Medium)
+            .fontColor(this.pal().text)
+          Text(I18n.t('stLangDesc'))
+            .fontSize(11)
+            .fontColor(this.pal().text2)
+            .margin({ top: 4 })
+        }
+        .alignItems(HorizontalAlign.Start)
+        .layoutWeight(1)
+
+        Row({ space: 8 }) {
+          Button(I18n.t('stLangZh'))
+            .fontSize(13)
+            .height(32)
+            .padding({ left: 16, right: 16 })
+            .backgroundColor(this.appLocale === 'zh' ? '#1A73E8' : this.pal().surface)
+            .fontColor(this.appLocale === 'zh' ? '#FFFFFF' : '#1A73E8')
+            .fontWeight(this.appLocale === 'zh' ? FontWeight.Bold : FontWeight.Normal)
+            .borderRadius(16)
+            .border({ width: 1, color: this.appLocale === 'zh' ? '#1A73E8' : this.pal().border })
+            .onClick(() => {
+              I18n.setLocale('zh')
+            })
+          Button(I18n.t('stLangEn'))
+            .fontSize(13)
+            .height(32)
+            .padding({ left: 16, right: 16 })
+            .backgroundColor(this.appLocale === 'en' ? '#1A73E8' : this.pal().surface)
+            .fontColor(this.appLocale === 'en' ? '#FFFFFF' : '#1A73E8')
+            .fontWeight(this.appLocale === 'en' ? FontWeight.Bold : FontWeight.Normal)
+            .borderRadius(16)
+            .border({ width: 1, color: this.appLocale === 'en' ? '#1A73E8' : this.pal().border })
+            .onClick(() => {
+              I18n.setLocale('en')
+            })
+        }
+      }
+      .width('100%')
+
+      Divider().color(this.pal().border).margin({ top: 18, bottom: 14 })
+
       this.CardShell(I18n.t('stThemeCard'), I18n.t('stThemeDesc'))
 
       Row() {
@@ -506,41 +553,6 @@ struct SettingsPage {
       }
       .width('100%')
       .margin({ top: 16 })
-
-      // P48: 语言切换（中文 / English）
-      Divider().color(this.pal().border).margin({ top: 16, bottom: 12 })
-      Row() {
-        Column() {
-          Text(I18n.t('stLangCard'))
-            .fontSize(13)
-            .fontColor(this.pal().text)
-          Text(I18n.t('stLangDesc'))
-            .fontSize(11)
-            .fontColor(this.pal().text2)
-            .margin({ top: 2 })
-        }
-        .alignItems(HorizontalAlign.Start)
-        .layoutWeight(1)
-
-        Row({ space: 6 }) {
-          Text(I18n.t('stLangZh'))
-            .fontSize(13)
-            .fontColor(this.appLocale === 'zh' ? '#1A73E8' : this.pal().text2)
-            .onClick(() => {
-              I18n.setLocale('zh')
-            })
-          Text('·')
-            .fontSize(13)
-            .fontColor(this.pal().text2)
-          Text(I18n.t('stLangEn'))
-            .fontSize(13)
-            .fontColor(this.appLocale === 'en' ? '#1A73E8' : this.pal().text2)
-            .onClick(() => {
-              I18n.setLocale('en')
-            })
-        }
-      }
-      .width('100%')
     }
     .width('100%')
     .padding(20)
