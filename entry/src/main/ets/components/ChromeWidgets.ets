@@ -34,7 +34,8 @@ export struct ThreeDotMenu {
 
   private readonly group1: MenuEntry[] = [
     { icon: $rawfile('ic_add.svg'), label: '新建标签页', action: 'new_tab' },
-    { icon: $rawfile('ic_content_copy.svg'), label: '新窗口', action: 'new_window' }
+    { icon: $rawfile('ic_content_copy.svg'), label: '新窗口', action: 'new_window' },
+    { icon: $rawfile('ic_incognito.svg'), label: '新建无痕标签页', action: 'new_incognito' }
   ]
   private readonly group2: MenuEntry[] = [
     { icon: $rawfile('ic_history.svg'), label: '历史', action: 'history' },
@@ -45,6 +46,9 @@ export struct ThreeDotMenu {
   private readonly group3: MenuEntry[] = [
     { icon: $rawfile('ic_schedule.svg'), label: '定时任务', action: 'scheduled_tasks' },
     { icon: $rawfile('ic_robot.svg'), label: 'Skills', action: 'skills' },
+    { icon: $rawfile('ic_zoom_search.svg'), label: '放大', action: 'zoom_in' },
+    { icon: $rawfile('ic_zoom_out.svg'), label: '缩小', action: 'zoom_out' },
+    { icon: $rawfile('ic_reload.svg'), label: '重置缩放', action: 'zoom_reset' },
     { icon: $rawfile('ic_bug.svg'), label: '开发者工具', action: 'devtools' },
     { icon: $rawfile('ic_settings.svg'), label: '设置', action: 'settings' },
     { icon: $rawfile('ic_find.svg'), label: '查找', action: 'find' },

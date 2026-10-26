@@ -1165,6 +1165,9 @@ struct BrowserShell {
   @State p47SaveUser: string = ''
   @State p47SavePass: string = ''
   private p47WatchedTabs: Set<string> = new Set()
+  // P47-C: 无痕标签集合 / P47-D: 缩放
+  private p47IncognitoTabs: Set<string> = new Set()
+  @State p47ZoomToast: string = ''
 
   /** P28-A: 竖排标签区(左侧,固定宽 200) —— TabStrip vertical + chrome 色背景 */
   @Builder
@@ -1884,7 +1887,7 @@ struct BrowserShell {
   WebViewContent(): void {
     Stack() {
       ForEach(this.tabs, (tab: TabInfo) => {
-        Web({ src: 'about:blank', controller: this.getOrCreateController(tab.tabId) })
+        Web({ src: 'about:blank', controller: this.getOrCreateController(tab.tabId), incognitoMode: this.p47IncognitoTabs.has(tab.tabId) })
           .width('100%')
           .height('100%')
           .visibility(tab.tabId === this.activeTabId && !this.showDashboard ? Visibility.Visible : Visibility.Hidden)
@@ -2051,6 +2054,23 @@ struct BrowserShell {
               error: event.error ? event.error.getErrorInfo() : 'unknown'
             }
             EventBus.emit(EventBusEvents.PAGE_LOAD_ERROR, errData)
+          })
+          .onInterceptRequest((event) => {
+            // P47-A: Network 日志收集（不拦截，记录后放行）
+            if (event && event.request) {
+              try {
+                const req = event.request
+                let hdr = ''
+                const hs = req.getRequestHeader()
+                for (const h of hs) {
+                  hdr += h.headerKey + '=' + h.headerValue + '; '
+                }
+                DevToolsCollector.addNetwork(tab.tabId, req.getRequestUrl(), req.getRequestMethod(), hdr)
+              } catch (e) {
+                // 记录失败不阻断加载
+              }
+            }
+            return null
           })
           .onConsole((event) => {
             // P47-A: DevTools Console 日志收集
@@ -2536,6 +2556,19 @@ struct BrowserShell {
       case 'settings':
         router.pushUrl({ url: 'pages/SettingsPage' })
         break
+      case 'new_incognito':
+        // P47-C: 新建无痕标签页
+        this.p47CreateIncognitoTab()
+        break
+      case 'zoom_in':
+        this.p47Zoom(0.25)
+        break
+      case 'zoom_out':
+        this.p47Zoom(-0.25)
+        break
+      case 'zoom_reset':
+        this.p47ZoomReset()
+        break
       case 'passwords':
         // P47-B: 密码管理器
         router.pushUrl({ url: 'pages/PasswordsPage' })
@@ -2575,6 +2608,56 @@ struct BrowserShell {
       return `${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
     }
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+  }
+
+  /** P47-C: 新建无痕标签（标记集合 + TabManager 不持久化单 tab 例外） */
+  private p47CreateIncognitoTab(): void {
+    const tab = TabManager.createTab(false)
+    if (!tab) {
+      return
+    }
+    this.p47IncognitoTabs.add(tab.tabId)
+    this.tabs = TabManager.getAllTabs()
+    this.activeTabId = tab.tabId
+    this.showDashboard = false
+    console.info('[P47] incognito tab created: ' + tab.tabId)
+  }
+
+  /** P47-D: 缩放（对活动 tab 的 WebviewController 调 zoom） */
+  private p47Zoom(delta: number): void {
+    const native = this.controllers.get(this.activeTabId)
+    if (!native) {
+      return
+    }
+    try {
+      native.zoom(delta)
+NaN    } catch (e) {
+      console.warn('[P47] zoom fail: ' + e)
+    }
+  }
+
+  private p47ZoomReset(): void {
+    const native = this.controllers.get(this.activeTabId)
+    if (!native) {
+      return
+    }
+    try {
+      native.zoom(1)
+      this.p47FlashToast('重置缩放 100%')
+    } catch (e) {
+      console.warn('[P47] zoom reset fail: ' + e)
+    }
+  }
+
+  private p47CurZoom: number = 1
+
+  private p47FlashToast(msg: string): void {
+    this.p47ZoomToast = msg
+    setTimeout(() => {
+      if (this.p47ZoomToast === msg) {
+        this.p47ZoomToast = ''
+      }
+    }, 1500)
   }
 
   /** P47-B: 域名提取 */

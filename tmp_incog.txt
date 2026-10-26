@@ -1,0 +1,44 @@
+qUrl.length > 0 && navTarget.length > 0 && norm(reqUrl) === norm(navTarget)) {
+                this.navError = event.error ? event.error.getErrorInfo() : '无法打开页面'
+                this.navErrorUrl = reqUrl
+                console.warn('BrowserShell navError banner: ' + reqUrl + ' ' + this.navError)
+              }
+            }
+            const errData: PageLoadErrorData = {
+              tabId: tab.tabId,
+              error: event.error ? event.error.getErrorInfo() : 'unknown'
+            }
+            EventBus.emit(EventBusEvents.PAGE_LOAD_ERROR, errData)
+          })
+          .incognitoMode(this.p47IncognitoTabs.has(tab.tabId))
+          .onInterceptRequest((event) => {
+            // P47-A: Network 日志收集（不拦截，记录后放行）
+            if (event && event.request) {
+              try {
+                const req = event.request
+                let hdr = ''
+                const hs = req.getRequestHeader()
+                for (const h of hs) {
+                  hdr += h.headerKey + '=' + h.headerValue + '; '
+                }
+                DevToolsCollector.addNetwork(tab.tabId, req.getUrl(), req.getMethod(), hdr)
+              } catch (e) {
+                // 记录失败不阻断加载
+              }
+            }
+            return null
+          })
+          .onConsole((event) => {
+            // P47-A: DevTools Console 日志收集
+            const msg = event.message
+            DevToolsCollector.addConsole(tab.tabId, msg.getMessageLevel(), msg.getSourceId(), msg.getMessage())
+            return false
+          })
+          .onContextMenuShow((event) => {
+            // P11c: 拦截系统右键菜单,自绘 Chromium 风菜单(return true)
+            if (tab.tabId !== this.activeTabId) {
+              return false
+            }
+            const linkUrl = event.param.getLinkUrl()
+            this.ctxLinkUrl = linkUrl ? linkUrl : ''
+            this.ctxEntries = this.buildPa
