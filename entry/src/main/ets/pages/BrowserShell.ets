@@ -35,6 +35,8 @@ import { AgentEngine } from '../service/AgentEngine'
 import { RunStrategy } from '../common/Types'
 import { preferences } from '@kit.ArkData'
 import { ScheduleManager, ScheduleTask } from '../service/ScheduleManager'
+import { CredentialStore } from '../service/CredentialStore'
+import { DevToolsCollector } from '../service/DevToolsCollector'
 
 interface PageLoadErrorData {
   tabId: string
@@ -288,6 +290,11 @@ struct BrowserShell {
   aboutToAppear(): void {
     console.info('BrowserShell aboutToAppear start')
     this.initUltrafastPrefs()
+    // P47-B: 密码库初始化
+    const p47ctx = this.getUIContext().getHostContext()
+    if (p47ctx) {
+      CredentialStore.init(p47ctx)
+    }
     // P35-C: 新标签页 agent-command 数据装载
     this.loadDashProviders()
     this.loadRecentSites()
@@ -693,6 +700,90 @@ struct BrowserShell {
         .backgroundColor(this.pal().surface)
         .alignItems(HorizontalAlign.Center)
       }
+      // P47-B: 密码填充提示条（底部悬浮）
+      if (this.p47ShowFillBar) {
+        Row({ space: 8 }) {
+          Image($rawfile('ic_key.svg'))
+            .width(16).height(16)
+            .fillColor('#F9AB00')
+            .draggable(false)
+          Text('密码管理器可填充 ' + this.p47FillDomain + ' 的登录信息')
+            .fontSize(12)
+            .fontColor(this.pal().text)
+            .layoutWeight(1)
+            .maxLines(1)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+          Button('填充')
+            .fontSize(12)
+            .height(30)
+            .backgroundColor('#1A73E8')
+            .fontColor('#FFFFFF')
+            .onClick(() => { this.p47DoFill() })
+          Button({ type: ButtonType.Normal }) {
+            Image($rawfile('ic_close.svg'))
+              .width(14).height(14)
+              .fillColor(this.pal().text2)
+              .draggable(false)
+          }
+          .width(30).height(30)
+          .backgroundColor(Color.Transparent)
+          .onClick(() => { this.p47DismissFill() })
+        }
+        .width('94%')
+        .height(44)
+        .padding({ left: 14, right: 10 })
+        .borderRadius(10)
+        .backgroundColor(this.pal().surface)
+        .border({ width: 1, color: this.pal().border })
+        .shadow({ radius: 12, color: '#44000000', offsetY: -2 })
+        .position({ x: '3%', y: '86%' })
+      }
+      // P47-B: 保存密码弹层
+      if (this.p47SaveOpen) {
+        Column()
+          .width('100%')
+          .height('100%')
+          .backgroundColor('#66000000')
+          .onClick(() => { this.p47SaveOpen = false })
+        Column() {
+          Text('保存密码？')
+            .fontSize(15)
+            .fontWeight(FontWeight.Bold)
+            .fontColor(this.pal().text)
+            .alignSelf(ItemAlign.Start)
+          Text(this.p47SaveDomain + ' · ' + this.p47SaveUser)
+            .fontSize(12)
+            .fontColor(this.pal().text2)
+            .margin({ top: 6 })
+            .alignSelf(ItemAlign.Start)
+            .maxLines(1)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+          Row() {
+            Button('不保存')
+              .fontSize(13)
+              .height(36)
+              .layoutWeight(1)
+              .backgroundColor(this.pal().surfaceAlt)
+              .fontColor(this.pal().text)
+              .onClick(() => { this.p47SaveOpen = false })
+            Button('保存')
+              .fontSize(13)
+              .height(36)
+              .layoutWeight(1)
+              .backgroundColor('#1A73E8')
+              .fontColor('#FFFFFF')
+              .margin({ left: 10 })
+              .onClick(() => { this.p47DoSave() })
+          }
+          .width('100%')
+          .margin({ top: 14 })
+        }
+        .width('72%')
+        .padding(18)
+        .borderRadius(14)
+        .backgroundColor(this.pal().surface)
+        .alignItems(HorizontalAlign.Center)
+      }
       // P33-D: 更新日志弹层(版本变化后 5s 弹出;声明在 Stack 末位 = 渲染最上层,拦截点击)
       ChangelogOverlay()
     }
@@ -1064,6 +1155,16 @@ struct BrowserShell {
   @State ctxMenuY: number = -1
   @State ctxEntries: CtxEntry[] = []
   @State ctxLinkUrl: string = ''
+  // P47-B: 密码填充提示条 / 保存密码弹层
+  @State p47ShowFillBar: boolean = false
+  @State p47FillDomain: string = ''
+  @State p47FillUser: string = ''
+  @State p47FillPass: string = ''
+  @State p47SaveOpen: boolean = false
+  @State p47SaveDomain: string = ''
+  @State p47SaveUser: string = ''
+  @State p47SavePass: string = ''
+  private p47WatchedTabs: Set<string> = new Set()
 
   /** P28-A: 竖排标签区(左侧,固定宽 200) —— TabStrip vertical + chrome 色背景 */
   @Builder
@@ -1913,6 +2014,8 @@ struct BrowserShell {
             }
             const completeData: PageLoadCompleteData = { tabId: tabId, url: url }
             EventBus.emit(EventBusEvents.PAGE_LOAD_COMPLETE, completeData)
+            // P47-B: 密码检测（非无痕标签）
+            this.p47OnPageEnd(tabId, url, controller)
           })
           .onProgressChange((event) => {
             if (tab.tabId === this.activeTabId) {
@@ -1948,6 +2051,12 @@ struct BrowserShell {
               error: event.error ? event.error.getErrorInfo() : 'unknown'
             }
             EventBus.emit(EventBusEvents.PAGE_LOAD_ERROR, errData)
+          })
+          .onConsole((event) => {
+            // P47-A: DevTools Console 日志收集
+            const msg = event.message
+            DevToolsCollector.addConsole(tab.tabId, msg.getMessageLevel(), msg.getSourceId(), msg.getMessage())
+            return false
           })
           .onContextMenuShow((event) => {
             // P11c: 拦截系统右键菜单,自绘 Chromium 风菜单(return true)
@@ -2427,6 +2536,14 @@ struct BrowserShell {
       case 'settings':
         router.pushUrl({ url: 'pages/SettingsPage' })
         break
+      case 'passwords':
+        // P47-B: 密码管理器
+        router.pushUrl({ url: 'pages/PasswordsPage' })
+        break
+      case 'devtools':
+        // P47-A: 开发者工具
+        router.pushUrl({ url: 'pages/DevToolsPage' })
+        break
       case 'find':
         this.openFindBar()
         break
@@ -2458,6 +2575,107 @@ struct BrowserShell {
       return `${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
     }
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+  }
+
+  /** P47-B: 域名提取 */
+  private p47DomainOf(url: string): string {
+    const m = url.match(/^https?:\/\/([^\/?#]+)/)
+    return m && m.length > 1 ? m[1] : ''
+  }
+
+  /** P47-B: 页面加载完成后密码检测 —— 有密码框+已存凭据→填充条；无凭据→注入 submit 监听待保存 */
+  private p47OnPageEnd(tabId: string, url: string, controller: IWebviewController | null): void {
+    if (!url.startsWith('http') || !controller) {
+      return
+    }
+    const domain = this.p47DomainOf(url)
+    if (domain.length === 0) {
+      return
+    }
+    controller.runJavaScript("(function(){var p=document.querySelectorAll('input[type=password]');return String(p.length)})()").then((r: string) => {
+      const n = parseInt(r)
+      console.info('[P47] pw inputs on ' + domain + ': ' + n)
+      if (!(n > 0)) {
+        return
+      }
+      const creds = CredentialStore.getByDomain(domain)
+      if (creds.length > 0 && tabId === this.activeTabId) {
+        this.p47FillDomain = domain
+        this.p47FillUser = creds[0].username
+        this.p47FillPass = creds[0].password
+        this.p47ShowFillBar = true
+        console.info('[P47] fill bar shown for ' + domain)
+      } else {
+        this.p47StartSaveWatch(tabId, domain, controller)
+      }
+    }).catch((e: Object) => {
+      console.warn('[P47] pw detect fail: ' + e)
+    })
+  }
+
+  /** P47-B: 注入 submit 监听 + 轮询捕获新凭据→保存弹层 */
+  private p47StartSaveWatch(tabId: string, domain: string, controller: IWebviewController): void {
+    if (this.p47WatchedTabs.has(tabId)) {
+      return
+    }
+    this.p47WatchedTabs.add(tabId)
+    controller.runJavaScript("(function(){if(window.__bwWatch)return '1';window.__bwWatch=1;document.addEventListener('submit',function(e){try{var f=e.target;if(!f)return;var pw=f.querySelector('input[type=password]');if(!pw)return;var un=f.querySelector('input[type=email]')||f.querySelector('input[type=text]')||f.querySelector('input:not([type])');window.__bw_cred={u:un?un.value:'',p:pw.value}}catch(_){}},true);return '0'})()").catch(() => {})
+    let tries = 0
+    const timer = setInterval(() => {
+      tries++
+      controller.runJavaScript("(function(){return window.__bw_cred?JSON.stringify(window.__bw_cred):''})()").then((r: string) => {
+        const s = r.replace(/^"|"$/g, '')
+        if (s.length > 0 && s !== 'undefined') {
+          clearInterval(timer)
+          try {
+            const cred = JSON.parse(s) as Record<string, string>
+            const u = cred['u'] ?? ''
+            const p = cred['p'] ?? ''
+            if (p.length > 0 && !CredentialStore.hasCredentialFor(domain)) {
+              this.p47SaveDomain = domain
+              this.p47SaveUser = u.length > 0 ? u : '(未知用户名)'
+              this.p47SavePass = p
+              this.p47SaveOpen = true
+              console.info('[P47] save prompt: ' + domain + ' user=' + u)
+            }
+          } catch (e) {
+            console.warn('[P47] cred parse fail')
+          }
+        }
+      }).catch(() => {})
+      if (tries >= 8) {
+        clearInterval(timer)
+      }
+    }, 1500)
+  }
+
+  /** P47-B: 执行自动填充（native setter + input/change 事件，兼容 React 受控组件） */
+  private p47DoFill(): void {
+    const ctrl = this.getActiveController()
+    if (!ctrl) {
+      return
+    }
+    const u = JSON.stringify(this.p47FillUser)
+    const p = JSON.stringify(this.p47FillPass)
+    const js = "(function(){function sv(el,v){var pr=Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype,'value');if(pr&&pr.set){pr.set.call(el,v)}else{el.value=v}el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}))}var un=document.querySelector('input[type=email]')||document.querySelector('input[type=text]')||document.querySelector('input:not([type])');var pw=document.querySelector('input[type=password]');if(!pw)return 'no-pw';if(un){sv(un,'" + u + "')}sv(pw,'" + p + "');return 'ok'})()"
+    ctrl.runJavaScript(js).then((r: string) => {
+      console.info('[P47] fill result: ' + r)
+      this.p47ShowFillBar = false
+    }).catch((e: Object) => {
+      console.error('[P47] fill fail: ' + e)
+    })
+  }
+
+  private p47DismissFill(): void {
+    this.p47ShowFillBar = false
+  }
+
+  /** P47-B: 保存单凭凭据 */
+  private p47DoSave(): void {
+    const user = this.p47SaveUser === '(未知用户名)' ? '' : this.p47SaveUser
+    CredentialStore.add(this.p47SaveDomain, user, this.p47SavePass)
+    console.info('[P47] credential saved: ' + this.p47SaveDomain)
+    this.p47SaveOpen = false
   }
 
   /** 新建空白标签页（切到 dashboard 态） */

@@ -12,6 +12,8 @@
     "pages/LlmHubPage",
     "pages/SkillsPage",
     "pages/JtbdSurveyPage",
-    "pages/UltrafastWaitlistPage"
+    "pages/UltrafastWaitlistPage",
+    "pages/PasswordsPage",
+    "pages/DevToolsPage"
   ]
 }

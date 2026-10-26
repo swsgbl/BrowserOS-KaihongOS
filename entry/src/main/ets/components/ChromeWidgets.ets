@@ -39,11 +39,13 @@ export struct ThreeDotMenu {
   private readonly group2: MenuEntry[] = [
     { icon: $rawfile('ic_history.svg'), label: '历史', action: 'history' },
     { icon: $rawfile('ic_star_outline.svg'), label: '书签', action: 'bookmarks' },
-    { icon: $rawfile('ic_download.svg'), label: '下载', action: 'downloads' }
+    { icon: $rawfile('ic_download.svg'), label: '下载', action: 'downloads' },
+    { icon: $rawfile('ic_key.svg'), label: '密码管理器', action: 'passwords' }
   ]
   private readonly group3: MenuEntry[] = [
     { icon: $rawfile('ic_schedule.svg'), label: '定时任务', action: 'scheduled_tasks' },
     { icon: $rawfile('ic_robot.svg'), label: 'Skills', action: 'skills' },
+    { icon: $rawfile('ic_bug.svg'), label: '开发者工具', action: 'devtools' },
     { icon: $rawfile('ic_settings.svg'), label: '设置', action: 'settings' },
     { icon: $rawfile('ic_find.svg'), label: '查找', action: 'find' },
     { icon: $rawfile('ic_help.svg'), label: '帮助', action: 'help' }
