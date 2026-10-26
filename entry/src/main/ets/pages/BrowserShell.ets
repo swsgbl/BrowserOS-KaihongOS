@@ -1771,14 +1771,8 @@ struct BrowserShell {
       }
 
       // P29: 聊天输入框（对标上游新标签页 ConversationInput——大圆角搜索/提问框+发送）
-      // P46-C: 左侧 ic_search 图标(上游 BotInputIcon 通用位) + 发送钮
       Row() {
         Row() {
-          Image($rawfile('ic_search.svg'))
-            .width(16).height(16)
-            .fillColor(this.pal().text2)
-            .draggable(false)
-            .margin({ left: 14 })
           TextInput({ text: this.chatInput, placeholder: '问点什么，或让代理帮你浏览...' })
             .fontSize(14)
             .fontColor(this.pal().text)
