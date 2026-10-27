@@ -8,6 +8,7 @@ interface TabInfoJSON {
   status: TabStatus
   isDashboard: boolean
   createdAt: number
+  profileType: string   // P53: default | incognito
 }
 
 export class TabInfo {
@@ -18,6 +19,11 @@ export class TabInfo {
   status: TabStatus = TabStatus.IDLE
   isDashboard: boolean = false
   createdAt: number = 0
+  profileType: string = 'default'   // P53
+
+  isIncognito(): boolean {
+    return this.profileType === 'incognito'
+  }
 
   constructor(tabId: string, agentId: string, isDashboard: boolean = false) {
     this.tabId = tabId
@@ -35,7 +41,8 @@ export class TabInfo {
       title: this.title,
       status: this.status,
       isDashboard: this.isDashboard,
-      createdAt: this.createdAt
+      createdAt: this.createdAt,
+      profileType: this.profileType
     }
     return result
   }
@@ -50,6 +57,9 @@ export class TabInfo {
     tab.title = json.title
     tab.status = json.status
     tab.createdAt = json.createdAt
+    if (json.profileType !== undefined) {
+      tab.profileType = json.profileType
+    }
     return tab
   }
 }

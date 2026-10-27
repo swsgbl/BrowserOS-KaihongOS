@@ -18,6 +18,7 @@ import { ConfirmDialog } from '../components/ConfirmDialog'
 import { ChangelogOverlay } from '../components/ChangelogOverlay'
 import { NeoDashboardPanel } from '../components/NeoDashboardPanel'
 import { webview } from '@kit.ArkWeb'
+import { picker } from '@kit.CoreFileKit'
 import { router } from '@kit.ArkUI'
 import EntryAbility from '../entryability/EntryAbility'
 import { LoginStateManager } from '../service/LoginStateManager'
@@ -1141,9 +1142,8 @@ struct BrowserShell {
   }
 
   private importLoginState(): void {
-    this.importPath = ''
-    this.importResult = ''
-    this.showImportPanel = true
+    // P53: 升级为四步导入向导（来源选择→文件选择→预览→执行注入）
+    router.pushUrl({ url: 'pages/ImportWizardPage' })
   }
 
   private doImport(): void {
@@ -1459,6 +1459,16 @@ struct BrowserShell {
 
   /** P11c: 关闭 tab(带兜底:全关后自动建 dashboard tab) */
   private closeTabById(tabId: string): void {
+    // P53: 无痕标签关闭 —— 清全局无痕 cookie 存储（防止残留）
+    if (this.p47IncognitoTabs.has(tabId)) {
+      try {
+        webview.WebCookieManager.clearAllCookiesSync(true)
+        console.info('[P53] incognito tab closed, incognito cookies cleared: ' + tabId)
+      } catch (e) {
+        console.warn('[P53] clear incognito cookies failed: ' + e)
+      }
+      this.p47IncognitoTabs.delete(tabId)
+    }
     this.controllers.delete(tabId)
     this.attachedTabs.delete(tabId)
     TabManager.closeTab(tabId)
@@ -2096,7 +2106,7 @@ struct BrowserShell {
   WebViewContent(): void {
     Stack() {
       ForEach(this.tabs, (tab: TabInfo) => {
-        Web({ src: 'about:blank', controller: this.getOrCreateController(tab.tabId), incognitoMode: this.p47IncognitoTabs.has(tab.tabId) })
+        Web({ src: 'about:blank', controller: this.getOrCreateController(tab.tabId), incognitoMode: this.p47IncognitoTabs.has(tab.tabId) || tab.isIncognito() })
           .width('100%')
           .height('100%')
           .visibility(tab.tabId === this.activeTabId && !this.showDashboard ? Visibility.Visible : Visibility.Hidden)
@@ -2153,6 +2163,35 @@ struct BrowserShell {
           })
           // P16a: 下载接线 —— SDK14 OnDownloadStartEvent{url,userAgent,contentDisposition,mimetype,contentLength}
           // 无 suggestedFileName 字段，文件名由 DownloadManager.extractFileName 三级推导
+          // P53: 文件选择注入（upload 闭环）—— 页面 <input type=file> 触发
+          .onShowFileSelector((event: OnShowFileSelectorEvent) => {
+            if (event && event.fileSelector && event.result) {
+              const fsParam = event.fileSelector
+              console.info('[P53] onShowFileSelector title=' + fsParam.getTitle() +
+                ' mode=' + fsParam.getMode() + ' accept=' + fsParam.getAcceptType().join(','))
+              try {
+                const hostCtx = this.getUIContext().getHostContext()
+                const docPicker = hostCtx !== undefined ? new picker.DocumentViewPicker(hostCtx) : new picker.DocumentViewPicker()
+                const opts = new picker.DocumentSelectOptions()
+                opts.maxSelectNumber = 1
+                docPicker.select(opts).then((uris: Array<string>) => {
+                  if (uris.length > 0) {
+                    console.info('[P53] file selected for upload: ' + uris[0])
+                    event.result.handleFileList(uris)
+                  } else {
+                    event.result.handleFileList([])
+                  }
+                }).catch((e: Object) => {
+                  console.info('[P53] upload picker dismissed: ' + e)
+                  event.result.handleFileList([])
+                })
+              } catch (e) {
+                console.error('[P53] onShowFileSelector error: ' + e)
+                event.result.handleFileList([])
+              }
+            }
+            return true
+          })
           .onDownloadStart((e) => {
             const fn: string = DownloadManager.fileNameFrom(e.contentDisposition, e.url)
             console.info('BrowserShell onDownloadStart url=' + e.url + ' mime=' + e.mimetype + ' len=' + e.contentLength + ' file=' + fn)
@@ -2834,6 +2873,9 @@ struct BrowserShell {
       return
     }
     this.p47IncognitoTabs.add(tab.tabId)
+    // P53: profileType 统一标记（TabInfo 持久化，MCP/会话路由可见）
+    tab.profileType = 'incognito'
+    TabManager.updateTabUrl(tab.tabId, tab.currentUrl)
     this.tabs = TabManager.getAllTabs()
     this.activeTabId = tab.tabId
     this.showDashboard = false

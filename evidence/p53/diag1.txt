@@ -1,0 +1,6 @@
+10-27 20:21:24.923 20662 20662 I A03d00/JSAPP: [LoginStateManager] PrefsStore login_state ready
+10-27 20:21:24.925 20662 20662 I A03d00/JSAPP: EntryAbility LoginStateManager loadPersistedStates done, domains=0
+10-27 20:36:20.330 24148 24148 I A03d00/JSAPP: [LoginStateManager] PrefsStore login_state ready
+10-27 20:36:20.332 24148 24148 I A03d00/JSAPP: EntryAbility LoginStateManager loadPersistedStates done, domains=0
+10-27 20:41:40.041 24655 24655 I A03d00/JSAPP: [LoginStateManager] PrefsStore login_state ready
+10-27 20:41:40.042 24655 24655 I A03d00/JSAPP: EntryAbility LoginStateManager loadPersistedStates done, domains=0

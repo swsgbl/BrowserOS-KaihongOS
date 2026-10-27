@@ -11,6 +11,48 @@ import { fileIo as fs } from '@kit.CoreFileKit'
 import { util } from '@kit.ArkTS'
 import { webview } from '@kit.ArkWeb'
 
+// P53: 向导页统一从 service 导入（re-export）
+export { LoginStateData, CookieEntry }
+
+/** P53 导入来源类型 */
+export enum ImportSourceKind {
+  NETSCAPE = 'netscape',
+  CHROME_JSON = 'chrome_json',
+  BITWARDEN = 'bitwarden',
+  MANUAL = 'manual'
+}
+
+/** P53 预览行（向导 Step3 展示单元） */
+export class ImportPreviewRow {
+  domain: string = ''
+  cookieCount: number = 0
+  nearestExpiry: number = 0   // 0 = 会话 cookie（不过期）
+  expiredCount: number = 0
+  duplicate: boolean = false  // 已存在于当前导入域集合
+}
+
+/** P53 单域导入结果 */
+export class ImportDomainResult {
+  domain: string = ''
+  imported: number = 0
+  skipped: number = 0
+  failed: number = 0
+  reasons: string[] = []
+}
+
+/** P53 导入执行汇总 */
+export class ImportSummary {
+  states: LoginStateData[] = []
+  results: ImportDomainResult[] = []
+  totalImported: number = 0
+  totalSkipped: number = 0
+  totalFailed: number = 0
+}
+
+/** P53 无痕 profile 常量 */
+export const PROFILE_INCOGNITO: string = 'incognito'
+export const PROFILE_DEFAULT: string = 'default'
+
 interface LoginSessionAgg {
   domains: Record<string, Object>
 }
@@ -238,7 +280,337 @@ class LoginStateManagerImpl {
   }
 
   private detectChromeDataPath(): string | null {
+    // P53: KaihongOS 沙盒不可直读其他应用 profile —— 不再探测，返回 null
+    // 并由调用方（导入向导）引导用户走「文件导出 + 手动导入」路径
     return null
+  }
+
+  /** P53: 沙盒 filesDir 相对路径直读（adb 预置文件后的可靠导入通道） */
+  /** P53: 扫描沙盒 filesDir 下可导入文件（.txt/.json，忽略隐藏项） */
+  listSandboxImportable(): string[] {
+    const out: string[] = []
+    try {
+      const ctx = this.context
+      if (!ctx) {
+        return out
+      }
+      const names = fs.listFileSync(ctx.filesDir)
+      for (const n of names) {
+        if (n.startsWith('.')) {
+          continue
+        }
+        if (n.endsWith('.txt') || n.endsWith('.json')) {
+          out.push(n)
+        }
+      }
+    } catch (e) {
+      console.error('[P53] listSandboxImportable failed: ' + e)
+    }
+    return out
+  }
+
+  readSandboxText(relPath: string): string {
+    try {
+      const ctx = this.context
+      if (!ctx) {
+        console.error('LoginStateManager readSandboxText: no context')
+        return ''
+      }
+      const cleaned = relPath.replace(/^files\//, '')
+      const full = ctx.filesDir + '/' + cleaned
+      console.info('[P53] readSandboxText: full=' + full)
+      return this.readTextFromUri(full)
+    } catch (e) {
+      console.error('LoginStateManager readSandboxText failed: ' + e)
+      return ''
+    }
+  }
+
+  /** P53: 从文件 URI 读取文本（DocumentViewPicker 返回的 uri 直接可 open） */
+  readTextFromUri(fileUri: string): string {
+    let file: fs.File | null = null
+    try {
+      file = fs.openSync(fileUri, fs.OpenMode.READ_ONLY)
+      const stat = fs.statSync(file.fd)
+      if (stat.size > 8 * 1024 * 1024) {
+        console.warn('LoginStateManager readTextFromUri: file too large ' + stat.size)
+      }
+      const buffer = new ArrayBuffer(stat.size)
+      fs.readSync(file.fd, buffer)
+      fs.closeSync(file)
+      file = null
+      return util.TextDecoder.create('utf-8').decodeWithStream(new Uint8Array(buffer))
+    } catch (e) {
+      if (file !== null) {
+        try {
+          fs.closeSync(file)
+        } catch (err) {
+        }
+      }
+      console.error('LoginStateManager readTextFromUri failed: ' + e)
+      return ''
+    }
+  }
+
+  /**
+   * P53: Netscape cookie.txt 解析。
+   * 行格式: domain \t flag \t path \t secure \t expiry \t name \t value
+   * - '#' 开头为注释（识别 "# Netscape HTTP Cookie File" 头）
+   * - expiry 为秒级 Unix；0/空 = 会话 cookie
+   */
+  parseNetscapeCookies(text: string): CookieEntry[] {
+    const cookies: CookieEntry[] = []
+    const lines = text.split(/\r?\n/)
+    for (const rawLine of lines) {
+      const line = rawLine.trim()
+      if (line.length === 0 || line.startsWith('#')) {
+        continue
+      }
+      const parts = line.split('\t')
+      if (parts.length < 7) {
+        // 容错：7 字段以空格分隔的变体（极少见）—— 不足 7 字段跳过
+        continue
+      }
+      const domain = parts[0].trim()
+      const name = parts[5].trim()
+      if (domain.length === 0 || name.length === 0) {
+        continue
+      }
+      const entry = new CookieEntry(name, parts[6], domain)
+      entry.path = parts[2].trim().length > 0 ? parts[2].trim() : '/'
+      entry.secure = parts[3].trim() === 'TRUE'
+      const expRaw = parseInt(parts[4].trim())
+      entry.expires = isNaN(expRaw) ? 0 : expRaw
+      cookies.push(entry)
+    }
+    console.info('LoginStateManager parseNetscapeCookies: lines=' + lines.length + ' cookies=' + cookies.length)
+    return cookies
+  }
+
+  /** P53: 自动识别导入格式（Netscape / Chrome JSON / Bitwarden） */
+  detectFormat(text: string): ImportSourceKind {
+    const head = text.substring(0, 512)
+    if (head.indexOf('# Netscape HTTP Cookie File') >= 0 || head.indexOf('# Netscape') >= 0) {
+      return ImportSourceKind.NETSCAPE
+    }
+    const trimmed = text.trimLeft()
+    if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+      try {
+        const parsed = JSON.parse(text) as Record<string, Object>
+        if (parsed['encrypted'] !== undefined || (parsed['items'] !== undefined && Array.isArray(parsed['items']))) {
+          return ImportSourceKind.BITWARDEN
+        }
+        if (parsed['cookies'] !== undefined && Array.isArray(parsed['cookies'])) {
+          return ImportSourceKind.CHROME_JSON
+        }
+      } catch (e) {
+        // JSON 解析失败 → 当作无法识别
+      }
+      if (trimmed.startsWith('[')) {
+        return ImportSourceKind.CHROME_JSON
+      }
+    }
+    return ImportSourceKind.MANUAL
+  }
+
+  /** P53: 通用解析入口 —— 按格式分发，返回域聚合后的 states（未持久化） */
+  parseAny(text: string, kindHint: ImportSourceKind): LoginStateData[] {
+    const kind = kindHint === ImportSourceKind.MANUAL ? this.detectFormat(text) : kindHint
+    const byDomain: Map<string, LoginStateData> = new Map()
+    if (kind === ImportSourceKind.NETSCAPE) {
+      for (const cookie of this.parseNetscapeCookies(text)) {
+        if (!byDomain.has(cookie.domain)) {
+          byDomain.set(cookie.domain, new LoginStateData(cookie.domain))
+        }
+        byDomain.get(cookie.domain)!.addCookie(cookie)
+      }
+    } else if (kind === ImportSourceKind.CHROME_JSON) {
+      return this.parseCookieJson(text)
+    } else if (kind === ImportSourceKind.BITWARDEN) {
+      // Bitwarden JSON: {items:[{login:{uris:[{uri}],username,password}}]}
+      try {
+        const parsed = JSON.parse(text) as Record<string, Object>
+        const items = parsed['items'] as Record<string, Object>[]
+        if (items) {
+          for (const item of items) {
+            const login = item['login'] as Record<string, Object>
+            if (!login) {
+              continue
+            }
+            const uris = login['uris'] as Record<string, Object>[]
+            if (!uris || uris.length === 0) {
+              continue
+            }
+            const uri = (uris[0]['uri'] as string) || ''
+            const host = this.hostOf(uri)
+            if (host.length === 0) {
+              continue
+            }
+            if (!byDomain.has(host)) {
+              byDomain.set(host, new LoginStateData(host))
+            }
+            // Bitwarden 凭据以 localStorage 伪键承载（P47-B CredentialStore 为主载体）
+            const state = byDomain.get(host)!
+            const uname = (login['username'] as string) || ''
+            const pwd = (login['password'] as string) || ''
+            state.setLocalStorageItem('__bw_username', uname)
+            state.setLocalStorageItem('__bw_password', pwd)
+          }
+        }
+      } catch (e) {
+        console.error('LoginStateManager parseAny bitwarden failed: ' + e)
+      }
+    }
+    const states: LoginStateData[] = []
+    byDomain.forEach((state: LoginStateData) => {
+      states.push(state)
+    })
+    return states
+  }
+
+  /** P53: 从 uri 提取 host（scheme://host[:port]/path） */
+  hostOf(uri: string): string {
+    try {
+      const m = uri.match(/^[a-zA-Z][a-zA-Z0-9+.-]*:\/\/([^\/?:#]+)/)
+      return m ? m[1] : ''
+    } catch (e) {
+      return ''
+    }
+  }
+
+  /** P53: 生成预览行（域名排序、最近过期、重复标记） */
+  buildPreview(states: LoginStateData[]): ImportPreviewRow[] {
+    const rows: ImportPreviewRow[] = []
+    const sorted = states.slice().sort((a: LoginStateData, b: LoginStateData): number => a.domain.localeCompare(b.domain))
+    const now = Date.now() / 1000
+    for (const state of sorted) {
+      const row = new ImportPreviewRow()
+      row.domain = state.domain
+      row.cookieCount = state.cookies.length
+      row.duplicate = this.loginStates.has(state.domain)
+      let nearest = 0
+      let expired = 0
+      for (const c of state.cookies) {
+        if (c.expires > 0) {
+          if (nearest === 0 || c.expires < nearest) {
+            nearest = c.expires
+          }
+          if (c.expires < now) {
+            expired++
+          }
+        }
+      }
+      row.nearestExpiry = nearest
+      row.expiredCount = expired
+      rows.push(row)
+    }
+    return rows
+  }
+
+  /**
+   * P53: 执行导入（向导 Step4）—— 持久化 + 注入 WebView + 事件。
+   * 仅导入勾选域名；逐域统计成功/跳过（重复域全跳）/失败。
+   */
+  async executeImport(states: LoginStateData[], selectedDomains: string[]): Promise<ImportSummary> {
+    const summary = new ImportSummary()
+    const now = Date.now() / 1000
+    const sel = new Set<string>()
+    for (const d of selectedDomains) {
+      sel.add(d)
+    }
+    for (const state of states) {
+      const res = new ImportDomainResult()
+      res.domain = state.domain
+      if (!sel.has(state.domain)) {
+        res.skipped = state.cookies.length
+        res.reasons.push('unselected')
+        summary.totalSkipped += res.skipped
+        summary.results.push(res)
+        continue
+      }
+      // 过期 cookie 跳过（不入库）
+      const fresh: CookieEntry[] = []
+      let expiredSkipped = 0
+      for (const c of state.cookies) {
+        if (c.expires > 0 && c.expires < now) {
+          expiredSkipped++
+        } else {
+          fresh.push(c)
+        }
+      }
+      if (expiredSkipped > 0) {
+        res.skipped = expiredSkipped
+        res.reasons.push(`expired cookies: ${expiredSkipped}`)
+        summary.totalSkipped += expiredSkipped
+      }
+      if (fresh.length === 0 && expiredSkipped > 0) {
+        res.reasons.push('all cookies expired — domain skipped')
+        summary.results.push(res)
+        continue
+      }
+      const target = new LoginStateData(state.domain)
+      for (const c of fresh) {
+        target.addCookie(c)
+      }
+      target.localStorage = state.localStorage
+      target.sessionStorage = state.sessionStorage
+      target.isEncrypted = SecureStorageAdapter.isSecureStorageAvailable()
+      try {
+        await this.persistLoginState(target)
+        this.importedDomains.add(state.domain)
+        this.loginStates.set(state.domain, target)
+        res.imported = fresh.length
+        summary.totalImported += fresh.length
+        summary.states.push(target)
+      } catch (e) {
+        res.failed = fresh.length
+        res.reasons.push(`persist failed: ${e}`)
+        summary.totalFailed += fresh.length
+      }
+      summary.results.push(res)
+    }
+    if (summary.states.length > 0) {
+      await this.persistSessionInfo()
+      const importedData: LoginStateImportedData = {
+        domains: summary.states.map((s: LoginStateData): string => s.domain),
+        count: summary.states.length
+      }
+      EventBus.emit(EventBusEvents.LOGIN_STATE_IMPORTED, importedData)
+      // P53: 导入即注入（configCookieSync 全局 cookie 管理器）
+      const written = await this.injectCookiesToWebview()
+      console.info(`[P53] executeImport: imported=${summary.totalImported} skipped=${summary.totalSkipped} failed=${summary.totalFailed} injected=${written}`)
+    }
+    return summary
+  }
+
+  /** P53: 对单个域名注入 cookies（供导航到对应域时按需调用） */
+  async injectDomainCookies(domain: string): Promise<number> {
+    const state = this.loginStates.get(domain)
+    if (!state) {
+      return 0
+    }
+    let written = 0
+    for (const cookie of state.cookies) {
+      try {
+        const cookieStr = this.buildCookieString(cookie, domain)
+        webview.WebCookieManager.configCookieSync('https://' + domain, cookieStr, false)
+        written++
+      } catch (e) {
+        console.error('[P53] injectDomainCookies setCookie failed: ' + e)
+      }
+    }
+    console.info(`[P53] injectDomainCookies domain=${domain} written=${written}`)
+    return written
+  }
+
+  /** P53: 读取全局 CookieManager 中的域 cookie（验证注入效果/无痕不残留） */
+  fetchCookieForVerify(domain: string, incognito: boolean = false): string {
+    try {
+      return webview.WebCookieManager.fetchCookieSync('https://' + domain, incognito)
+    } catch (e) {
+      console.warn('[P53] fetchCookieForVerify failed: ' + e)
+      return ''
+    }
   }
 
   private async readChromeCookies(chromeDataPath: string): Promise<CookieEntry[]> {

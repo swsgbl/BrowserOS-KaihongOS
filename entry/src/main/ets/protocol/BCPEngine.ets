@@ -1,5 +1,6 @@
 
 import { BCPResult } from '../common/Types'
+import { util } from '@kit.ArkTS'
 import { IWebviewController } from '../common/IWebviewController'
 import { Constants } from '../common/Constants'
 import { JSBridgeInjector } from './JSBridgeInjector'
@@ -86,6 +87,24 @@ class BCPEngineImpl {
       return { success: true, data: url, error: null }
     } catch (e) {
       timer()
+      return { success: false, data: null, error: `${e}` }
+    }
+  }
+
+  /** P53: 当前页导出 PDF（WebviewController.createPdf, since 14）。返回 base64（大负载截断策略同 screenshot） */
+  async createPdf(): Promise<BCPResult> {
+    if (!this.webviewController) {
+      return { success: false, data: null, error: 'WebView not bound' }
+    }
+    try {
+      const buf = await this.webviewController.createPdf(8.27, 11.69, 0.4, true)
+      const b64 = new util.Base64Helper().encodeToStringSync(buf)
+      // 上限 12MB base64 —— 超限截断报错（HTTP 层另有整体限制）
+      if (b64.length > 12 * 1024 * 1024) {
+        return { success: false, data: null, error: 'pdf too large (>12MB base64)' }
+      }
+      return { success: true, data: b64, error: null }
+    } catch (e) {
       return { success: false, data: null, error: `${e}` }
     }
   }

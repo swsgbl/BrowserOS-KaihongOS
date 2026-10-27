@@ -51,4 +51,18 @@ export class WebViewAdapter implements IWebviewController {
   accessForward(): boolean {
     return this.controller.accessForward()
   }
+
+  createPdf(widthIn: number, heightIn: number, margins: number, printBackground: boolean): Promise<Uint8Array> {
+    const cfg: webview.PdfConfiguration = {
+      width: widthIn,
+      height: heightIn,
+      marginTop: margins,
+      marginBottom: margins,
+      marginRight: margins,
+      marginLeft: margins,
+      scale: 1.0,
+      shouldPrintBackground: printBackground
+    }
+    return this.controller.createPdf(cfg).then((data: webview.PdfData): Uint8Array => data.pdfArrayBuffer())
+  }
 }

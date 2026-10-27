@@ -8,4 +8,5 @@ export interface IWebviewController {
   getTitle(): string
   accessBackward(): boolean
   accessForward(): boolean
+  createPdf(widthIn: number, heightIn: number, margins: number, printBackground: boolean): Promise<Uint8Array>
 }

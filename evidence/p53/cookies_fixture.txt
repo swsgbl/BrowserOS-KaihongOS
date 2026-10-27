@@ -1,0 +1,6 @@
+# Netscape HTTP Cookie File
+# https://curl.se/docs/http-cookies.html
+
+.p53a.example.com	TRUE	/	FALSE	1795697058	p53_session_a	sessvalueAAA123
+.p53a.example.com	TRUE	/	TRUE	1795697058	p53_token_a	tokenBBB456
+.p53b.example.org	TRUE	/	FALSE	1795697058	p53_session_b	sessvalueCCC789

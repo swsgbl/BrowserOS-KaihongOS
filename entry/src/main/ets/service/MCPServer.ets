@@ -862,7 +862,13 @@ class MCPServerImpl implements McpHttpDelegate {
   // 工具面在场、如实返回 unsupported（接线留待后续棒）
 
   private handleUpload: ToolHandler = async (params, agentId) => {
-    const rec23: Record<string, Object> = { 'error': 'unsupported on ArkWeb', 'supported': false, 'detail': 'requires onFileSelectorShow wiring (deferred)' }
+    // P53: onShowFileSelector 已接线 —— 页面 <input type=file> 的 click 会拉起系统文件选择器，
+    // 用户完成选择后文件直接注入页面（UI 闭环）。MCP 程序化指定 filePath 的注入仍受沙盒限制（同上游）。
+    const rec23: Record<string, Object> = {
+      'supported': true,
+      'mode': 'interactive',
+      'detail': 'click a file input on the page to trigger the system picker (onShowFileSelector); programmatic filePath injection is sandbox-restricted'
+    }
     return this.okResponse(rec23)
   }
 
@@ -929,8 +935,14 @@ class MCPServerImpl implements McpHttpDelegate {
   // ---------- [P43] pdf：ArkWeb 无 printToPDF —— 工具面在场、如实返回 unsupported ----------
 
   private handlePdf: ToolHandler = async (params, agentId) => {
-    const rec25: Record<string, Object> = { 'error': 'unsupported on ArkWeb', 'supported': false }
-    return this.okResponse(rec25)
+    // P53: 真实现 —— WebviewController.createPdf (since 14)，A4 纵向 + 打印背景
+    const result = await BCPEngine.createPdf()
+    if (!result.success) {
+      const recFail: Record<string, Object> = { 'supported': true, 'error': result.error || 'createPdf failed' }
+      return this.okResponse(recFail)
+    }
+    const data: MCPResponseData = { result: result.data === null ? null : `${result.data}` }
+    return this.bcpToMcpResponse(result, data)
   }
 
   // ---------- wait：现有实现保留；schema 对齐上游（ms/selector） ----------

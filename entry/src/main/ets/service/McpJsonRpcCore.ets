@@ -318,7 +318,7 @@ class McpJsonRpcCoreImpl {
         ['fileName', new McpParamProp('string', 'Optional file name for start')],
         ['mimeType', new McpParamProp('string', 'Optional mime type for start')]
       ]), [], []))
-    tools.push(this.toolDef('upload', 'File upload — unsupported on ArkWeb in this build (onFileSelectorShow wiring deferred)',
+    tools.push(this.toolDef('upload', 'File upload — page <input type=file> triggers system file picker (onShowFileSelector wired P53)',
       this.propMap([
         ['filePath', new McpParamProp('string', 'Reserved: preset file path to inject')]
       ]), [], []))
@@ -334,7 +334,7 @@ class McpJsonRpcCoreImpl {
       this.propMap([
         ['quality', new McpParamProp('string', 'low | medium | high')]
       ]), [], []))
-    tools.push(this.toolDef('pdf', 'Print page to PDF — unsupported on ArkWeb in this build', this.propMap([]), [], []))
+    tools.push(this.toolDef('pdf', 'Print page to PDF (A4 portrait, background on) — returns base64 PDF; implemented via WebviewController.createPdf since API 14', this.propMap([]), [], []))
     tools.push(this.toolDef('wait', 'Wait for milliseconds or for a selector to appear',
       this.propMap([
         ['ms', new McpParamProp('number', 'Milliseconds to wait')],

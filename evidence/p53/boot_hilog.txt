@@ -1,0 +1,597 @@
+10-27 19:36:37.566 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=3 uiTabs=2 dirty=true
+10-27 19:36:37.566 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=3 uiTabs=3 dirty=true
+10-27 19:36:37.581 18178 18178 I A03d00/JSAPP: BrowserShell created WebviewController for tabId=tab_1_1793100997566
+10-27 19:36:37.590 18178 18178 I A03d00/JSAPP: BrowserShell onControllerAttached tabId=tab_1_1793100997566
+10-27 19:36:37.590 18178 18178 I A03d00/JSAPP: BrowserShell registered webview adapter for tabId=tab_1_1793100997566
+10-27 19:36:37.597 18178 18178 I A03d00/JSAPP: BrowserShell onPageBegin tabId=tab_1_1793100997566 url=about:blank
+10-27 19:36:37.598 18178 18178 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_1_1793100997566 url=about:blank
+10-27 19:36:37.598 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=3 uiTabs=3 dirty=true
+10-27 19:36:37.599 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=3 uiTabs=3 dirty=true
+10-27 19:36:37.600 18178 18178 I A03d00/JSAPP: BrowserShell JSBridge injected for tabId=tab_1_1793100997566
+10-27 19:36:37.600 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=3 uiTabs=3 dirty=true
+10-27 19:36:37.610 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=3 uiTabs=3 dirty=true
+10-27 19:36:38.604 18178 18178 I A03d00/JSAPP: BrowserShell onPageBegin tabId=tab_1_1793100997566 url=https://example.com/
+10-27 19:36:38.717 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=3 uiTabs=3 dirty=true
+10-27 19:36:39.217 18178 18178 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_1_1793100997566 url=https://example.com/
+10-27 19:36:39.218 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=3 uiTabs=3 dirty=true
+10-27 19:36:39.218 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=3 uiTabs=3 dirty=true
+10-27 19:36:39.219 18178 18178 I A03d00/JSAPP: BrowserShell JSBridge injected for tabId=tab_1_1793100997566
+10-27 19:36:41.666 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=3 uiTabs=3 dirty=true
+10-27 19:36:41.763 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=3 uiTabs=3 dirty=true
+10-27 19:36:41.899 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=4 uiTabs=3 dirty=true
+10-27 19:36:41.899 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=4 uiTabs=4 dirty=true
+10-27 19:36:41.901 18178 18178 I A03d00/JSAPP: BrowserShell created WebviewController for tabId=tab_2_1793101001899
+10-27 19:36:41.909 18178 18178 I A03d00/JSAPP: BrowserShell onControllerAttached tabId=tab_2_1793101001899
+10-27 19:36:41.909 18178 18178 I A03d00/JSAPP: BrowserShell registered webview adapter for tabId=tab_2_1793101001899
+10-27 19:36:41.915 18178 18178 I A03d00/JSAPP: BrowserShell onPageBegin tabId=tab_2_1793101001899 url=about:blank
+10-27 19:36:41.916 18178 18178 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_2_1793101001899 url=about:blank
+10-27 19:36:41.916 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=4 uiTabs=4 dirty=true
+10-27 19:36:41.916 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=4 uiTabs=4 dirty=true
+10-27 19:36:41.917 18178 18178 I A03d00/JSAPP: BrowserShell JSBridge injected for tabId=tab_2_1793101001899
+10-27 19:36:41.917 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=4 uiTabs=4 dirty=true
+10-27 19:36:41.943 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=4 uiTabs=4 dirty=true
+10-27 19:36:41.961 18178 18178 I A03d00/JSAPP: BrowserShell onPageBegin tabId=tab_2_1793101001899 url=https://example.com/
+10-27 19:36:41.961 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=4 uiTabs=4 dirty=true
+10-27 19:36:41.961 18178 18178 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_2_1793101001899 url=https://example.com/
+10-27 19:36:41.961 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=4 uiTabs=4 dirty=true
+10-27 19:36:41.961 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=4 uiTabs=4 dirty=true
+10-27 19:36:41.963 18178 18178 I A03d00/JSAPP: BrowserShell JSBridge injected for tabId=tab_2_1793101001899
+10-27 19:36:45.998 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=4 uiTabs=4 dirty=true
+10-27 19:36:46.046 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=4 uiTabs=4 dirty=true
+10-27 19:36:46.180 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=5 uiTabs=4 dirty=true
+10-27 19:36:46.180 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=5 uiTabs=5 dirty=true
+10-27 19:36:46.184 18178 18178 I A03d00/JSAPP: BrowserShell created WebviewController for tabId=tab_3_1793101006180
+10-27 19:36:46.192 18178 18178 I A03d00/JSAPP: BrowserShell onControllerAttached tabId=tab_3_1793101006180
+10-27 19:36:46.192 18178 18178 I A03d00/JSAPP: BrowserShell registered webview adapter for tabId=tab_3_1793101006180
+10-27 19:36:46.199 18178 18178 I A03d00/JSAPP: BrowserShell onPageBegin tabId=tab_3_1793101006180 url=about:blank
+10-27 19:36:46.200 18178 18178 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_3_1793101006180 url=about:blank
+10-27 19:36:46.200 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=5 uiTabs=5 dirty=true
+10-27 19:36:46.200 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=5 uiTabs=5 dirty=true
+10-27 19:36:46.201 18178 18178 I A03d00/JSAPP: BrowserShell JSBridge injected for tabId=tab_3_1793101006180
+10-27 19:36:46.201 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=5 uiTabs=5 dirty=true
+10-27 19:36:46.225 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=5 uiTabs=5 dirty=true
+10-27 19:36:46.235 18178 18178 I A03d00/JSAPP: BrowserShell onPageBegin tabId=tab_3_1793101006180 url=https://example.com/
+10-27 19:36:46.245 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=5 uiTabs=5 dirty=true
+10-27 19:36:46.245 18178 18178 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_3_1793101006180 url=https://example.com/
+10-27 19:36:46.246 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=5 uiTabs=5 dirty=true
+10-27 19:36:46.246 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=5 uiTabs=5 dirty=true
+10-27 19:36:46.248 18178 18178 I A03d00/JSAPP: BrowserShell JSBridge injected for tabId=tab_3_1793101006180
+10-27 19:36:50.280 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=5 uiTabs=5 dirty=true
+10-27 19:36:50.328 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=5 uiTabs=5 dirty=true
+10-27 19:36:50.462 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=6 uiTabs=5 dirty=true
+10-27 19:36:50.462 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=6 uiTabs=6 dirty=true
+10-27 19:36:50.468 18178 18178 I A03d00/JSAPP: BrowserShell created WebviewController for tabId=tab_4_1793101010462
+10-27 19:36:50.476 18178 18178 I A03d00/JSAPP: BrowserShell onControllerAttached tabId=tab_4_1793101010462
+10-27 19:36:50.476 18178 18178 I A03d00/JSAPP: BrowserShell registered webview adapter for tabId=tab_4_1793101010462
+10-27 19:36:50.483 18178 18178 I A03d00/JSAPP: BrowserShell onPageBegin tabId=tab_4_1793101010462 url=about:blank
+10-27 19:36:50.484 18178 18178 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_4_1793101010462 url=about:blank
+10-27 19:36:50.484 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=6 uiTabs=6 dirty=true
+10-27 19:36:50.484 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=6 uiTabs=6 dirty=true
+10-27 19:36:50.485 18178 18178 I A03d00/JSAPP: BrowserShell JSBridge injected for tabId=tab_4_1793101010462
+10-27 19:36:50.485 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=6 uiTabs=6 dirty=true
+10-27 19:36:50.506 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=6 uiTabs=6 dirty=true
+10-27 19:36:50.534 18178 18178 I A03d00/JSAPP: BrowserShell onPageBegin tabId=tab_4_1793101010462 url=https://example.com/
+10-27 19:36:50.534 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=6 uiTabs=6 dirty=true
+10-27 19:36:50.534 18178 18178 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_4_1793101010462 url=https://example.com/
+10-27 19:36:50.535 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=6 uiTabs=6 dirty=true
+10-27 19:36:50.535 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=6 uiTabs=6 dirty=true
+10-27 19:36:50.537 18178 18178 I A03d00/JSAPP: BrowserShell JSBridge injected for tabId=tab_4_1793101010462
+10-27 19:36:54.562 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=6 uiTabs=6 dirty=true
+10-27 19:36:54.612 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=6 uiTabs=6 dirty=true
+10-27 19:36:54.750 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=7 uiTabs=6 dirty=true
+10-27 19:36:54.750 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=7 uiTabs=7 dirty=true
+10-27 19:36:54.751 18178 18178 I A03d00/JSAPP: BrowserShell created WebviewController for tabId=tab_5_1793101014750
+10-27 19:36:54.762 18178 18178 I A03d00/JSAPP: BrowserShell onControllerAttached tabId=tab_5_1793101014750
+10-27 19:36:54.762 18178 18178 I A03d00/JSAPP: BrowserShell registered webview adapter for tabId=tab_5_1793101014750
+10-27 19:36:54.771 18178 18178 I A03d00/JSAPP: BrowserShell onPageBegin tabId=tab_5_1793101014750 url=about:blank
+10-27 19:36:54.772 18178 18178 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_5_1793101014750 url=about:blank
+10-27 19:36:54.772 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=7 uiTabs=7 dirty=true
+10-27 19:36:54.772 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=7 uiTabs=7 dirty=true
+10-27 19:36:54.775 18178 18178 I A03d00/JSAPP: BrowserShell JSBridge injected for tabId=tab_5_1793101014750
+10-27 19:36:54.775 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=7 uiTabs=7 dirty=true
+10-27 19:36:54.795 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=7 uiTabs=7 dirty=true
+10-27 19:36:54.816 18178 18178 I A03d00/JSAPP: BrowserShell onPageBegin tabId=tab_5_1793101014750 url=https://example.com/
+10-27 19:36:54.816 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=7 uiTabs=7 dirty=true
+10-27 19:36:54.820 18178 18178 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_5_1793101014750 url=https://example.com/
+10-27 19:36:54.821 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=7 uiTabs=7 dirty=true
+10-27 19:36:54.821 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=7 uiTabs=7 dirty=true
+10-27 19:36:54.822 18178 18178 I A03d00/JSAPP: BrowserShell JSBridge injected for tabId=tab_5_1793101014750
+10-27 19:36:58.851 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=7 uiTabs=7 dirty=true
+10-27 19:36:58.900 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=7 uiTabs=7 dirty=true
+10-27 19:36:59.036 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=8 uiTabs=7 dirty=true
+10-27 19:36:59.036 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=8 uiTabs=8 dirty=true
+10-27 19:36:59.051 18178 18178 I A03d00/JSAPP: BrowserShell created WebviewController for tabId=tab_6_1793101019036
+10-27 19:36:59.060 18178 18178 I A03d00/JSAPP: BrowserShell onControllerAttached tabId=tab_6_1793101019036
+10-27 19:36:59.060 18178 18178 I A03d00/JSAPP: BrowserShell registered webview adapter for tabId=tab_6_1793101019036
+10-27 19:36:59.069 18178 18178 I A03d00/JSAPP: BrowserShell onPageBegin tabId=tab_6_1793101019036 url=about:blank
+10-27 19:36:59.069 18178 18178 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_6_1793101019036 url=about:blank
+10-27 19:36:59.069 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=8 uiTabs=8 dirty=true
+10-27 19:36:59.069 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=8 uiTabs=8 dirty=true
+10-27 19:36:59.070 18178 18178 I A03d00/JSAPP: BrowserShell JSBridge injected for tabId=tab_6_1793101019036
+10-27 19:36:59.070 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=8 uiTabs=8 dirty=true
+10-27 19:36:59.081 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=8 uiTabs=8 dirty=true
+10-27 19:36:59.104 18178 18178 I A03d00/JSAPP: BrowserShell onPageBegin tabId=tab_6_1793101019036 url=https://example.com/
+10-27 19:36:59.104 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=8 uiTabs=8 dirty=true
+10-27 19:36:59.110 18178 18178 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_6_1793101019036 url=https://example.com/
+10-27 19:36:59.110 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=8 uiTabs=8 dirty=true
+10-27 19:36:59.110 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=8 uiTabs=8 dirty=true
+10-27 19:36:59.111 18178 18178 I A03d00/JSAPP: BrowserShell JSBridge injected for tabId=tab_6_1793101019036
+10-27 19:37:03.137 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=8 uiTabs=8 dirty=true
+10-27 19:37:03.185 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=8 uiTabs=8 dirty=true
+10-27 19:37:03.789 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=9 uiTabs=8 dirty=true
+10-27 19:37:03.789 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=9 uiTabs=9 dirty=true
+10-27 19:37:03.801 18178 18178 I A03d00/JSAPP: BrowserShell created WebviewController for tabId=tab_7_1793101023789
+10-27 19:37:03.811 18178 18178 I A03d00/JSAPP: BrowserShell onControllerAttached tabId=tab_7_1793101023789
+10-27 19:37:03.811 18178 18178 I A03d00/JSAPP: BrowserShell registered webview adapter for tabId=tab_7_1793101023789
+10-27 19:37:03.818 18178 18178 I A03d00/JSAPP: BrowserShell onPageBegin tabId=tab_7_1793101023789 url=about:blank
+10-27 19:37:03.820 18178 18178 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_7_1793101023789 url=about:blank
+10-27 19:37:03.820 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=9 uiTabs=9 dirty=true
+10-27 19:37:03.820 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=9 uiTabs=9 dirty=true
+10-27 19:37:03.821 18178 18178 I A03d00/JSAPP: BrowserShell JSBridge injected for tabId=tab_7_1793101023789
+10-27 19:37:03.821 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=9 uiTabs=9 dirty=true
+10-27 19:37:03.834 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=9 uiTabs=9 dirty=true
+10-27 19:37:03.858 18178 18178 I A03d00/JSAPP: BrowserShell onPageBegin tabId=tab_7_1793101023789 url=https://example.com/
+10-27 19:37:03.858 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=9 uiTabs=9 dirty=true
+10-27 19:37:03.861 18178 18178 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_7_1793101023789 url=https://example.com/
+10-27 19:37:03.861 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=9 uiTabs=9 dirty=true
+10-27 19:37:03.861 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=9 uiTabs=9 dirty=true
+10-27 19:37:03.864 18178 18178 I A03d00/JSAPP: BrowserShell JSBridge injected for tabId=tab_7_1793101023789
+10-27 19:37:09.890 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=9 uiTabs=9 dirty=true
+10-27 19:37:09.938 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=9 uiTabs=9 dirty=true
+10-27 19:37:31.416 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=10 uiTabs=9 dirty=true
+10-27 19:37:31.416 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=10 uiTabs=10 dirty=true
+10-27 19:37:31.418 18178 18178 I A03d00/JSAPP: BrowserShell created WebviewController for tabId=tab_8_1793101051416
+10-27 19:37:31.426 18178 18178 I A03d00/JSAPP: BrowserShell onControllerAttached tabId=tab_8_1793101051416
+10-27 19:37:31.426 18178 18178 I A03d00/JSAPP: BrowserShell registered webview adapter for tabId=tab_8_1793101051416
+10-27 19:37:31.433 18178 18178 I A03d00/JSAPP: BrowserShell onPageBegin tabId=tab_8_1793101051416 url=about:blank
+10-27 19:37:31.434 18178 18178 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_8_1793101051416 url=about:blank
+10-27 19:37:31.434 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=10 uiTabs=10 dirty=true
+10-27 19:37:31.434 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=10 uiTabs=10 dirty=true
+10-27 19:37:31.435 18178 18178 I A03d00/JSAPP: BrowserShell JSBridge injected for tabId=tab_8_1793101051416
+10-27 19:37:31.435 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=10 uiTabs=10 dirty=true
+10-27 19:37:31.461 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=10 uiTabs=10 dirty=true
+10-27 19:37:31.483 18178 18178 I A03d00/JSAPP: BrowserShell onPageBegin tabId=tab_8_1793101051416 url=https://example.com/
+10-27 19:37:31.483 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=10 uiTabs=10 dirty=true
+10-27 19:37:31.483 18178 18178 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_8_1793101051416 url=https://example.com/
+10-27 19:37:31.484 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=10 uiTabs=10 dirty=true
+10-27 19:37:31.484 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=10 uiTabs=10 dirty=true
+10-27 19:37:31.485 18178 18178 I A03d00/JSAPP: BrowserShell JSBridge injected for tabId=tab_8_1793101051416
+10-27 19:37:35.516 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=10 uiTabs=10 dirty=true
+10-27 19:37:35.564 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=10 uiTabs=10 dirty=true
+10-27 19:37:35.699 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=11 uiTabs=10 dirty=true
+10-27 19:37:35.699 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=11 uiTabs=11 dirty=true
+10-27 19:37:35.704 18178 18178 I A03d00/JSAPP: BrowserShell created WebviewController for tabId=tab_9_1793101055699
+10-27 19:37:35.713 18178 18178 I A03d00/JSAPP: BrowserShell onControllerAttached tabId=tab_9_1793101055699
+10-27 19:37:35.713 18178 18178 I A03d00/JSAPP: BrowserShell registered webview adapter for tabId=tab_9_1793101055699
+10-27 19:37:35.720 18178 18178 I A03d00/JSAPP: BrowserShell onPageBegin tabId=tab_9_1793101055699 url=about:blank
+10-27 19:37:35.988 18178 18178 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_9_1793101055699 url=about:blank
+10-27 19:37:35.988 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=11 uiTabs=11 dirty=true
+10-27 19:37:35.989 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=11 uiTabs=11 dirty=true
+10-27 19:37:36.015 18178 18178 I A03d00/JSAPP: BrowserShell JSBridge injected for tabId=tab_9_1793101055699
+10-27 19:37:36.015 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=11 uiTabs=11 dirty=true
+10-27 19:37:36.017 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=11 uiTabs=11 dirty=true
+10-27 19:37:36.813 18178 18178 I A03d00/JSAPP: BrowserShell onPageBegin tabId=tab_9_1793101055699 url=https://example.com/
+10-27 19:37:36.813 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=11 uiTabs=11 dirty=true
+10-27 19:37:36.813 18178 18178 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_9_1793101055699 url=https://example.com/
+10-27 19:37:36.813 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=11 uiTabs=11 dirty=true
+10-27 19:37:36.813 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=11 uiTabs=11 dirty=true
+10-27 19:37:36.934 18178 18178 I A03d00/JSAPP: BrowserShell JSBridge injected for tabId=tab_9_1793101055699
+10-27 19:37:40.106 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=11 uiTabs=11 dirty=true
+10-27 19:37:40.155 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=11 uiTabs=11 dirty=true
+10-27 19:37:40.288 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=12 uiTabs=11 dirty=true
+10-27 19:37:40.288 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=12 uiTabs=12 dirty=true
+10-27 19:37:40.304 18178 18178 I A03d00/JSAPP: BrowserShell created WebviewController for tabId=tab_10_1793101060288
+10-27 19:37:40.313 18178 18178 I A03d00/JSAPP: BrowserShell onControllerAttached tabId=tab_10_1793101060288
+10-27 19:37:40.313 18178 18178 I A03d00/JSAPP: BrowserShell registered webview adapter for tabId=tab_10_1793101060288
+10-27 19:37:40.322 18178 18178 I A03d00/JSAPP: BrowserShell onPageBegin tabId=tab_10_1793101060288 url=about:blank
+10-27 19:37:40.322 18178 18178 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_10_1793101060288 url=about:blank
+10-27 19:37:40.323 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=12 uiTabs=12 dirty=true
+10-27 19:37:40.323 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=12 uiTabs=12 dirty=true
+10-27 19:37:40.324 18178 18178 I A03d00/JSAPP: BrowserShell JSBridge injected for tabId=tab_10_1793101060288
+10-27 19:37:40.324 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=12 uiTabs=12 dirty=true
+10-27 19:37:40.333 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=12 uiTabs=12 dirty=true
+10-27 19:37:40.360 18178 18178 I A03d00/JSAPP: BrowserShell onPageBegin tabId=tab_10_1793101060288 url=https://example.com/
+10-27 19:37:40.361 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=12 uiTabs=12 dirty=true
+10-27 19:37:40.363 18178 18178 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_10_1793101060288 url=https://example.com/
+10-27 19:37:40.489 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=12 uiTabs=12 dirty=true
+10-27 19:37:40.489 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=12 uiTabs=12 dirty=true
+10-27 19:37:40.634 18178 18178 I A03d00/JSAPP: BrowserShell JSBridge injected for tabId=tab_10_1793101060288
+10-27 19:37:44.388 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=12 uiTabs=12 dirty=true
+10-27 19:37:44.503 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=12 uiTabs=12 dirty=true
+10-27 19:37:44.699 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=13 uiTabs=12 dirty=true
+10-27 19:37:44.699 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=13 uiTabs=13 dirty=true
+10-27 19:37:44.704 18178 18178 I A03d00/JSAPP: BrowserShell created WebviewController for tabId=tab_11_1793101064699
+10-27 19:37:44.804 18178 18178 I A03d00/JSAPP: BrowserShell onControllerAttached tabId=tab_11_1793101064699
+10-27 19:37:44.804 18178 18178 I A03d00/JSAPP: BrowserShell registered webview adapter for tabId=tab_11_1793101064699
+10-27 19:37:44.806 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=13 uiTabs=13 dirty=true
+10-27 19:37:45.110 18178 18178 I A03d00/JSAPP: BrowserShell onPageBegin tabId=tab_11_1793101064699 url=about:blank
+10-27 19:37:45.111 18178 18178 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_11_1793101064699 url=about:blank
+10-27 19:37:45.111 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=13 uiTabs=13 dirty=true
+10-27 19:37:45.111 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=13 uiTabs=13 dirty=true
+10-27 19:37:45.259 18178 18178 I A03d00/JSAPP: BrowserShell JSBridge injected for tabId=tab_11_1793101064699
+10-27 19:37:45.259 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=13 uiTabs=13 dirty=true
+10-27 19:37:48.824 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=13 uiTabs=13 dirty=true
+10-27 19:37:49.000 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=13 uiTabs=13 dirty=true
+10-27 19:37:49.153 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=14 uiTabs=13 dirty=true
+10-27 19:37:49.153 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=14 uiTabs=14 dirty=true
+10-27 19:37:49.154 18178 18178 I A03d00/JSAPP: BrowserShell created WebviewController for tabId=tab_12_1793101069153
+10-27 19:37:49.630 18178 18178 I A03d00/JSAPP: BrowserShell onControllerAttached tabId=tab_12_1793101069153
+10-27 19:37:49.630 18178 18178 I A03d00/JSAPP: BrowserShell registered webview adapter for tabId=tab_12_1793101069153
+10-27 19:37:49.664 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=14 uiTabs=14 dirty=true
+10-27 19:37:49.981 18178 18178 I A03d00/JSAPP: BrowserShell onPageBegin tabId=tab_12_1793101069153 url=about:blank
+10-27 19:37:49.999 18178 18178 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_12_1793101069153 url=about:blank
+10-27 19:37:49.999 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=14 uiTabs=14 dirty=true
+10-27 19:37:49.999 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=14 uiTabs=14 dirty=true
+10-27 19:37:50.029 18178 18178 I A03d00/JSAPP: BrowserShell JSBridge injected for tabId=tab_12_1793101069153
+10-27 19:37:50.029 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=14 uiTabs=14 dirty=true
+10-27 19:37:53.941 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=14 uiTabs=14 dirty=true
+10-27 19:37:54.006 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=14 uiTabs=14 dirty=true
+10-27 19:37:54.154 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=15 uiTabs=14 dirty=true
+10-27 19:37:54.154 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=15 uiTabs=15 dirty=true
+10-27 19:37:54.170 18178 18178 I A03d00/JSAPP: BrowserShell created WebviewController for tabId=tab_13_1793101074154
+10-27 19:37:54.179 18178 18178 I A03d00/JSAPP: BrowserShell onControllerAttached tabId=tab_13_1793101074154
+10-27 19:37:54.179 18178 18178 I A03d00/JSAPP: BrowserShell registered webview adapter for tabId=tab_13_1793101074154
+10-27 19:37:54.196 18178 18178 I A03d00/JSAPP: BrowserShell onPageBegin tabId=tab_13_1793101074154 url=about:blank
+10-27 19:37:54.199 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=15 uiTabs=15 dirty=true
+10-27 19:37:54.205 18178 18178 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_13_1793101074154 url=about:blank
+10-27 19:37:54.205 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=15 uiTabs=15 dirty=true
+10-27 19:37:54.205 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=15 uiTabs=15 dirty=true
+10-27 19:37:54.208 18178 18178 I A03d00/JSAPP: BrowserShell JSBridge injected for tabId=tab_13_1793101074154
+10-27 19:37:54.208 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=15 uiTabs=15 dirty=true
+10-27 19:37:54.244 18178 18178 I A03d00/JSAPP: BrowserShell onPageBegin tabId=tab_13_1793101074154 url=https://example.com/
+10-27 19:37:54.245 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=15 uiTabs=15 dirty=true
+10-27 19:37:54.247 18178 18178 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_13_1793101074154 url=https://example.com/
+10-27 19:37:54.248 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=15 uiTabs=15 dirty=true
+10-27 19:37:54.248 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=15 uiTabs=15 dirty=true
+10-27 19:37:54.256 18178 18178 I A03d00/JSAPP: BrowserShell JSBridge injected for tabId=tab_13_1793101074154
+10-27 19:37:58.209 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=15 uiTabs=15 dirty=true
+10-27 19:37:58.284 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=15 uiTabs=15 dirty=true
+10-27 19:37:58.979 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=16 uiTabs=15 dirty=true
+10-27 19:37:58.979 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=16 uiTabs=16 dirty=true
+10-27 19:37:58.987 18178 18178 I A03d00/JSAPP: BrowserShell created WebviewController for tabId=tab_14_1793101078979
+10-27 19:37:58.996 18178 18178 I A03d00/JSAPP: BrowserShell onControllerAttached tabId=tab_14_1793101078979
+10-27 19:37:58.996 18178 18178 I A03d00/JSAPP: BrowserShell registered webview adapter for tabId=tab_14_1793101078979
+10-27 19:37:59.003 18178 18178 I A03d00/JSAPP: BrowserShell onPageBegin tabId=tab_14_1793101078979 url=about:blank
+10-27 19:37:59.003 18178 18178 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_14_1793101078979 url=about:blank
+10-27 19:37:59.003 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=16 uiTabs=16 dirty=true
+10-27 19:37:59.003 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=16 uiTabs=16 dirty=true
+10-27 19:37:59.014 18178 18178 I A03d00/JSAPP: BrowserShell JSBridge injected for tabId=tab_14_1793101078979
+10-27 19:37:59.014 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=16 uiTabs=16 dirty=true
+10-27 19:37:59.023 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=16 uiTabs=16 dirty=true
+10-27 19:37:59.035 18178 18178 I A03d00/JSAPP: BrowserShell onPageBegin tabId=tab_14_1793101078979 url=https://example.com/
+10-27 19:37:59.065 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=16 uiTabs=16 dirty=true
+10-27 19:37:59.066 18178 18178 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_14_1793101078979 url=https://example.com/
+10-27 19:37:59.067 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=16 uiTabs=16 dirty=true
+10-27 19:37:59.067 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=16 uiTabs=16 dirty=true
+10-27 19:37:59.075 18178 18178 I A03d00/JSAPP: BrowserShell JSBridge injected for tabId=tab_14_1793101078979
+10-27 19:38:05.081 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=16 uiTabs=16 dirty=true
+10-27 19:38:05.130 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=16 uiTabs=16 dirty=true
+10-27 19:38:25.351 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=17 uiTabs=16 dirty=true
+10-27 19:38:25.351 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=17 uiTabs=17 dirty=true
+10-27 19:38:25.354 18178 18178 I A03d00/JSAPP: BrowserShell created WebviewController for tabId=tab_15_1793101105351
+10-27 19:38:25.363 18178 18178 I A03d00/JSAPP: BrowserShell onControllerAttached tabId=tab_15_1793101105351
+10-27 19:38:25.363 18178 18178 I A03d00/JSAPP: BrowserShell registered webview adapter for tabId=tab_15_1793101105351
+10-27 19:38:25.371 18178 18178 I A03d00/JSAPP: BrowserShell onPageBegin tabId=tab_15_1793101105351 url=about:blank
+10-27 19:38:25.372 18178 18178 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_15_1793101105351 url=about:blank
+10-27 19:38:25.372 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=17 uiTabs=17 dirty=true
+10-27 19:38:25.372 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=17 uiTabs=17 dirty=true
+10-27 19:38:25.375 18178 18178 I A03d00/JSAPP: BrowserShell JSBridge injected for tabId=tab_15_1793101105351
+10-27 19:38:25.375 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=17 uiTabs=17 dirty=true
+10-27 19:38:25.395 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=17 uiTabs=17 dirty=true
+10-27 19:38:25.405 18178 18178 I A03d00/JSAPP: BrowserShell onPageBegin tabId=tab_15_1793101105351 url=https://example.com/
+10-27 19:38:25.426 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=17 uiTabs=17 dirty=true
+10-27 19:38:25.427 18178 18178 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_15_1793101105351 url=https://example.com/
+10-27 19:38:25.427 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=17 uiTabs=17 dirty=true
+10-27 19:38:25.427 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=17 uiTabs=17 dirty=true
+10-27 19:38:25.428 18178 18178 I A03d00/JSAPP: BrowserShell JSBridge injected for tabId=tab_15_1793101105351
+10-27 19:38:29.451 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=17 uiTabs=17 dirty=true
+10-27 19:38:29.500 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=17 uiTabs=17 dirty=true
+10-27 19:38:29.635 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=18 uiTabs=17 dirty=true
+10-27 19:38:29.635 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=18 uiTabs=18 dirty=true
+10-27 19:38:29.641 18178 18178 I A03d00/JSAPP: BrowserShell created WebviewController for tabId=tab_16_1793101109635
+10-27 19:38:29.649 18178 18178 I A03d00/JSAPP: BrowserShell onControllerAttached tabId=tab_16_1793101109635
+10-27 19:38:29.649 18178 18178 I A03d00/JSAPP: BrowserShell registered webview adapter for tabId=tab_16_1793101109635
+10-27 19:38:29.657 18178 18178 I A03d00/JSAPP: BrowserShell onPageBegin tabId=tab_16_1793101109635 url=about:blank
+10-27 19:38:29.658 18178 18178 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_16_1793101109635 url=about:blank
+10-27 19:38:29.658 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=18 uiTabs=18 dirty=true
+10-27 19:38:29.658 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=18 uiTabs=18 dirty=true
+10-27 19:38:29.659 18178 18178 I A03d00/JSAPP: BrowserShell JSBridge injected for tabId=tab_16_1793101109635
+10-27 19:38:29.660 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=18 uiTabs=18 dirty=true
+10-27 19:38:29.679 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=18 uiTabs=18 dirty=true
+10-27 19:38:29.689 18178 18178 I A03d00/JSAPP: BrowserShell onPageBegin tabId=tab_16_1793101109635 url=https://example.com/
+10-27 19:38:29.689 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=18 uiTabs=18 dirty=true
+10-27 19:38:29.709 18178 18178 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_16_1793101109635 url=https://example.com/
+10-27 19:38:29.721 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=18 uiTabs=18 dirty=true
+10-27 19:38:29.721 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=18 uiTabs=18 dirty=true
+10-27 19:38:29.722 18178 18178 I A03d00/JSAPP: BrowserShell JSBridge injected for tabId=tab_16_1793101109635
+10-27 19:38:33.735 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=18 uiTabs=18 dirty=true
+10-27 19:38:33.783 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=18 uiTabs=18 dirty=true
+10-27 19:38:33.916 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=19 uiTabs=18 dirty=true
+10-27 19:38:33.916 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=19 uiTabs=19 dirty=true
+10-27 19:38:33.924 18178 18178 I A03d00/JSAPP: BrowserShell created WebviewController for tabId=tab_17_1793101113916
+10-27 19:38:33.934 18178 18178 I A03d00/JSAPP: BrowserShell onControllerAttached tabId=tab_17_1793101113916
+10-27 19:38:33.934 18178 18178 I A03d00/JSAPP: BrowserShell registered webview adapter for tabId=tab_17_1793101113916
+10-27 19:38:33.944 18178 18178 I A03d00/JSAPP: BrowserShell onPageBegin tabId=tab_17_1793101113916 url=about:blank
+10-27 19:38:33.944 18178 18178 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_17_1793101113916 url=about:blank
+10-27 19:38:33.944 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=19 uiTabs=19 dirty=true
+10-27 19:38:33.944 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=19 uiTabs=19 dirty=true
+10-27 19:38:33.947 18178 18178 I A03d00/JSAPP: BrowserShell JSBridge injected for tabId=tab_17_1793101113916
+10-27 19:38:33.947 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=19 uiTabs=19 dirty=true
+10-27 19:38:33.959 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=19 uiTabs=19 dirty=true
+10-27 19:38:33.971 18178 18178 I A03d00/JSAPP: BrowserShell onPageBegin tabId=tab_17_1793101113916 url=https://example.com/
+10-27 19:38:33.971 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=19 uiTabs=19 dirty=true
+10-27 19:38:33.974 18178 18178 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_17_1793101113916 url=https://example.com/
+10-27 19:38:33.974 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=19 uiTabs=19 dirty=true
+10-27 19:38:33.974 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=19 uiTabs=19 dirty=true
+10-27 19:38:33.976 18178 18178 I A03d00/JSAPP: BrowserShell JSBridge injected for tabId=tab_17_1793101113916
+10-27 19:38:37.966 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=19 uiTabs=19 dirty=true
+10-27 19:38:38.015 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=19 uiTabs=19 dirty=true
+10-27 19:38:38.154 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=20 uiTabs=19 dirty=true
+10-27 19:38:38.154 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=20 uiTabs=20 dirty=true
+10-27 19:38:38.158 18178 18178 I A03d00/JSAPP: BrowserShell created WebviewController for tabId=tab_18_1793101118154
+10-27 19:38:38.167 18178 18178 I A03d00/JSAPP: BrowserShell onControllerAttached tabId=tab_18_1793101118154
+10-27 19:38:38.167 18178 18178 I A03d00/JSAPP: BrowserShell registered webview adapter for tabId=tab_18_1793101118154
+10-27 19:38:38.178 18178 18178 I A03d00/JSAPP: BrowserShell onPageBegin tabId=tab_18_1793101118154 url=about:blank
+10-27 19:38:38.179 18178 18178 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_18_1793101118154 url=about:blank
+10-27 19:38:38.179 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=20 uiTabs=20 dirty=true
+10-27 19:38:38.179 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=20 uiTabs=20 dirty=true
+10-27 19:38:38.180 18178 18178 I A03d00/JSAPP: BrowserShell JSBridge injected for tabId=tab_18_1793101118154
+10-27 19:38:38.180 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=20 uiTabs=20 dirty=true
+10-27 19:38:38.198 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=20 uiTabs=20 dirty=true
+10-27 19:38:38.210 18178 18178 I A03d00/JSAPP: BrowserShell onPageBegin tabId=tab_18_1793101118154 url=https://example.com/
+10-27 19:38:38.210 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=20 uiTabs=20 dirty=true
+10-27 19:38:38.250 18178 18178 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_18_1793101118154 url=https://example.com/
+10-27 19:38:38.250 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=20 uiTabs=20 dirty=true
+10-27 19:38:38.250 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=20 uiTabs=20 dirty=true
+10-27 19:38:38.263 18178 18178 I A03d00/JSAPP: BrowserShell JSBridge injected for tabId=tab_18_1793101118154
+10-27 19:38:42.254 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=20 uiTabs=20 dirty=true
+10-27 19:38:42.304 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=20 uiTabs=20 dirty=true
+10-27 19:38:42.438 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=21 uiTabs=20 dirty=true
+10-27 19:38:42.438 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=21 uiTabs=21 dirty=true
+10-27 19:38:42.442 18178 18178 I A03d00/JSAPP: BrowserShell created WebviewController for tabId=tab_19_1793101122438
+10-27 19:38:42.451 18178 18178 I A03d00/JSAPP: BrowserShell onControllerAttached tabId=tab_19_1793101122438
+10-27 19:38:42.451 18178 18178 I A03d00/JSAPP: BrowserShell registered webview adapter for tabId=tab_19_1793101122438
+10-27 19:38:42.459 18178 18178 I A03d00/JSAPP: BrowserShell onPageBegin tabId=tab_19_1793101122438 url=about:blank
+10-27 19:38:42.459 18178 18178 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_19_1793101122438 url=about:blank
+10-27 19:38:42.459 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=21 uiTabs=21 dirty=true
+10-27 19:38:42.460 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=21 uiTabs=21 dirty=true
+10-27 19:38:42.461 18178 18178 I A03d00/JSAPP: BrowserShell JSBridge injected for tabId=tab_19_1793101122438
+10-27 19:38:42.461 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=21 uiTabs=21 dirty=true
+10-27 19:38:42.485 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=21 uiTabs=21 dirty=true
+10-27 19:38:42.515 18178 18178 I A03d00/JSAPP: BrowserShell onPageBegin tabId=tab_19_1793101122438 url=https://example.com/
+10-27 19:38:42.515 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=21 uiTabs=21 dirty=true
+10-27 19:38:42.524 18178 18178 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_19_1793101122438 url=https://example.com/
+10-27 19:38:42.524 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=21 uiTabs=21 dirty=true
+10-27 19:38:42.524 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=21 uiTabs=21 dirty=true
+10-27 19:38:42.526 18178 18178 I A03d00/JSAPP: BrowserShell JSBridge injected for tabId=tab_19_1793101122438
+10-27 19:38:46.543 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=21 uiTabs=21 dirty=true
+10-27 19:38:46.592 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=21 uiTabs=21 dirty=true
+10-27 19:38:46.726 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=22 uiTabs=21 dirty=true
+10-27 19:38:46.726 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=22 uiTabs=22 dirty=true
+10-27 19:38:46.741 18178 18178 I A03d00/JSAPP: BrowserShell created WebviewController for tabId=tab_20_1793101126726
+10-27 19:38:46.750 18178 18178 I A03d00/JSAPP: BrowserShell onControllerAttached tabId=tab_20_1793101126726
+10-27 19:38:46.750 18178 18178 I A03d00/JSAPP: BrowserShell registered webview adapter for tabId=tab_20_1793101126726
+10-27 19:38:46.757 18178 18178 I A03d00/JSAPP: BrowserShell onPageBegin tabId=tab_20_1793101126726 url=about:blank
+10-27 19:38:46.760 18178 18178 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_20_1793101126726 url=about:blank
+10-27 19:38:46.760 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=22 uiTabs=22 dirty=true
+10-27 19:38:46.760 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=22 uiTabs=22 dirty=true
+10-27 19:38:46.761 18178 18178 I A03d00/JSAPP: BrowserShell JSBridge injected for tabId=tab_20_1793101126726
+10-27 19:38:46.761 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=22 uiTabs=22 dirty=true
+10-27 19:38:46.770 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=22 uiTabs=22 dirty=true
+10-27 19:38:46.800 18178 18178 I A03d00/JSAPP: BrowserShell onPageBegin tabId=tab_20_1793101126726 url=https://example.com/
+10-27 19:38:46.801 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=22 uiTabs=22 dirty=true
+10-27 19:38:46.803 18178 18178 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_20_1793101126726 url=https://example.com/
+10-27 19:38:46.803 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=22 uiTabs=22 dirty=true
+10-27 19:38:46.803 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=22 uiTabs=22 dirty=true
+10-27 19:38:46.831 18178 18178 I A03d00/JSAPP: BrowserShell JSBridge injected for tabId=tab_20_1793101126726
+10-27 19:38:50.826 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=22 uiTabs=22 dirty=true
+10-27 19:38:50.876 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=22 uiTabs=22 dirty=true
+10-27 19:38:51.621 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=23 uiTabs=22 dirty=true
+10-27 19:38:51.621 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=23 uiTabs=23 dirty=true
+10-27 19:38:51.625 18178 18178 I A03d00/JSAPP: BrowserShell created WebviewController for tabId=tab_21_1793101131621
+10-27 19:38:51.634 18178 18178 I A03d00/JSAPP: BrowserShell onControllerAttached tabId=tab_21_1793101131621
+10-27 19:38:51.634 18178 18178 I A03d00/JSAPP: BrowserShell registered webview adapter for tabId=tab_21_1793101131621
+10-27 19:38:51.641 18178 18178 I A03d00/JSAPP: BrowserShell onPageBegin tabId=tab_21_1793101131621 url=about:blank
+10-27 19:38:51.642 18178 18178 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_21_1793101131621 url=about:blank
+10-27 19:38:51.643 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=23 uiTabs=23 dirty=true
+10-27 19:38:51.643 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=23 uiTabs=23 dirty=true
+10-27 19:38:51.659 18178 18178 I A03d00/JSAPP: BrowserShell JSBridge injected for tabId=tab_21_1793101131621
+10-27 19:38:51.659 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=23 uiTabs=23 dirty=true
+10-27 19:38:51.666 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=23 uiTabs=23 dirty=true
+10-27 19:38:51.704 18178 18178 I A03d00/JSAPP: BrowserShell onPageBegin tabId=tab_21_1793101131621 url=https://example.com/
+10-27 19:38:51.711 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=23 uiTabs=23 dirty=true
+10-27 19:38:51.718 18178 18178 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_21_1793101131621 url=https://example.com/
+10-27 19:38:51.719 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=23 uiTabs=23 dirty=true
+10-27 19:38:51.719 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=23 uiTabs=23 dirty=true
+10-27 19:38:51.738 18178 18178 I A03d00/JSAPP: BrowserShell JSBridge injected for tabId=tab_21_1793101131621
+10-27 19:38:57.727 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=23 uiTabs=23 dirty=true
+10-27 19:38:57.776 18178 18178 I A03d00/JSAPP: BrowserShell tab event: managerTabs=23 uiTabs=23 dirty=true
+10-27 20:21:24.151  3173  3173 I A04f4f/systemuiApp: [a92abb9744182c4, 12ca9cc, 2559335] khWindow_api setAnimationPositionSync start, bundleName: com.kaihong.appdock, abilityName: EntryAbility, posX: 473.5, posY: 769, isCold: false
+10-27 20:21:24.151  3173  3173 I A04f4f/systemuiApp: [a92abb9744182c4, 12ca9cc, 2559335] khWindow_api setAnimationPositionSync start, bundleName: com.kaihong.filemanager, abilityName: EntryAbility, posX: 527.5, posY: 769, isCold: false
+10-27 20:21:24.151  3173  3173 I A04f4f/systemuiApp: [a92abb9744182c4, 12ca9cc, 2559335] khWindow_api setAnimationPositionSync start, bundleName: com.kaihong.terminal, abilityName: EntryAbility, posX: 581.5, posY: 769, isCold: false
+10-27 20:21:24.151  3173  3173 I A04f4f/systemuiApp: [a92abb9744182c4, 12ca9cc, 2559335] khWindow_api setAnimationPositionSync start, bundleName: com.kaihong.atomicservicecenter, abilityName: EntryAbility, posX: 689.5, posY: 769, isCold: false
+10-27 20:21:24.152  3173  3173 I A04f4f/systemuiApp: [a92abb9744182c4, 12ca9cc, 2559335] khWindow_api setAnimationPositionSync start, bundleName: com.example.dshapp, abilityName: EntryAbility, posX: 743.5, posY: 769, isCold: false
+10-27 20:21:24.177  3173  3173 I A04f4f/systemuiApp: AppManagerAPI [appManager] onAbilityStateChanged: com.browseros.kaihong EntryAbility 2
+10-27 20:21:24.177  3173  3173 I A04f4f/systemuiApp: AppManagerAPI onAbilityStateChanged: foregroundAbilityName == EntryAbility
+10-27 20:21:24.178  3173  3173 I A04f4f/systemuiApp: AppManagerAPI [appManager] onAbilityStateChanged: com.browseros.kaihong EntryAbility 5
+10-27 20:21:24.234  3180  3180 I A00123/HimaLauncher:  [ApplicationApi] handleAbilityInfo com.browseros.kaihong abilityName123: EntryAbility
+10-27 20:21:24.235  3180  3180 I A00123/HimaLauncher:  [ApplicationApi] handleAbilityInfo com.example.dshapp abilityName123: EntryAbility
+10-27 20:21:24.236  3180  3180 I A00123/HimaLauncher:  [ApplicationApi] handleAbilityInfo com.example.harmoyappstore abilityName123: EntryAbility
+10-27 20:21:24.237  3180  3180 I A00123/HimaLauncher:  [ApplicationApi] handleAbilityInfo com.example.harmoyappstore.player.wechat abilityName123: PlayerEntryAbility
+10-27 20:21:24.239  3180  3180 I A00123/HimaLauncher:  [ApplicationApi] handleAbilityInfo com.hmh.desktop.ohos abilityName123: EntryAbility
+10-27 20:21:24.240  3180  3180 I A00123/HimaLauncher:  [ApplicationApi] handleAbilityInfo com.kaihong.atomicservicecenter abilityName123: EntryAbility
+10-27 20:21:24.243  3180  3180 I A00123/HimaLauncher:  [ApplicationApi] handleAbilityInfo com.kaihong.calculator abilityName123: EntryAbility
+10-27 20:21:24.246  3180  3180 I A00123/HimaLauncher:  [ApplicationApi] handleAbilityInfo com.kaihong.calendar abilityName123: EntryAbility
+10-27 20:21:24.247  3180  3180 I A00123/HimaLauncher:  [ApplicationApi] handleAbilityInfo com.kaihong.camera abilityName123: EntryAbility
+10-27 20:21:24.248  3180  3180 I A00123/HimaLauncher:  [ApplicationApi] handleAbilityInfo com.kaihong.clock abilityName123: EntryAbility
+10-27 20:21:24.252  3180  3180 I A00123/HimaLauncher:  [ApplicationApi] handleAbilityInfo com.kaihong.equipmentcenter abilityName123: EntryAbility
+10-27 20:21:24.254  3180  3180 I A00123/HimaLauncher:  [ApplicationApi] handleAbilityInfo com.kaihong.filemanager abilityName123: EntryAbility
+10-27 20:21:24.255  3180  3180 I A00123/HimaLauncher:  [ApplicationApi] handleAbilityInfo com.kaihong.galaxynet abilityName123: EntryAbility
+10-27 20:21:24.256  3180  3180 I A00123/HimaLauncher:  [ApplicationApi] handleAbilityInfo com.kaihong.imagemanager abilityName123: EntryAbility
+10-27 20:21:24.258  3180  3180 I A00123/HimaLauncher:  [ApplicationApi] handleAbilityInfo com.kaihong.inputmethod abilityName123: EntryAbility
+10-27 20:21:24.259  3180  3180 I A00123/HimaLauncher:  [ApplicationApi] handleAbilityInfo com.kaihong.khtoolboxui abilityName123: EntryAbility
+10-27 20:21:24.260  3180  3180 I A00123/HimaLauncher:  [ApplicationApi] handleAbilityInfo com.kaihong.ohosshellvscode abilityName123: EntryAbility
+10-27 20:21:24.261  3180  3180 I A00123/HimaLauncher:  [ApplicationApi] handleAbilityInfo com.kaihong.player abilityName123: EntryAbility
+10-27 20:21:24.264  3180  3180 I A00123/HimaLauncher:  [ApplicationApi] handleAbilityInfo com.kaihong.superdesktop abilityName123: EntryAbility
+10-27 20:21:24.266  3180  3180 I A00123/HimaLauncher:  [ApplicationApi] handleAbilityInfo com.kaihong.taskmanager abilityName123: EntryAbility
+10-27 20:21:24.267  3180  3180 I A00123/HimaLauncher:  [ApplicationApi] handleAbilityInfo com.kaihong.terminal abilityName123: EntryAbility
+10-27 20:21:24.268  3180  3180 I A00123/HimaLauncher:  [ApplicationApi] handleAbilityInfo com.ohos.settings abilityName123: EntryAbility
+10-27 20:21:24.273  3180  3180 I A00123/HimaLauncher:  [ApplicationApi] handleAbilityInfo com.oneaiterm.terminal abilityName123: EntryAbility
+10-27 20:21:24.274  3180  3180 I A00123/HimaLauncher:  [ApplicationApi] handleAbilityInfo com.qingxi.GuanXingBrowser abilityName123: EntryAbility
+10-27 20:21:24.377  3180  3180 I A00123/HimaLauncher:  [AppListPaged] savedOrderItem={"pageIndex":0,"index":0,"bundleName":"com.example.harmoyappstore","abilityName":"EntryAbility"}
+10-27 20:21:24.377  3180  3180 I A00123/HimaLauncher:  [AppListPaged] savedOrderItem={"pageIndex":0,"index":1,"bundleName":"com.kaihong.atomicservicecenter","abilityName":"EntryAbility"}
+10-27 20:21:24.377  3180  3180 I A00123/HimaLauncher:  [AppListPaged] savedOrderItem={"pageIndex":0,"index":3,"bundleName":"com.kaihong.calculator","abilityName":"EntryAbility"}
+10-27 20:21:24.377  3180  3180 I A00123/HimaLauncher:  [AppListPaged] savedOrderItem={"pageIndex":0,"index":4,"bundleName":"com.kaihong.calendar","abilityName":"EntryAbility"}
+10-27 20:21:24.377  3180  3180 I A00123/HimaLauncher:  [AppListPaged] savedOrderItem={"pageIndex":0,"index":5,"bundleName":"com.kaihong.camera","abilityName":"EntryAbility"}
+10-27 20:21:24.377  3180  3180 I A00123/HimaLauncher:  [AppListPaged] savedOrderItem={"pageIndex":0,"index":6,"bundleName":"com.kaihong.clock","abilityName":"EntryAbility"}
+10-27 20:21:24.377  3180  3180 I A00123/HimaLauncher:  [AppListPaged] savedOrderItem={"pageIndex":0,"index":7,"bundleName":"com.kaihong.equipmentcenter","abilityName":"EntryAbility"}
+10-27 20:21:24.377  3180  3180 I A00123/HimaLauncher:  [AppListPaged] savedOrderItem={"pageIndex":0,"index":8,"bundleName":"com.kaihong.filemanager","abilityName":"EntryAbility"}
+10-27 20:21:24.377  3180  3180 I A00123/HimaLauncher:  [AppListPaged] savedOrderItem={"pageIndex":0,"index":9,"bundleName":"com.kaihong.galaxynet","abilityName":"EntryAbility"}
+10-27 20:21:24.377  3180  3180 I A00123/HimaLauncher:  [AppListPaged] savedOrderItem={"pageIndex":0,"index":10,"bundleName":"com.kaihong.imagemanager","abilityName":"EntryAbility"}
+10-27 20:21:24.377  3180  3180 I A00123/HimaLauncher:  [AppListPaged] savedOrderItem={"pageIndex":0,"index":11,"bundleName":"com.kaihong.inputmethod","abilityName":"EntryAbility"}
+10-27 20:21:24.377  3180  3180 I A00123/HimaLauncher:  [AppListPaged] savedOrderItem={"pageIndex":0,"index":12,"bundleName":"com.kaihong.khtoolboxui","abilityName":"EntryAbility"}
+10-27 20:21:24.377  3180  3180 I A00123/HimaLauncher:  [AppListPaged] savedOrderItem={"pageIndex":0,"index":13,"bundleName":"com.kaihong.player","abilityName":"EntryAbility"}
+10-27 20:21:24.377  3180  3180 I A00123/HimaLauncher:  [AppListPaged] savedOrderItem={"pageIndex":0,"index":15,"bundleName":"com.kaihong.superdesktop","abilityName":"EntryAbility"}
+10-27 20:21:24.377  3180  3180 I A00123/HimaLauncher:  [AppListPaged] savedOrderItem={"pageIndex":0,"index":16,"bundleName":"com.kaihong.taskmanager","abilityName":"EntryAbility"}
+10-27 20:21:24.377  3180  3180 I A00123/HimaLauncher:  [AppListPaged] savedOrderItem={"pageIndex":0,"index":17,"bundleName":"com.kaihong.terminal","abilityName":"EntryAbility"}
+10-27 20:21:24.377  3180  3180 I A00123/HimaLauncher:  [AppListPaged] savedOrderItem={"pageIndex":0,"index":18,"bundleName":"com.ohos.settings","abilityName":"EntryAbility"}
+10-27 20:21:24.377  3180  3180 I A00123/HimaLauncher:  [AppListPaged] savedOrderItem={"pageIndex":0,"index":19,"bundleName":"com.example.dshapp","abilityName":"EntryAbility"}
+10-27 20:21:24.377  3180  3180 I A00123/HimaLauncher:  [AppListPaged] savedOrderItem={"pageIndex":0,"index":20,"bundleName":"com.kaihong.ohosshellvscode","abilityName":"EntryAbility"}
+10-27 20:21:24.377  3180  3180 I A00123/HimaLauncher:  [AppListPaged] savedOrderItem={"pageIndex":0,"index":21,"bundleName":"com.browseros.kaihong","abilityName":"EntryAbility"}
+10-27 20:21:24.377  3180  3180 I A00123/HimaLauncher:  [AppListPaged] savedOrderItem={"pageIndex":0,"index":23,"bundleName":"com.example.harmoyappstore.player.wechat","abilityName":"PlayerEntryAbility"}
+10-27 20:21:24.377  3180  3180 I A00123/HimaLauncher:  [AppListPaged] savedOrderItem={"pageIndex":0,"index":24,"bundleName":"com.qingxi.GuanXingBrowser","abilityName":"EntryAbility"}
+10-27 20:21:24.377  3180  3180 I A00123/HimaLauncher:  [AppListPaged] savedOrderItem={"pageIndex":0,"index":25,"bundleName":"com.oneaiterm.terminal","abilityName":"EntryAbility"}
+10-27 20:21:24.377  3180  3180 I A00123/HimaLauncher:  [AppListPaged] savedOrderItem={"pageIndex":0,"index":26,"bundleName":"com.hmh.desktop.ohos","abilityName":"EntryAbility"}
+10-27 20:21:24.581  3173  3173 I A04f4f/systemuiApp: [a92ab197446ebab, 529bc, 2ef80a1] AppManagerAPI [appManager] onAbilityStateChanged: com.browseros.kaihong EntryAbility 0
+10-27 20:21:24.849  3173  3173 I A04f4f/systemuiApp: AppManagerAPI [appManager] onAbilityStateChanged: com.browseros.kaihong EntryAbility 2
+10-27 20:21:24.849  3173  3173 I A04f4f/systemuiApp: AppManagerAPI onAbilityStateChanged: foregroundAbilityName == EntryAbility
+10-27 20:21:24.849 20662 20662 I A03d00/JSAPP: BrowserOS KaihongOS EntryAbility onCreate
+10-27 20:21:24.851 20662 20662 I A03d00/JSAPP: EntryAbility StorageManager base path set: /data/storage/el2/base/haps/entry/files
+10-27 20:21:24.875 20662 20662 I A03d00/JSAPP: EntryAbility session index reconciled: 0
+10-27 20:21:24.884 20662 20662 I A03d00/JSAPP: BrowserOS KaihongOS EntryAbility onWindowStageCreate
+10-27 20:21:24.921 20662 20662 I A03d00/JSAPP: EntryAbility tabs restored: 8
+10-27 20:21:24.922 20662 20662 I A03d00/JSAPP: BrowserOS KaihongOS EntryAbility onForeground
+10-27 20:21:24.923  3173  3173 I A04f4f/systemuiApp: AppManagerAPI [appManager] onAbilityStateChanged: com.browseros.kaihong EntryAbility 2
+10-27 20:21:24.923  3173  3173 I A04f4f/systemuiApp: AppManagerAPI onAbilityStateChanged: foregroundAbilityName == EntryAbility
+10-27 20:21:24.923 20662 20662 I A03d00/JSAPP: EntryAbility I18n ready locale=zh bundle=514
+10-27 20:21:24.925 20662 20662 I A03d00/JSAPP: EntryAbility LoginStateManager loadPersistedStates done, domains=0
+10-27 20:21:24.926 20662 20662 I A03d00/JSAPP: EntryAbility HistoryManager loadHistory done
+10-27 20:21:24.928 20662 20662 I A03d00/JSAPP: EntryAbility ConfigManager loaded, mcpPort=9222 [P36] secure=true load_ms=54
+10-27 20:21:24.930 20662 20662 I A03d00/JSAPP: EntryAbility darkMode=true sensitiveConfirm=true
+10-27 20:21:24.930 20662 20662 I A03d00/JSAPP: EntryAbility entry page: pages/BrowserShell (onboardingCompleted=true)
+10-27 20:21:24.982 20662 20662 I A03d00/JSAPP: EntryAbility MCPServer started on port 9222
+10-27 20:21:24.985 20662 20662 I A03d00/JSAPP: BrowserShell aboutToAppear start
+10-27 20:21:24.985 20662 20662 I A03d00/JSAPP: BrowserShell tabs loaded: 8
+10-27 20:21:24.985 20662 20662 I A03d00/JSAPP: BrowserShell cold start: switched to dashboard tab tab_1_1793084604269
+10-27 20:21:24.985 20662 20662 I A03d00/JSAPP: BrowserShell restore url pending: https://example.com/ tab=tab_1_1793100997566
+10-27 20:21:24.985 20662 20662 I A03d00/JSAPP: BrowserShell restore url pending: https://example.com/ tab=tab_2_1793101001899
+10-27 20:21:24.985 20662 20662 I A03d00/JSAPP: BrowserShell restore url pending: https://example.com/ tab=tab_3_1793101006180
+10-27 20:21:24.985 20662 20662 I A03d00/JSAPP: BrowserShell restore url pending: https://example.com/ tab=tab_4_1793101010462
+10-27 20:21:24.985 20662 20662 I A03d00/JSAPP: BrowserShell restore url pending: https://example.com/ tab=tab_5_1793101014750
+10-27 20:21:24.985 20662 20662 I A03d00/JSAPP: BrowserShell restore url pending: https://example.com/ tab=tab_6_1793101019036
+10-27 20:21:24.985 20662 20662 I A03d00/JSAPP: BrowserShell active tab: tab_1_1793084604269
+10-27 20:21:24.985 20662 20662 I A03d00/JSAPP: BrowserShell aboutToAppear done
+10-27 20:21:24.986 20662 20662 I A03d00/JSAPP: BrowserShell bookmarks loaded: 0
+10-27 20:21:25.012 20662 20662 I A03d00/JSAPP: BrowserShell created WebviewController for tabId=tab_1_1793084604269
+10-27 20:21:25.015 20662 20662 I A03d00/JSAPP: BrowserShell created WebviewController for tabId=tab_2_1793084607665
+10-27 20:21:25.016 20662 20662 I A03d00/JSAPP: BrowserShell created WebviewController for tabId=tab_1_1793100997566
+10-27 20:21:25.018 20662 20662 I A03d00/JSAPP: BrowserShell created WebviewController for tabId=tab_2_1793101001899
+10-27 20:21:25.020 20662 20662 I A03d00/JSAPP: BrowserShell created WebviewController for tabId=tab_3_1793101006180
+10-27 20:21:25.021 20662 20662 I A03d00/JSAPP: BrowserShell created WebviewController for tabId=tab_4_1793101010462
+10-27 20:21:25.023 20662 20662 I A03d00/JSAPP: BrowserShell created WebviewController for tabId=tab_5_1793101014750
+10-27 20:21:25.024 20662 20662 I A03d00/JSAPP: BrowserShell created WebviewController for tabId=tab_6_1793101019036
+10-27 20:21:25.038 20662 20662 I A03d00/JSAPP: BrowserShell onPageShow: resync tab state
+10-27 20:21:25.038 20662 20662 I A03d00/JSAPP: BrowserShell sync: managerTabs=8 uiTabs=8 active=tab_1_1793084604269 dirty=false
+10-27 20:21:25.099 20662 20662 I A03d00/JSAPP: BrowserShell onControllerAttached tabId=tab_1_1793084604269
+10-27 20:21:25.099 20662 20662 I A03d00/JSAPP: BrowserShell registered webview adapter for tabId=tab_1_1793084604269
+10-27 20:21:25.105 20662 20662 I A03d00/JSAPP: BrowserShell onControllerAttached tabId=tab_2_1793084607665
+10-27 20:21:25.105 20662 20662 I A03d00/JSAPP: BrowserShell registered webview adapter for tabId=tab_2_1793084607665
+10-27 20:21:25.110 20662 20662 I A03d00/JSAPP: BrowserShell onControllerAttached tabId=tab_1_1793100997566
+10-27 20:21:25.110 20662 20662 I A03d00/JSAPP: BrowserShell registered webview adapter for tabId=tab_1_1793100997566
+10-27 20:21:25.120 20662 23699 I C04500/webadapter: StartChildProcess: AafwkAppMgrClientAdapterImpl::StartChildProcess, renderParamNew = /system/bin/web_render#--type=renderer#--string-annotations#--enable-crash-reporter=,#--user-data-dir=cache/web#--user-data-dir=/data/storage/el2/base/cache/web#--log-severity=info#--ohos-scheme-handler-custom-scheme={}#--user-hap-path=/data/storage/el1/bundle/entry.hap#--no-sandbox#--enable-touch-drag-drop#--enable-viewport#--no-zygote#--use-mobile-user-agent#--ozone-platform=headless#--bundle-installation-dir=/data/storage/el1/bundle#--bundle-name=com.browseros.kaihong#--virtual-pixel-ratio=1.000000#--ohos-enable-gwp-asan-type=none#--lang=zh-CN#--num-raster-threads=4#--gpu-rasterization-msaa-sample-count=1#--enable-main-frame-before-activation#--renderer-client-id=3#--time-ticks-at-unix-epoch=-1793075921127451#--launch-time-ticks=27763992310#--shared-files#--field-trial-handle=3,i,11351103048564424669,4177309098934351607,262144#--enable-features=ForceScrollbar,OverlayScrollbar,UseOzonePlatform#--disable-features=BackForwardCache,FencedFrames#--variations-seed-version#--enable-logging=stderr#--v=2#--v=2#--appEngineVersion=2#--appBundleName=com.browseros.kaihong#--appApiVersion=23#--appVersion=1.1.0, renderPid = 0
+10-27 20:21:25.123 20662 20662 I A03d00/JSAPP: BrowserShell restoreUrl loaded after attach: https://example.com/ tab=tab_1_1793100997566
+10-27 20:21:25.128 20662 20662 I A03d00/JSAPP: BrowserShell onControllerAttached tabId=tab_2_1793101001899
+10-27 20:21:25.128 20662 20662 I A03d00/JSAPP: BrowserShell registered webview adapter for tabId=tab_2_1793101001899
+10-27 20:21:25.131 20662 20662 I A03d00/JSAPP: BrowserShell restoreUrl loaded after attach: https://example.com/ tab=tab_2_1793101001899
+10-27 20:21:25.137 20662 20662 I A03d00/JSAPP: BrowserShell onControllerAttached tabId=tab_3_1793101006180
+10-27 20:21:25.137 20662 20662 I A03d00/JSAPP: BrowserShell registered webview adapter for tabId=tab_3_1793101006180
+10-27 20:21:25.140 20662 20662 I A03d00/JSAPP: BrowserShell restoreUrl loaded after attach: https://example.com/ tab=tab_3_1793101006180
+10-27 20:21:25.145 20662 20662 I A03d00/JSAPP: BrowserShell onControllerAttached tabId=tab_4_1793101010462
+10-27 20:21:25.145 20662 20662 I A03d00/JSAPP: BrowserShell registered webview adapter for tabId=tab_4_1793101010462
+10-27 20:21:25.147 20662 20662 I A03d00/JSAPP: BrowserShell restoreUrl loaded after attach: https://example.com/ tab=tab_4_1793101010462
+10-27 20:21:25.153 20662 20662 I A03d00/JSAPP: BrowserShell onControllerAttached tabId=tab_5_1793101014750
+10-27 20:21:25.153 20662 20662 I A03d00/JSAPP: BrowserShell registered webview adapter for tabId=tab_5_1793101014750
+10-27 20:21:25.156 20662 20662 I A03d00/JSAPP: BrowserShell restoreUrl loaded after attach: https://example.com/ tab=tab_5_1793101014750
+10-27 20:21:25.162 20662 20662 I A03d00/JSAPP: BrowserShell onControllerAttached tabId=tab_6_1793101019036
+10-27 20:21:25.162 20662 20662 I A03d00/JSAPP: BrowserShell registered webview adapter for tabId=tab_6_1793101019036
+10-27 20:21:25.164 20662 20662 I A03d00/JSAPP: BrowserShell restoreUrl loaded after attach: https://example.com/ tab=tab_6_1793101019036
+10-27 20:21:25.245 23700     1 I C02c11/APPSPAWN: [nwebspawn_adapter.cpp:161]RunChildProcessorNweb /system/bin/web_render#--type=renderer#--string-annotations#--enable-crash-reporter=,#--user-data-dir=cache/web#--user-data-dir=/data/storage/el2/base/cache/web#--log-severity=info#--ohos-scheme-handler-custom-scheme={}#--user-hap-path=/data/storage/el1/bundle/entry.hap#--no-sandbox#--enable-touch-drag-drop#--enable-viewport#--no-zygote#--use-mobile-user-agent#--ozone-platform=headless#--bundle-installation-dir=/data/storage/el1/bundle#--bundle-name=com.browseros.kaihong#--virtual-pixel-ratio=1.000000#--ohos-enable-gwp-asan-type=none#--lang=zh-CN#--num-raster-threads=4#--gpu-rasterization-msaa-sample-count=1#--enable-main-frame-before-activation#--renderer-client-id=3#--time-ticks-at-unix-epoch=-1793075921127451#--launch-time-ticks=27763992310#--shared-files#--field-trial-handle=3,i,11351103048564424669,4177309098934351607,262144#--enable-features=ForceScrollbar,OverlayScrollbar,UseOzonePlatform#--disable-features=BackForwardCache,FencedFrames#--variations-seed-version#--enable-logging=stderr#--v=2#--v=2
+10-27 20:21:25.277 23700     1 I C04501/chromium: [crashpad_ohos.cc:601] crashpad PlatformCrashpadInitialization, other process init
+10-27 20:21:25.277 23700     1 I C04501/cef: [crash_reporting.cc:209] Crash reporting enabled for process: renderer
+10-27 20:21:25.305 20662 20662 I A03d00/JSAPP: BrowserShell onPageBegin tabId=tab_1_1793084604269 url=about:blank
+10-27 20:21:25.308 20662 20662 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_1_1793084604269 url=about:blank
+10-27 20:21:25.308 20662 20662 I A03d00/JSAPP: BrowserShell tab event: managerTabs=8 uiTabs=8 dirty=false
+10-27 20:21:25.308 20662 20662 I A03d00/JSAPP: BrowserShell tab event: managerTabs=8 uiTabs=8 dirty=false
+10-27 20:21:25.310 20662 20662 I A03d00/JSAPP: BrowserShell JSBridge injected for tabId=tab_1_1793084604269
+10-27 20:21:25.310 20662 20662 I A03d00/JSAPP: BrowserShell tab event: managerTabs=8 uiTabs=8 dirty=false
+10-27 20:21:25.310 20662 20662 I A03d00/JSAPP: BrowserShell onPageBegin tabId=tab_2_1793084607665 url=about:blank
+10-27 20:21:25.326 20662 20662 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_2_1793084607665 url=about:blank
+10-27 20:21:25.326 20662 20662 I A03d00/JSAPP: BrowserShell tab event: managerTabs=8 uiTabs=8 dirty=false
+10-27 20:21:25.326 20662 20662 I A03d00/JSAPP: BrowserShell tab event: managerTabs=8 uiTabs=8 dirty=false
+10-27 20:21:25.327 20662 20662 I A03d00/JSAPP: BrowserShell JSBridge injected for tabId=tab_2_1793084607665
+10-27 20:21:25.327 20662 20662 I A03d00/JSAPP: BrowserShell tab event: managerTabs=8 uiTabs=8 dirty=false
+10-27 20:21:25.328 20662 20662 I A03d00/JSAPP: BrowserShell onPageBegin tabId=tab_1_1793100997566 url=about:blank
+10-27 20:21:25.328 20662 20662 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_1_1793100997566 url=about:blank
+10-27 20:21:25.328 20662 20662 I A03d00/JSAPP: BrowserShell tab event: managerTabs=8 uiTabs=8 dirty=false
+10-27 20:21:25.328 20662 20662 I A03d00/JSAPP: BrowserShell tab event: managerTabs=8 uiTabs=8 dirty=false
+10-27 20:21:25.329 20662 20662 I A03d00/JSAPP: BrowserShell JSBridge injected for tabId=tab_1_1793100997566
+10-27 20:21:25.329 20662 20662 I A03d00/JSAPP: BrowserShell tab event: managerTabs=8 uiTabs=8 dirty=false
+10-27 20:21:25.329 20662 20662 I A03d00/JSAPP: BrowserShell onPageBegin tabId=tab_2_1793101001899 url=about:blank
+10-27 20:21:25.329 20662 20662 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_2_1793101001899 url=about:blank
+10-27 20:21:25.329 20662 20662 I A03d00/JSAPP: BrowserShell tab event: managerTabs=8 uiTabs=8 dirty=false
+10-27 20:21:25.329 20662 20662 I A03d00/JSAPP: BrowserShell tab event: managerTabs=8 uiTabs=8 dirty=false
+10-27 20:21:25.330 20662 20662 I A03d00/JSAPP: BrowserShell JSBridge injected for tabId=tab_2_1793101001899
+10-27 20:21:25.331 20662 20662 I A03d00/JSAPP: BrowserShell tab event: managerTabs=8 uiTabs=8 dirty=false
+10-27 20:21:25.331 20662 20662 I A03d00/JSAPP: BrowserShell onPageBegin tabId=tab_3_1793101006180 url=about:blank
+10-27 20:21:25.331 20662 20662 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_3_1793101006180 url=about:blank
+10-27 20:21:25.331 20662 20662 I A03d00/JSAPP: BrowserShell tab event: managerTabs=8 uiTabs=8 dirty=false
+10-27 20:21:25.331 20662 20662 I A03d00/JSAPP: BrowserShell tab event: managerTabs=8 uiTabs=8 dirty=false
+10-27 20:21:25.332 20662 20662 I A03d00/JSAPP: BrowserShell JSBridge injected for tabId=tab_3_1793101006180
+10-27 20:21:25.332 20662 20662 I A03d00/JSAPP: BrowserShell tab event: managerTabs=8 uiTabs=8 dirty=false
+10-27 20:21:25.332 20662 20662 I A03d00/JSAPP: BrowserShell onPageBegin tabId=tab_4_1793101010462 url=about:blank
+10-27 20:21:25.332 20662 20662 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_4_1793101010462 url=about:blank
+10-27 20:21:25.332 20662 20662 I A03d00/JSAPP: BrowserShell tab event: managerTabs=8 uiTabs=8 dirty=false
+10-27 20:21:25.333 20662 20662 I A03d00/JSAPP: BrowserShell tab event: managerTabs=8 uiTabs=8 dirty=false
+10-27 20:21:25.334 20662 20662 I A03d00/JSAPP: BrowserShell JSBridge injected for tabId=tab_4_1793101010462
+10-27 20:21:25.334 20662 20662 I A03d00/JSAPP: BrowserShell tab event: managerTabs=8 uiTabs=8 dirty=false
+10-27 20:21:25.334 20662 20662 I A03d00/JSAPP: BrowserShell onPageBegin tabId=tab_5_1793101014750 url=about:blank
+10-27 20:21:25.334 20662 20662 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_5_1793101014750 url=about:blank
+10-27 20:21:25.334 20662 20662 I A03d00/JSAPP: BrowserShell tab event: managerTabs=8 uiTabs=8 dirty=false
+10-27 20:21:25.335 20662 20662 I A03d00/JSAPP: BrowserShell tab event: managerTabs=8 uiTabs=8 dirty=false
+10-27 20:21:25.336 20662 20662 I A03d00/JSAPP: BrowserShell JSBridge injected for tabId=tab_5_1793101014750
+10-27 20:21:25.336 20662 20662 I A03d00/JSAPP: BrowserShell tab event: managerTabs=8 uiTabs=8 dirty=false
+10-27 20:21:25.336 20662 20662 I A03d00/JSAPP: BrowserShell onPageBegin tabId=tab_6_1793101019036 url=about:blank
+10-27 20:21:25.336 20662 20662 I A03d00/JSAPP: BrowserShell onPageEnd tabId=tab_6_1793101019036 url=about:blank
+10-27 20:21:25.336 20662 20662 I A03d00/JSAPP: BrowserShell tab event: managerTabs=8 uiTabs=8 dirty=false
+10-27 20:21:25.336 20662 20662 I A03d00/JSAPP: BrowserShell tab event: managerTabs=8 uiTabs=8 dirty=false
+10-27 20:21:25.337 20662 20662 I A03d00/JSAPP: BrowserShell JSBridge injected for tabId=tab_6_1793101019036
+10-27 20:21:25.337 20662 20662 I A03d00/JSAPP: BrowserShell tab event: managerTabs=8 uiTabs=8 dirty=false
+10-27 20:21:25.339  3173  3173 I A04f4f/systemuiApp: MissionAPI onMissionCreated mission {"missionId":6,"runningState":0,"lockedState":false,"continuable":false,"timestamp":"1793103684923318524","want":{"deviceId":"","bundleName":"com.browseros.kaihong","abilityName":"EntryAbility","uri":"","type":"","flags":0,"action":"","parameters":{"moduleName":"entry","ohos.aafwk.param.callerAbilityName":"","ohos.aafwk.param.callerBundleName":"","ohos.aafwk.param.callerNativeName":"_hdcd","ohos.aafwk.param.callerPid":23627,"ohos.aafwk.param.callerToken":806181588,"ohos.aafwk.param.callerUid":0,"ohos.dlp.params.sandbox":false,"ohos.param.callerAppCloneIndex":0},"entities":[]},"label":"BrowserOS","iconPath":"$media:app_icon","abilityState":9,"unclearable":false}
+10-27 20:21:25.343  3173  3173 I A04f4f/systemuiApp: khWindow_api setAnimationPositionSync start, bundleName: com.kaihong.appdock, abilityName: EntryAbility, posX: 442, posY: 769, isCold: false
+10-27 20:21:25.343  3173  3173 I C0d501/KhGraphic: OnSetAnimationPositionSync: JsKhWindowManager::OnSetAnimationPositionSync nameKey:com.kaihong.appdock_EntryAbility, posx:442, posy:769, isCold:0
+10-27 20:21:25.343  2733  2741 I C0d502/KHWMS: SetWindowPosition: SetWindowPosition key=com.kaihong.appdock_EntryAbility, x=442, y=769, isColdStart=0
+10-27 20:21:25.343  3173  3173 I A04f4f/systemuiApp: khWindow_api setAnimationPositionSync start, bundleName: com.kaihong.filemanager, abilityName: EntryAbility, posX: 496, posY: 769, isCold: false
+10-27 20:21:25.343  3173  3173 I C0d501/KhGraphic: OnSetAnimationPositionSync: JsKhWindowManager::OnSetAnimationPositionSync nameKey:com.kaihong.filemanager_EntryAbility, posx:496, posy:769, isCold:0
+10-27 20:21:25.343  2733  2733 I C0d502/KHWMS: SetWindowPosition: SetWindowPosition key=com.kaihong.filemanager_EntryAbility, x=496, y=769, isColdStart=0
+10-27 20:21:25.343  3173  3173 I A04f4f/systemuiApp: khWindow_api setAnimationPositionSync start, bundleName: com.kaihong.terminal, abilityName: EntryAbility, posX: 550, posY: 769, isCold: false
+10-27 20:21:25.343  3173  3173 I C0d501/KhGraphic: OnSetAnimationPositionSync: JsKhWindowManager::OnSetAnimationPositionSync nameKey:com.kaihong.terminal_EntryAbility, posx:550, posy:769, isCold:0
+10-27 20:21:25.343  2733  2733 I C0d502/KHWMS: SetWindowPosition: SetWindowPosition key=com.kaihong.terminal_EntryAbility, x=550, y=769, isColdStart=0
+10-27 20:21:25.343  3173  3173 I A04f4f/systemuiApp: khWindow_api setAnimationPositionSync start, bundleName: com.kaihong.atomicservicecenter, abilityName: EntryAbility, posX: 658, posY: 769, isCold: false
+10-27 20:21:25.343  3173  3173 I C0d501/KhGraphic: OnSetAnimationPositionSync: JsKhWindowManager::OnSetAnimationPositionSync nameKey:com.kaihong.atomicservicecenter_EntryAbility, posx:658, posy:769, isCold:0
+10-27 20:21:25.343  2733  2733 I C0d502/KHWMS: SetWindowPosition: SetWindowPosition key=com.kaihong.atomicservicecenter_EntryAbility, x=658, y=769, isColdStart=0
+10-27 20:21:25.343  3173  3173 I A04f4f/systemuiApp: khWindow_api setAnimationPositionSync start, bundleName: com.example.dshapp, abilityName: EntryAbility, posX: 712, posY: 769, isCold: false
+10-27 20:21:25.343  3173  3173 I C0d501/KhGraphic: OnSetAnimationPositionSync: JsKhWindowManager::OnSetAnimationPositionSync nameKey:com.example.dshapp_EntryAbility, posx:712, posy:769, isCold:0
+10-27 20:21:25.344  2733  2733 I C0d502/KHWMS: SetWindowPosition: SetWindowPosition key=com.example.dshapp_EntryAbility, x=712, y=769, isColdStart=0
+10-27 20:21:25.344  3173  3173 I A04f4f/systemuiApp: khWindow_api setAnimationPositionSync start, bundleName: com.browseros.kaihong, abilityName: EntryAbility, posX: 789, posY: 769, isCold: false
+10-27 20:21:25.344  3173  3173 I C0d501/KhGraphic: OnSetAnimationPositionSync: JsKhWindowManager::OnSetAnimationPositionSync nameKey:com.browseros.kaihong_EntryAbility, posx:789, posy:769, isCold:0
+10-27 20:21:25.344  2733  2733 I C0d502/KHWMS: SetWindowPosition: SetWindowPosition key=com.browseros.kaihong_EntryAbility, x=789, y=769, isColdStart=0
