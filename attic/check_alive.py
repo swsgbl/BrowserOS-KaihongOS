@@ -1,0 +1,10 @@
+import glob, os, time, sys
+sys.stdout.reconfigure(encoding='utf-8')
+fs = glob.glob(r'C:\Users\hongfu\.hmharness\sessions\2026\10\2*\*.jsonl')
+f = max(fs, key=os.path.getmtime)
+age = int(time.time() - os.path.getmtime(f))
+size = os.path.getsize(f)
+print('session:', os.path.basename(f))
+print('age:', age, 's')
+print('size:', size)
+print('status:', 'ALIVE' if age < 120 else 'ZOMBIE (no write for %d min)' % (age // 60))

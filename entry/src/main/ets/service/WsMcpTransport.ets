@@ -383,7 +383,8 @@ class WsMcpTransportImpl {
       await this.sendTextFrame(conn, errBody)
       return
     }
-    const outcome = await McpJsonRpcCore.handleRpc(text, conn.token, 'mcp_ws')
+    // P51: WS connection-bound session identity
+    const outcome = await McpJsonRpcCore.handleRpc(text, conn.token, 'mcp_ws', conn.sessionId)
     if (outcome.sessionId !== '') {
       conn.sessionId = outcome.sessionId
       this.sessionConns.set(outcome.sessionId, conn)

@@ -7,6 +7,7 @@ interface AuditLogEntryJSON {
   result: string
   errorMessage: string
   durationMs: number
+  paramsRedacted: string
 }
 
 export class AuditLogEntry {
@@ -18,6 +19,8 @@ export class AuditLogEntry {
   result: string = ''
   errorMessage: string = ''
   durationMs: number = 0
+  /** P51 (1c): 工具参数（deep-redacted 后序列化；''=未记录） */
+  paramsRedacted: string = ''
 
   constructor(requestId: string, agentId: string, operationType: string, targetUrl: string) {
     this.requestId = requestId
@@ -42,7 +45,8 @@ export class AuditLogEntry {
       timestamp: this.timestamp,
       result: this.result,
       errorMessage: this.errorMessage,
-      durationMs: this.durationMs
+      durationMs: this.durationMs,
+      paramsRedacted: this.paramsRedacted
     }
     return result
   }
@@ -58,6 +62,7 @@ export class AuditLogEntry {
     entry.result = json['result'] as string
     entry.errorMessage = json['errorMessage'] as string
     entry.durationMs = json['durationMs'] as number
+    entry.paramsRedacted = (json['paramsRedacted'] as string) || ''
     return entry
   }
 

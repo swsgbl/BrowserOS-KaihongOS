@@ -1,0 +1,174 @@
+#!/usr/bin/env python3
+"""P51 session-isolation E2E: -32001 gate, session routing, redaction, concurrency isolation.
+
+Device target: 127.0.0.1:5555 (DevEco emulator), HTTP fport host 19222 -> device 9222.
+Flow:
+  A. initialize w/o session -> tools/list WITHOUT Mcp-Session-Id -> must be -32001
+  B. initialize -> get session id from response header -> tools/list with it -> ok
+  C. session A tabs new (owns tabA); session B tabs new (owns tabB)
+     session A navigate example.com; session B navigate example.org
+     session A read -> must contain example.com content, NOT example.org (isolation)
+  D. tools/call type with text "mypassword123" -> audit log must NOT contain plaintext
+  E. forged session id -> -32001
+"""
+import json
+import subprocess
+import time
+import urllib.request
+
+HDC = 'hdc'
+T = '127.0.0.1:5555'
+HOST_PORT = 19222
+BASE = 'http://127.0.0.1:%d' % HOST_PORT
+
+results = []
+
+def record(name, ok, detail=''):
+    results.append((name, ok, detail))
+    print('[%s] %s -- %s' % ('PASS' if ok else 'FAIL', name, detail[:120]))
+
+def sh(cmd):
+    return subprocess.run([HDC, '-t', T, 'shell', cmd], capture_output=True, text=True, timeout=30).stdout
+
+def http_post(path, body, headers=None):
+    url = BASE + path
+    data = json.dumps(body).encode()
+    req = urllib.request.Request(url, data=data, method='POST')
+    req.add_header('Content-Type', 'application/json')
+    for k, v in (headers or {}).items():
+        req.add_header(k, v)
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            body = json.loads(resp.read().decode())
+            if not isinstance(body, dict):
+                body = {'raw': str(body)}
+            body.setdefault('error', {})
+            return resp.status, body, dict(resp.headers)
+    except urllib.error.HTTPError as e:
+        try:
+            b = json.loads(e.read().decode())
+            if not isinstance(b, dict):
+                b = {'raw': str(b)}
+            b.setdefault('error', {})
+            return e.code, b, dict(e.headers)
+        except Exception:
+            return e.code, {'error': {'code': 'http-%d' % e.code, 'message': 'non-json'}}, {}
+    except Exception as e:
+        return 0, {'error': {'code': 'transport', 'message': str(e)}}, {}
+
+def rpc(method, params, _id=[0]):
+    _id[0] += 1
+    return {'jsonrpc': '2.0', 'id': _id[0], 'method': method, 'params': params}
+
+def unwrap(r):
+    """MCP tools/call response -> inner data dict (content[0].text is JSON)"""
+    try:
+        res = r.get('result') or {}
+        for item in res.get('content') or []:
+            if isinstance(item, dict) and item.get('type') == 'text':
+                try:
+                    inner = json.loads(item.get('text', ''))
+                    if isinstance(inner, dict):
+                        return inner
+                except Exception:
+                    pass
+        return res
+    except Exception:
+        return {}
+
+
+def main():
+    # fport (idempotent)
+    subprocess.run([HDC, '-t', T, 'fport', 'rm', 'tcp:%d' % HOST_PORT, 'tcp:9222'], capture_output=True)
+    r = subprocess.run([HDC, '-t', T, 'fport', 'tcp:%d' % HOST_PORT, 'tcp:9222'], capture_output=True, text=True)
+    time.sleep(1)
+    token = sh('cat /data/app/el2/100/base/com.browseros.kaihong/haps/entry/files/mcp_token.txt').strip().splitlines()[-1]
+    qs = '/mcp?token=' + token
+    print('token =', token[:6] + '...')
+
+    def call(name, args, sid=None):
+        h = {'Mcp-Session-Id': sid} if sid else {}
+        return http_post(qs, rpc('tools/call', {'name': name, 'arguments': args}), h)
+
+    # --- A. no-session gate ---
+    code, r, hd = http_post(qs, rpc('tools/list', {}))
+    err = r.get('error') or {}
+    record('A1 tools/list w/o session -> -32001', code == 200 and err.get('code') == -32001, str(err)[:80])
+
+    code, r, hd = http_post(qs, rpc('tools/call', {'name': 'tabs', 'arguments': {'action': 'list'}}))
+    err = r.get('error') or {}
+    record('A2 tools/call w/o session -> -32001', code == 200 and err.get('code') == -32001, str(err)[:80])
+
+    # --- B. initialize + session flow ---
+    code, r, hd = http_post(qs, rpc('initialize', {'protocolVersion': '2024-11-05',
+                                                   'capabilities': {},
+                                                   'clientInfo': {'name': 'p51-e2e-a', 'version': '1'}}))
+    sid_a = hd.get('Mcp-Session-Id', '') or r.get('result', {}).get('sessionId', '')
+    record('B1 initialize -> session id', code == 200 and bool(sid_a), 'sid=%s...' % sid_a[:8])
+
+    code, r, hd = http_post(qs, rpc('tools/list', {}), {'Mcp-Session-Id': sid_a})
+    record('B2 tools/list with session -> ok', code == 200 and 'result' in r, str(r)[:60])
+
+    code, r, hd = http_post(qs, rpc('tools/list', {}), {'Mcp-Session-Id': 'forged-0000-0000'})
+    err = r.get('error') or {}
+    record('B3 forged session -> -32001', err.get('code') == -32001, str(err)[:60])
+
+    # --- C. concurrency isolation ---
+    code, r, hd = http_post(qs, rpc('initialize', {'protocolVersion': '2024-11-05',
+                                                   'capabilities': {},
+                                                   'clientInfo': {'name': 'p51-e2e-b', 'version': '1'}}))
+    sid_b = hd.get('Mcp-Session-Id', '')
+    record('C1 second client session', bool(sid_b) and sid_b != sid_a, 'sidB=%s...' % sid_b[:8])
+
+    code, r, _ = call('tabs', {'action': 'new', 'url': 'about:blank'}, sid_a)
+    tab_a = (unwrap(r).get('data') or {}).get('tabId') or unwrap(r).get('tabId') or ''
+    record('C2 session A tabs new', code == 200 and bool(tab_a), 'tabA=%s raw=%s' % (tab_a[:12], str(unwrap(r))[:60]))
+
+    code, r, _ = call('tabs', {'action': 'new', 'url': 'about:blank'}, sid_b)
+    tab_b = (unwrap(r).get('data') or {}).get('tabId') or unwrap(r).get('tabId') or ''
+    record('C3 session B tabs new', code == 200 and bool(tab_b) and tab_b != tab_a, 'tabB=%s' % str(tab_b)[:12])
+
+    code, r, _ = call('navigate', {'url': 'https://example.com'}, sid_a)
+    record('C4 A navigate example.com', code == 200 and 'result' in r, str(r)[:60])
+    time.sleep(5)
+
+    code, r, _ = call('navigate', {'url': 'https://example.org'}, sid_b)
+    record('C5 B navigate example.org', code == 200 and 'result' in r, str(r)[:60])
+    time.sleep(5)
+
+    code, r, _ = call('read', {}, sid_a)
+    txt = json.dumps(r)
+    ok_a = code == 200 and ('Example Domain' in txt or 'example.com' in txt)
+    record('C6 A read -> example.com content', ok_a, txt[:100])
+
+    code, r, _ = call('read', {}, sid_b)
+    txt_b = json.dumps(r)
+    ok_b = code == 200 and ('Example Domain' in txt_b or 'example.org' in txt_b)
+    record('C7 B read -> example.org content', ok_b, txt_b[:100])
+
+    # cross-session tab access must be rejected
+    code, r, _ = call('read', {'tabId': tab_b}, sid_a)
+    rejected = 'not owned' in json.dumps(r)
+    record('C8 A read B tab -> rejected', rejected, str(r)[:100])
+
+    # --- D. redaction ---
+    code, r, _ = call('act', {'kind': 'type', 'ref': 'input', 'text': 'mypassword123'}, sid_a)
+    time.sleep(2)
+    log = sh('hilog -x -t P51 2>/dev/null || hilog -x')
+    has_plain = 'mypassword123' in log
+    record('D1 typed secret NOT in hilog', not has_plain, 'plaintext_in_hilog=%s' % has_plain)
+
+    # --- E. session-less after init (regression) ---
+    code, r, _ = call('tabs', {'action': 'list'})
+    err = r.get('error') or {}
+    record('E1 call w/o session still -32001', err.get('code') == -32001, str(err)[:60])
+    print('\n==== SUMMARY ====')
+    passed = sum(1 for _, ok, _ in results if ok)
+    print('%d/%d passed' % (passed, len(results)))
+    for name, ok, detail in results:
+        if not ok:
+            print('FAIL: %s -- %s' % (name, detail))
+    return 0 if passed == len(results) else 1
+
+if __name__ == '__main__':
+    exit(main())

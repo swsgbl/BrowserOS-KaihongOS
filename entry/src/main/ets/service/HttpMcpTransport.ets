@@ -30,6 +30,8 @@ export { McpHttpDelegate }
 class ConnectionState {
   client: socket.TCPSocketConnection
   buffer: Uint8Array = new Uint8Array(0)
+  /** P51: raw request header lines (Mcp-Session-Id lookup) */
+  headers: string[] = []
 
   constructor(client: socket.TCPSocketConnection) {
     this.client = client
@@ -231,6 +233,8 @@ class HttpMcpTransportImpl {
     const qIdx = rawPath.indexOf('?')
     const path = qIdx >= 0 ? rawPath.substring(0, qIdx) : rawPath
     const query = qIdx >= 0 ? rawPath.substring(qIdx + 1) : ''
+    // P51: stash header lines for Mcp-Session-Id lookup
+    conn.headers = lines
 
     console.info(`[${TAG}] ${method} ${rawPath} client=${conn.client.clientId} bodyLen=${bodyText.length}`)
 
@@ -277,7 +281,9 @@ class HttpMcpTransportImpl {
         return
       }
 
-      await this.handleJsonRpc(conn, bodyText, token)
+      // P51: read Mcp-Session-Id header per request (required for non-initialize calls)
+    const sid = this.extractHeader(conn.headers, 'mcp-session-id')
+    await this.handleJsonRpc(conn, bodyText, token, sid)
     } catch (e) {
       const detail = (e as BusinessError).code !== undefined ? `${(e as BusinessError).code}/${(e as BusinessError).message}` : JSON.stringify(e)
       console.error(`[${TAG}] dispatch error: ${detail}`)
@@ -291,8 +297,9 @@ class HttpMcpTransportImpl {
 
   // ---------- JSON-RPC 2.0（P13: 核心下沉 McpJsonRpcCore） ----------
 
-  private async handleJsonRpc(conn: ConnectionState, bodyText: string, token: string): Promise<void> {
-    const outcome = await McpJsonRpcCore.handleRpc(bodyText, token, 'mcp_http')
+  private async handleJsonRpc(conn: ConnectionState, bodyText: string, token: string,
+    sessionId: string): Promise<void> {
+    const outcome = await McpJsonRpcCore.handleRpc(bodyText, token, 'mcp_http', sessionId)
     if (outcome.sessionId !== '') {
       this.sessions.add(outcome.sessionId)
     }
@@ -327,6 +334,21 @@ class HttpMcpTransportImpl {
   }
 
   // ---------- 解析辅助 ----------
+
+  /** P51: case-insensitive header lookup */
+  private extractHeader(headers: string[], name: string): string {
+    if (!headers) {
+      return ''
+    }
+    const lower = name.toLowerCase()
+    for (const h of headers) {
+      const idx = h.indexOf(':')
+      if (idx > 0 && h.substring(0, idx).trim().toLowerCase() === lower) {
+        return h.substring(idx + 1).trim()
+      }
+    }
+    return ''
+  }
 
   private findHeaderEnd(buf: Uint8Array): number {
     for (let i = 0; i + 3 < buf.length; i++) {

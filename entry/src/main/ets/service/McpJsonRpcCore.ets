@@ -1,6 +1,7 @@
 import { util } from '@kit.ArkTS'
 import { redactSensitive } from '../common/Redact'
 import { MCPToolResponse } from '../common/Types'
+import { McpSessionStore } from './McpSessionStore'
 
 /**
  * P13: MCP JSON-RPC 分发核心（HTTP 9222 与 WS 8765 共用）。
@@ -16,7 +17,7 @@ const TAG_RPC: string = 'MCP-RPC'
 export interface McpHttpDelegate {
   validateToken(token: string): boolean
   callTool(toolName: string, params: Record<string, Object>, agentId: string,
-    token: string): Promise<MCPToolResponse>
+    token: string, sessionId: string): Promise<MCPToolResponse>
   getToolNames(): string[]
 }
 
@@ -120,8 +121,10 @@ class McpJsonRpcCoreImpl {
   /**
    * 处理一条 JSON-RPC 请求文本，产出响应（永不 reject——解析错误也映射为 -32700 响应）。
    * agentId: 审计/敏感确认链用的调用方标识（HTTP 传 mcp_http，WS 传 mcp_ws）
+   * incomingSessionId: P51 请求携带的 Mcp-Session-Id；非 initialize 方法必须有效，否则 -32001。
    */
-  async handleRpc(bodyText: string, token: string, agentId: string): Promise<RpcOutcome> {
+  async handleRpc(bodyText: string, token: string, agentId: string,
+    incomingSessionId: string = ''): Promise<RpcOutcome> {
     let root: Record<string, Object> | null = null
     try {
       root = JSON.parse(bodyText) as Record<string, Object>
@@ -136,19 +139,36 @@ class McpJsonRpcCoreImpl {
     const paramsObj = (root['params'] !== undefined && root['params'] !== null)
       ? root['params'] as Record<string, Object> : null
 
-    console.info(`[${TAG_RPC}] method=${rpcMethod} id=${JSON.stringify(rpcId)} via=${agentId}`)
+    console.info(`[${TAG_RPC}] method=${rpcMethod} id=${JSON.stringify(rpcId)} via=${agentId} sid=${incomingSessionId.substring(0, 8)}`)
 
     if (rpcMethod === 'initialize') {
+      // P51 (1a): clientInfo.name 入库；会话真值源 = McpSessionStore
+      let clientName = agentId
+      if (paramsObj && paramsObj['clientInfo'] !== undefined && paramsObj['clientInfo'] !== null) {
+        const ci = paramsObj['clientInfo'] as Record<string, Object>
+        if (ci['name'] !== undefined && ci['name'] !== null) {
+          clientName = `${ci['name']}`
+        }
+      }
+      const session = McpSessionStore.create(clientName)
       const result = new McpInitializeResult()
       result.protocolVersion = '2024-11-05'
       result.capabilities = new McpCapabilities()
       result.serverInfo.name = 'browseros-kaihong'
       result.serverInfo.version = '1.0.0'
-      const sessionId = util.generateRandomUUID()
+      const sessionId = session.sessionId
       const outcome = this.outcome(rpcId, null, result)
       outcome.sessionId = sessionId
       outcome.extraHeaders = [`Mcp-Session-Id: ${sessionId}`]
       return outcome
+    }
+
+    // P51 (1a/1b): 会话强制校验 —— 未携带/未知/过期一律 -32001
+    const session = McpSessionStore.touch(incomingSessionId)
+    if (!session) {
+      console.warn(`[${TAG_RPC}] -32001 rejected: method=${rpcMethod} via=${agentId}`)
+      return this.outcome(rpcId, this.rpcError(-32001,
+        'Session required: unknown or expired Mcp-Session-Id (initialize first)'))
     }
 
     if (rpcMethod === 'tools/list') {
@@ -167,7 +187,7 @@ class McpJsonRpcCoreImpl {
       if (!toolName) {
         return this.outcome(rpcId, this.rpcError(-32602, 'Invalid params: missing tool name'))
       }
-      const response = await this.callDelegate(toolName, args, agentId, token)
+      const response = await this.callDelegate(toolName, args, agentId, token, session.sessionId)
       if (response.status === 'success') {
         const result = new McpToolCallResult()
         const item = new McpContentItem()
@@ -190,14 +210,14 @@ class McpJsonRpcCoreImpl {
   }
 
   private async callDelegate(toolName: string, args: Record<string, Object>, agentId: string,
-    token: string): Promise<MCPToolResponse> {
+    token: string, sessionId: string): Promise<MCPToolResponse> {
     if (!this.delegate) {
       const fallback: MCPToolResponse = {
         status: 'error', data: null, error: 'MCP_999: no delegate bound', requestId: 'req_ws_nodel'
       }
       return fallback
     }
-    return this.delegate.callTool(toolName, args, agentId, token)
+    return this.delegate.callTool(toolName, args, agentId, token, sessionId)
   }
 
   private outcome(id: Object | null, error: JsonRpcErrorObj | null, result?: Object): RpcOutcome {

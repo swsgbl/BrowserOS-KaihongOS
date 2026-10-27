@@ -5,6 +5,10 @@ import { ScreenshotCapture } from '../protocol/ScreenshotCapture'
 import { AgentEngine } from './AgentEngine'
 import { SensitiveOperationDetector } from './SensitiveOperationDetector'
 import { AuditLogger } from '../storage/AuditLogger'
+import { McpSessionStore } from './McpSessionStore'
+import { redactDeep } from './AuditRedactor'
+
+
 import { AuditLogEntry } from '../model/AuditLogEntry'
 import { EventBus, EventBusEvents } from '../infra/EventBus'
 import { ErrorHandler, AppError } from '../infra/ErrorHandler'
@@ -22,7 +26,12 @@ import { TabInfo } from '../model/TabInfo'
 import { cryptoFramework } from '@kit.CryptoArchitectureKit'
 import { util } from '@kit.ArkTS'
 
-type ToolHandler = (params: Record<string, Object>, agentId: string) => Promise<MCPToolResponse>
+/** P51: tools that require a routed page (session must own a tab) */
+const PAGE_TOOLS: string[] = ['navigate', 'snapshot', 'diff', 'act', 'click', 'type', 'scroll', 'read', 'getText',
+  'grep', 'screenshot', 'pdf', 'wait', 'evaluate', 'run', 'download', 'upload']
+
+
+type ToolHandler = (params: Record<string, Object>, agentId: string, sessionId?: string) => Promise<MCPToolResponse>
 
 interface MCPConnectionChangeData {
   status: string
@@ -185,12 +194,60 @@ class MCPServerImpl implements McpHttpDelegate {
   }
 
   async callTool(toolName: string, params: Record<string, Object>, agentId: string,
-    token: string): Promise<MCPToolResponse> {
+    token: string, sessionId: string): Promise<MCPToolResponse> {
     if (!this.validateToken(token)) {
       return {
         status: 'error',
         data: null,
         error: ErrorCodes.getMessage(ErrorCodes.MCP_001),
+        requestId: this.generateRequestId()
+      }
+    }
+
+    // P51 (1b): session routing - resolve target tab from session.ownedTabIds,
+    // never fall back to the global active tab (concurrency isolation).
+    const session = McpSessionStore.touch(sessionId)
+    if (!session) {
+      return {
+        status: 'error',
+        data: null,
+        error: 'P51: session required (unknown or expired Mcp-Session-Id)',
+        requestId: this.generateRequestId()
+      }
+    }
+    const explicitTab = ((params['tabId'] as string) || (params['page'] as string) || '').trim()
+    let routeTab = explicitTab
+    if (!routeTab) {
+      routeTab = session.ownedTabIds.length > 0 ? session.ownedTabIds[0] : ''
+    }
+    if (routeTab.length > 0) {
+      if (session.ownedTabIds.indexOf(routeTab) >= 0) {
+        TabManager.switchTab(routeTab)
+        // P51: MCP-created tab 的 Web 组件由 UI 异步渲染（onTabStatusChange -> ForEach -> onAttached
+        // -> registerController -> BCPEngine.bindWebView）。路由后若尚未注册，轮询等待（最长 ~3s）。
+        const t0 = Date.now()
+        while (!TabManager.getWebView(routeTab) && Date.now() - t0 < 3000) {
+          await new Promise<void>((res) => setTimeout(res, 100))
+        }
+        const wv = TabManager.getWebView(routeTab)
+        if (wv) {
+          BCPEngine.bindWebView(wv.controller, routeTab)
+        } else {
+          console.warn('[P51] route: webview not ready for tab ' + routeTab + ' after 3s — proceed on current binding')
+        }
+        console.info('[P51] route sid=' + sessionId.substring(0, 8) + ' -> tab ' + routeTab + ' ' + toolName + ' wvReady=' + (wv !== null))
+      } else {
+        console.warn('[P51] route reject: tab ' + routeTab + ' not owned by sid=' + sessionId.substring(0, 8))
+        return {
+          status: 'error', data: null,
+          error: 'P51: tab not owned by this session', requestId: this.generateRequestId()
+        }
+      }
+    }
+    if (!routeTab && PAGE_TOOLS.indexOf(toolName) >= 0) {
+      return {
+        status: 'error', data: null,
+        error: 'P51: session owns no tab; call tabs{action:new} first',
         requestId: this.generateRequestId()
       }
     }
@@ -217,12 +274,18 @@ class MCPServerImpl implements McpHttpDelegate {
 
     const requestId = this.generateRequestId()
     const auditEntry = new AuditLogEntry(requestId, agentId, canonical, params['url'] as string || '')
+    // P51 (1c): 参数深度脱敏后入审计（type "mypassword123" -> text 前 8 字符 + ***）
+    try {
+      auditEntry.paramsRedacted = JSON.stringify(redactDeep(params))
+    } catch (e) {
+      auditEntry.paramsRedacted = ''
+    }
 
     const callData: MCPToolCallData = { requestId: requestId, agentId: agentId, toolName: canonical, params: params }
     EventBus.emit(EventBusEvents.MCP_TOOL_CALL, callData)
 
     try {
-    const response = await handler(adapted, agentId)
+    const response = await handler(adapted, agentId, sessionId)
       auditEntry.setResult(response.status, response.error || '')
       AuditLogger.log(auditEntry)
       const responseData: MCPToolResponseEventData = { requestId: requestId, response: response }
@@ -283,7 +346,7 @@ class MCPServerImpl implements McpHttpDelegate {
 
   // ---------- [P43] tabs：TabManager 直通（action: list/active/new/close/activate） ----------
 
-  private handleTabs: ToolHandler = async (params, agentId) => {
+  private handleTabs: ToolHandler = async (params, agentId, sessionId) => {
     const action = params['action'] as string || 'list'
     if (action === 'list') {
       const tabs = TabManager.getAllTabs()
@@ -313,6 +376,10 @@ class MCPServerImpl implements McpHttpDelegate {
       const url = params['url'] as string || 'about:blank'
       const tab = TabManager.createTab(false)
       TabManager.updateTabUrl(tab.tabId, url)
+      // P51 (1b)-4: new tab belongs to the calling session
+      if (sessionId) {
+        McpSessionStore.ownTab(sessionId, tab.tabId)
+      }
       const rec12: Record<string, Object> = { 'tabId': tab.tabId, 'url': url }
     return this.okResponse(rec12)
     }
@@ -324,6 +391,10 @@ class MCPServerImpl implements McpHttpDelegate {
       const ok = TabManager.closeTab(tabId)
       if (!ok) {
         return this.errorResponse(ErrorCodes.MCP_003, `tabs close: no such tab ${tabId}`)
+      }
+      // P51 (1b)-5: released from owning session (if any)
+      if (sessionId) {
+        McpSessionStore.releaseTab(sessionId, tabId)
       }
       const rec13: Record<string, Object> = { 'tabId': tabId, 'closed': true }
     return this.okResponse(rec13)

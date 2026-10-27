@@ -12,10 +12,24 @@ class BCPEngineImpl {
   private webviewId: string = ''
   private bridgeInjected: boolean = false
 
+  private reboundAt: number = 0
+
   bindWebView(webviewController: IWebviewController, webviewId: string): void {
     this.webviewController = webviewController
     this.webviewId = webviewId
     this.bridgeInjected = false
+    this.reboundAt = Date.now()
+  }
+
+  /** P51: rebind 后 bridge 注入异步落地；首个 executeJS 前留出注入窗口 */
+  private async settleIfJustRebound(): Promise<void> {
+    if (this.reboundAt === 0) {
+      return
+    }
+    const elapsed = Date.now() - this.reboundAt
+    if (elapsed < 500) {
+      await new Promise<void>((res) => setTimeout(res, 500 - elapsed))
+    }
   }
 
   unbindWebView(): void {
@@ -283,6 +297,7 @@ class BCPEngineImpl {
   }
   /** [P43] evaluate: 在当前页面求值任意 JS 表达式，结果 JSON 序列化返回（MCP evaluate/run 宏/act 扩展 kinds 复用） */
   async evaluate(expression: string): Promise<BCPResult> {
+    await this.settleIfJustRebound()
     const timer = PerformanceMonitor.startTimer('bcp_evaluate', 'BCP')
     const bridgeReady = await this.ensureBridge()
     if (!bridgeReady) {

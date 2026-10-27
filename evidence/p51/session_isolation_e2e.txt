@@ -1,0 +1,21 @@
+token = I85goO...
+[PASS] A1 tools/list w/o session -> -32001 -- {'code': -32001, 'message': 'Session required: unknown or expired Mcp-Session-Id
+[PASS] A2 tools/call w/o session -> -32001 -- {'code': -32001, 'message': 'Session required: unknown or expired Mcp-Session-Id
+[PASS] B1 initialize -> session id -- sid=3a400b85...
+[PASS] B2 tools/list with session -> ok -- {'jsonrpc': '2.0', 'id': 4, 'result': {'tools': [{'name': 't
+[PASS] B3 forged session -> -32001 -- {'code': -32001, 'message': 'Session required: unknown or ex
+[PASS] C1 second client session -- sidB=8a0ba388...
+[PASS] C2 session A tabs new -- tabA=tab_1_179308 raw={'tabId': 'tab_1_1793081958547', 'url': 'about:blank'}
+[PASS] C3 session B tabs new -- tabB=tab_2_179308
+[PASS] C4 A navigate example.com -- {'jsonrpc': '2.0', 'id': 9, 'result': {'content': [{'type': 
+[PASS] C5 B navigate example.org -- {'jsonrpc': '2.0', 'id': 10, 'result': {'content': [{'type':
+[FAIL] C6 A read -> example.com content -- {"jsonrpc": "2.0", "id": 11, "result": {"content": [{"type": "text", "text": "{\"result\":\"null\"}"
+[FAIL] C7 B read -> example.org content -- {"jsonrpc": "2.0", "id": 12, "result": {"content": [{"type": "text", "text": "{\"result\":\"null\"}"
+[PASS] C8 A read B tab -> rejected -- {'jsonrpc': '2.0', 'id': 13, 'result': None, 'error': {'code': -32000, 'message': 'P51: tab not owne
+[PASS] D1 typed secret NOT in hilog -- plaintext_in_hilog=False
+[PASS] E1 call w/o session still -32001 -- {'code': -32001, 'message': 'Session required: unknown or ex
+
+==== SUMMARY ====
+13/15 passed
+FAIL: C6 A read -> example.com content -- {"jsonrpc": "2.0", "id": 11, "result": {"content": [{"type": "text", "text": "{\"result\":\"null\"}"
+FAIL: C7 B read -> example.org content -- {"jsonrpc": "2.0", "id": 12, "result": {"content": [{"type": "text", "text": "{\"result\":\"null\"}"

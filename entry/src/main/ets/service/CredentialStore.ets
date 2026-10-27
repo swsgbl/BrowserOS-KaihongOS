@@ -1,13 +1,14 @@
 /**
  * P47-B: 密码管理器 —— 凭据存储服务
- * - Asset Store Kit (@ohos.security.asset) 加密镜像（尽力而为，失败回落 prefs）
- * - 主数据存 preferences（cred_store）
- * - Bitwarden JSON 明文导出格式导入/导出
+ * P51 (1d): Asset Store 为主真值源 —— password 只存 asset（alias browseros_pw_<id>），
+ * preferences 只留元数据（id/domain/username/createdAt）；init 时一次性把旧明文迁移到
+ * asset 并从 prefs 抹除 password 字段。asset 不可用时维持旧行为（明文 prefs）并打日志。
  * 采用模块级单例（项目惯例，避开 arkts-no-standalone-this）
  */
 import { asset } from '@kit.AssetStoreKit'
 import { preferences } from '@kit.ArkData'
 import { Context } from '@kit.AbilityKit'
+import { BusinessError } from '@kit.BasicServicesKit'
 
 export interface Credential {
   id: string
@@ -27,11 +28,13 @@ class CredentialStoreImpl {
   init(ctx: Context): void {
     this.readyPromise = preferences.getPreferences(ctx, { name: 'cred_store' }).then((p: preferences.Preferences): void => {
       this.prefs = p
+      // P51 (1d): 一次性迁移 —— prefs 里的明文 password 搬进 asset，prefs 只留元数据
+      this.migrateLegacyPlaintext()
       // init 前若有内存写入（cache），补写落盘
       if (this.cache !== null && this.cache.length > 0) {
         this.persist(this.cache)
       }
-      console.info('[P47] CredentialStore prefs ready')
+      console.info('[P47] CredentialStore prefs ready (P51 asset-primary)')
     }).catch((e: Object): void => {
       console.error('[P47] CredentialStore init fail: ' + e)
     })
@@ -56,6 +59,13 @@ class CredentialStoreImpl {
     try {
       const parsed = JSON.parse(raw) as object
       const arr = Array.isArray(parsed) ? parsed as Credential[] : []
+      // P51 (1d): 元数据里 password 一律为空（真值在 asset）；asset 可用时回填密文取回的明文
+      if (this.assetOk()) {
+        for (const c of arr) {
+          const sec = this.assetGet(this.aliasOf(c.id))
+          c.password = sec === null ? '' : sec
+        }
+      }
       arr.sort((a: Credential, b: Credential): number => b.createdAt - a.createdAt)
       this.cache = arr
       return arr
@@ -227,11 +237,129 @@ class CredentialStoreImpl {
     this.cache = all
     if (this.prefs) {
       try {
-        this.prefs.putSync('creds', JSON.stringify(all))
+        // P51 (1d): prefs 只落元数据，password 字段抹除（真值 = asset）
+        const meta: Credential[] = []
+        for (const c of all) {
+          const m: Credential = {
+            id: c.id,
+            domain: c.domain,
+            username: c.username,
+            password: '',
+            createdAt: c.createdAt
+          }
+          meta.push(m)
+        }
+        this.prefs.putSync('creds', JSON.stringify(meta))
         this.prefs.flush()
       } catch (e) {
         console.error('[P47] persist fail')
       }
+    }
+  }
+
+  /** P51 (1d): asset 可用且同步 API 正常 */
+  private assetOk(): boolean {
+    try {
+      const q: asset.AssetMap = new Map()
+      q.set(asset.Tag.ALIAS, this.strToU8('browseros_p51_probe'))
+      q.set(asset.Tag.RETURN_TYPE, asset.ReturnType.ATTRIBUTES)
+      asset.querySync(q)
+      return true
+    } catch (eA) {
+      const ea = eA as BusinessError
+      if (ea.code === 24000002) {
+        return true  // not found == service fine
+      }
+      return false
+    }
+  }
+
+  /** P51 (1d): 从 asset 取回明文（null = 无记录或服务不可用） */
+  private assetGet(alias: string): string | null {
+    try {
+      const q: asset.AssetMap = new Map()
+      q.set(asset.Tag.ALIAS, this.strToU8(alias))
+      q.set(asset.Tag.RETURN_TYPE, asset.ReturnType.ALL)
+      const rows = asset.querySync(q)
+      if (rows.length === 0) {
+        return null
+      }
+      const secretVal = rows[0].get(asset.Tag.SECRET)
+      if (!secretVal || typeof secretVal === 'number' || typeof secretVal === 'boolean') {
+        return null
+      }
+      const secretU8: Uint8Array = secretVal
+      if (!secretU8) {
+        return null
+      }
+      return this.u8ToStr(secretU8)
+    } catch (e) {
+      return null
+    }
+  }
+
+  private aliasOf(id: string): string {
+    return ALIAS_PREFIX + id
+  }
+
+  private u8ToStr(u8: Uint8Array): string {
+    let s = ''
+    for (let i = 0; i < u8.length; i++) {
+      s += String.fromCharCode(u8[i])
+    }
+    return s
+  }
+
+  /** P51 (1d): 一次性迁移 —— prefs 明文 password → asset，prefs 抹除 */
+  private migrateLegacyPlaintext(): void {
+    if (!this.prefs || !this.assetOk()) {
+      console.warn('[P51] credential migration skipped (prefs or asset unavailable)')
+      return
+    }
+    let raw = '[]'
+    try {
+      raw = this.prefs.getSync('creds', '[]') as string
+    } catch (e) {
+      return
+    }
+    let arr: Credential[] = []
+    try {
+      const parsed = JSON.parse(raw) as object
+      arr = Array.isArray(parsed) ? parsed as Credential[] : []
+    } catch (e) {
+      return
+    }
+    let migrated = 0
+    for (const c of arr) {
+      if (c.password && c.password.length > 0) {
+        // 明文在 prefs → 搬进 asset
+        this.assetMirror(c)
+        migrated++
+      }
+    }
+    if (migrated > 0) {
+      // 重写 prefs：password 全部抹除
+      const meta: Credential[] = []
+      for (const c of arr) {
+        const m: Credential = {
+          id: c.id,
+          domain: c.domain,
+          username: c.username,
+          password: '',
+          createdAt: c.createdAt
+        }
+        meta.push(m)
+      }
+      try {
+        this.prefs.putSync('creds', JSON.stringify(meta))
+        this.prefs.flush()
+      } catch (e) {
+        console.error('[P51] migration prefs rewrite fail')
+        return
+      }
+      console.info('[P51] credential migration done: ' + migrated + ' secrets moved to asset, prefs stripped')
+    } else {
+      console.info('[P51] credential migration: no legacy plaintext found')
     }
   }
 
