@@ -1,6 +1,7 @@
 import { IWebviewController } from '../common/IWebviewController'
 import { TabInfo } from '../model/TabInfo'
 import { TabStatus } from '../common/Types'
+import { AuditEventBus, AuditEventType, AUDIT_INTERNAL_SESSION } from './AuditEventBus'
 import { EventBus, EventBusEvents } from '../infra/EventBus'
 import { ErrorHandler, AppError } from '../infra/ErrorHandler'
 import { ErrorCodes } from '../common/ErrorCodes'
@@ -50,20 +51,17 @@ class TabManagerImpl {
       tab.title = 'BrowserOS'
     }
 
-    this.tabs.set(tabId, tab)
-    if (!this.activeTabId) {
-      this.activeTabId = tabId
-    }
-
+    AuditEventBus.record(AUDIT_INTERNAL_SESSION, tabId, AuditEventType.TAB_CREATED, '', 'ok', 0, isDashboard ? 'dashboard' : 'normal', '', '')
     EventBus.emit(EventBusEvents.TAB_STATUS_CHANGE, tab.toJSON())
     this.schedulePersist()
     return tab
-  }
+    }
 
   createAgentTab(agentId: string): TabInfo {
     const tabId = this.generateTabId()
     const tab = new TabInfo(tabId, agentId, false)
     tab.title = 'Agent ' + agentId.substring(agentId.length - 6)
+    AuditEventBus.record(AUDIT_INTERNAL_SESSION, tabId, AuditEventType.TAB_CREATED, '', 'ok', 0, 'agent', '', '')
     this.tabs.set(tabId, tab)
     // P3 修复：agent tab 立即可见于标签栏（BrowserShell 监听 TAB_STATUS_CHANGE 刷新）
     EventBus.emit(EventBusEvents.TAB_STATUS_CHANGE, tab.toJSON())
@@ -90,6 +88,7 @@ class TabManagerImpl {
     }
     this.tabs.delete(tabId)
     this.webviews.delete(tabId)
+    AuditEventBus.record(AUDIT_INTERNAL_SESSION, tabId, AuditEventType.TAB_CLOSED, '', 'ok', 0, '', '', '')
     console.info('[P45] TabManager.closeTab done: ' + tabId + ' remaining=' + this.tabs.size)
 
     if (this.activeTabId === tabId) {

@@ -39,6 +39,7 @@ import { preferences } from '@kit.ArkData'
 import { ScheduleManager, ScheduleTask } from '../service/ScheduleManager'
 import { CredentialStore } from '../service/CredentialStore'
 import { DevToolsCollector } from '../service/DevToolsCollector'
+import { AuditEventBus, AuditEventType, AUDIT_INTERNAL_SESSION } from '../service/AuditEventBus'
 
 interface PageLoadErrorData {
   tabId: string
@@ -2235,6 +2236,8 @@ struct BrowserShell {
             }
             // 历史记录 + Tab 元数据更新（P51-A: about:blank 不入历史——新标签页的 Web 初始装载会触发 onPageEnd(about:blank)，旧代码把它记进历史污染建议列表）
             if (url !== 'about:blank') {
+              // P54: 页面加载完成审计（导航终态；与 NAVIGATION running 配对）
+              AuditEventBus.record(AUDIT_INTERNAL_SESSION, tabId, AuditEventType.NAVIGATION, 'page_load', 'ok', 0, url, title, '')
               HistoryManager.recordNavigation(tabId, url, title)
             }
             TabManager.updateTabUrl(tabId, url)
@@ -2655,6 +2658,8 @@ struct BrowserShell {
 
   private navigate(url: string): void {
     console.info('BrowserShell navigate to: ' + url)
+  // P54: 用户手动导航审计（非 agent/MCP 驱动）
+  AuditEventBus.record(AUDIT_INTERNAL_SESSION, this.activeTabId, AuditEventType.NAVIGATION, 'user_navigate', 'running', 0, url, '', '')
     this.navError = ''
     this.currentUrl = url
     this.setOmniboxText(url)
@@ -2832,6 +2837,9 @@ struct BrowserShell {
       case 'devtools':
         // P47-A: 开发者工具
         router.pushUrl({ url: 'pages/DevToolsPage' })
+        break
+      case 'audit':
+        router.pushUrl({ url: 'pages/AuditPage' })
         break
       case 'find':
         this.openFindBar()

@@ -2,16 +2,21 @@ import { AuditLogEntry } from '../model/AuditLogEntry'
 import { StorageManager } from './StorageManager'
 import { Constants } from '../common/Constants'
 import { redactSensitive } from '../common/Redact'
+import { fileIo as fs } from '@kit.CoreFileKit'
+import { util } from '@kit.ArkTS'
 
 class AuditLoggerImpl {
   private logQueue: AuditLogEntry[] = []
   private flushInterval: number = 5000
   private maxQueueSize: number = 100
   private retentionDays: number = 30
+  /** P54: 惰性 flush 锚——log() 时距上次 flush 超过 flushInterval 即落盘（无常驻 timer） */
+  private lastFlushAt: number = Date.now()
 
   log(entry: AuditLogEntry): void {
     this.logQueue.push(entry)
-    if (this.logQueue.length >= this.maxQueueSize) {
+    const now = Date.now()
+    if (this.logQueue.length >= this.maxQueueSize || (now - this.lastFlushAt) >= this.flushInterval) {
       this.flush()
     }
   }
@@ -20,15 +25,37 @@ class AuditLoggerImpl {
     if (this.logQueue.length === 0) {
       return
     }
+    this.lastFlushAt = Date.now()
     const date = new Date()
     const dateStr = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`
     const logPath = `audit/${dateStr}.jsonl`
+
+    // P54: StorageManager.save 是 TRUNC 覆盖写 — flush 前同步读旧文件合并，避免每批覆盖上一批
+    let merged = ''
+    try {
+      const fullPath = `${StorageManager.getBasePath()}/${logPath}`
+      const stat = fs.statSync(fullPath)
+      const sizeNum: number = stat.size
+      if (sizeNum > 0) {
+        const file = fs.openSync(fullPath, fs.OpenMode.READ_ONLY)
+        const buf = new ArrayBuffer(sizeNum)
+        fs.readSync(file.fd, buf)
+        fs.closeSync(file)
+        const decoder = util.TextDecoder.create('utf-8')
+        const existing = decoder.decodeWithStream(new Uint8Array(buf))
+        if (existing.length > 0) {
+          merged = existing.endsWith('\n') ? existing : existing + '\n'
+        }
+      }
+    } catch (e) {
+      // 读失败按空处理（宁可重复不可丢失）
+    }
 
     // P42 (KAI-075): 审计写入统一脱敏（逐行）
     const lines = this.logQueue.map(entry => redactSensitive(entry.toLogString())).join('\n')
     this.logQueue = []
 
-    StorageManager.save(logPath, lines)
+    StorageManager.save(logPath, merged + lines + '\n')
   }
 
   async query(agentId?: string, startTime?: number, endTime?: number, operationType?: string): Promise<AuditLogEntry[]> {

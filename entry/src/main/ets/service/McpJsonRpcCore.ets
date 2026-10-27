@@ -3,6 +3,7 @@ import { bundleManager } from '@kit.AbilityKit'
 import { redactSensitive } from '../common/Redact'
 import { MCPToolResponse } from '../common/Types'
 import { McpSessionStore } from './McpSessionStore'
+import { AuditEventBus, AuditEventType } from './AuditEventBus'
 
 /**
  * P13: MCP JSON-RPC 分发核心（HTTP 9222 与 WS 8765 共用）。
@@ -197,7 +198,22 @@ class McpJsonRpcCoreImpl {
       if (!toolName) {
         return this.outcome(rpcId, this.rpcError(-32602, 'Invalid params: missing tool name'))
       }
+      // P54: 统一审计事件 - 外部 MCP 工具调用起点（sessionId=真实会话；tabId 取 args 显式值）
+      const auditT0 = Date.now()
+      let auditArgsText = ''
+      try {
+        auditArgsText = JSON.stringify(args)
+      } catch (e) {
+        auditArgsText = ''
+      }
+      const auditTab = args['tabId'] === undefined || args['tabId'] === null ? '' : (args['tabId'] as string)
+      AuditEventBus.record(session.sessionId, auditTab, AuditEventType.TOOL_START, toolName, 'running', 0, auditArgsText, '', '')
       const response = await this.callDelegate(toolName, args, agentId, token, session.sessionId)
+      // P54: 工具调用终点（status + 耗时 + 错误码）
+      AuditEventBus.record(session.sessionId, auditTab, AuditEventType.TOOL_END, toolName,
+        response.status === 'success' ? 'ok' : 'error', Date.now() - auditT0, '',
+        response.error === null ? '' : (response.error as string),
+        response.status === 'success' ? '' : 'MCP_TOOL_FAIL')
       if (response.status === 'success') {
         const result = new McpToolCallResult()
         const item = new McpContentItem()

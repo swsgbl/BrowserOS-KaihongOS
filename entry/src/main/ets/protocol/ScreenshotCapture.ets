@@ -4,12 +4,15 @@ import { Constants } from '../common/Constants'
 import { PerformanceMonitor } from '../infra/PerformanceMonitor'
 import { ErrorHandler, AppError } from '../infra/ErrorHandler'
 import { ErrorCodes } from '../common/ErrorCodes'
+import { AuditEventBus, AuditEventType, AUDIT_INTERNAL_SESSION } from '../service/AuditEventBus'
 
 class ScreenshotCaptureImpl {
-  async capture(quality: string = 'medium'): Promise<BCPResult> {
+  async capture(quality: string = 'medium', tabId: string = ''): Promise<BCPResult> {
     const timer = PerformanceMonitor.startTimer('screenshot_capture', 'Screenshot')
     const result = await BCPEngine.screenshot(quality)
     timer()
+  // P54: 截图审计（目标 tab 显式化；不落图数据）
+  AuditEventBus.record(AUDIT_INTERNAL_SESSION, tabId, AuditEventType.SCREENSHOT, 'screenshot', result.success ? 'ok' : 'error', 0, 'quality=' + quality, '', '')
 
     if (!result.success) {
       ErrorHandler.handle(new AppError(ErrorCodes.BCP_005, `Screenshot failed: ${result.error}`))

@@ -6,6 +6,7 @@ import { AgentEngine } from './AgentEngine'
 import { SensitiveOperationDetector } from './SensitiveOperationDetector'
 import { AuditLogger } from '../storage/AuditLogger'
 import { McpSessionStore } from './McpSessionStore'
+import { AuditEventBus, AuditEventType } from './AuditEventBus'
 import { redactDeep } from './AuditRedactor'
 
 
@@ -497,7 +498,7 @@ class MCPServerImpl implements McpHttpDelegate {
 
   // ---------- navigate：现有实现保留；schema 由 JsonRpcCore 补齐上游 waitUntil ----------
 
-  private handleNavigate: ToolHandler = async (params, agentId) => {
+  private handleNavigate: ToolHandler = async (params, agentId, sessionId) => {
     const url = params['url'] as string
     if (!url) {
       return this.errorResponse(ErrorCodes.MCP_003, 'Missing url parameter')
@@ -520,6 +521,14 @@ class MCPServerImpl implements McpHttpDelegate {
     }
 
     const result = await BCPEngine.navigate(url)
+    // P54: 导航审计事件（tabId 取 session 首个 ownedTab 或空）
+    let navTab = ''
+    const sess = McpSessionStore.peek(sessionId || '')
+    if (sess && sess.ownedTabIds.length > 0) {
+      navTab = sess.ownedTabIds[0]
+    }
+    AuditEventBus.record(sessionId || '', navTab, AuditEventType.NAVIGATION, 'navigate',
+      result.success ? 'ok' : 'error', 0, url, result.error === null ? '' : `${result.error}`, '')
     const data: MCPResponseData = { url: url, result: result.data === null ? null : `${result.data}` }
     return this.bcpToMcpResponse(result, data)
   }
@@ -925,10 +934,35 @@ class MCPServerImpl implements McpHttpDelegate {
 
   // ---------- screenshot：现有实现保留 ----------
 
-  private handleScreenshot: ToolHandler = async (params, agentId) => {
+  private handleScreenshot: ToolHandler = async (params, agentId, sessionId) => {
     const quality = (params['quality'] as string) || 'medium'
-    const result = await ScreenshotCapture.capture(quality)
+    // P54: 按 session 定向 —— 显式 tabId 参数最高，否则 firstOwnedTab（非全局 activeTab）
+    let shotTab = ((params['tabId'] as string) || '').trim()
+    if (!shotTab && sessionId) {
+      const sess = McpSessionStore.touch(sessionId)
+      if (sess && sess.ownedTabIds.length > 0) {
+        shotTab = sess.ownedTabIds[0]
+      }
+    }
+    if (shotTab) {
+      let wv = TabManager.getWebView(shotTab)
+      if (!wv) {
+        const t0 = Date.now()
+        while (!TabManager.getWebView(shotTab) && Date.now() - t0 < 3000) {
+          await new Promise<void>((res) => setTimeout(res, 100))
+        }
+        wv = TabManager.getWebView(shotTab)
+      }
+      if (wv) {
+        BCPEngine.bindWebView(wv.controller, shotTab)
+      }
+    }
+    const result = await ScreenshotCapture.capture(quality, shotTab)
     const data: MCPResponseData = { quality: quality, result: result.data === null ? null : `${result.data}` }
+    // P54: 截图审计事件（记录目标 tab，不落图数据）
+    AuditEventBus.record(sessionId || '', shotTab, AuditEventType.SCREENSHOT, 'screenshot',
+      result.success ? 'ok' : 'error', 0, 'quality=' + quality, result.error === null ? '' : `${result.error}`,
+      result.success ? '' : 'SHOT_FAIL')
     return this.bcpToMcpResponse(result, data)
   }
 

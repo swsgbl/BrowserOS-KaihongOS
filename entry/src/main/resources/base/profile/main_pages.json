@@ -15,6 +15,7 @@
     "pages/UltrafastWaitlistPage",
     "pages/PasswordsPage",
     "pages/DevToolsPage",
-    "pages/ImportWizardPage"
+    "pages/ImportWizardPage",
+    "pages/AuditPage"
   ]
 }

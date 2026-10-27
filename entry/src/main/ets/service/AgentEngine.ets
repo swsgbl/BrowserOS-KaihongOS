@@ -9,6 +9,7 @@ import { Constants } from '../common/Constants'
 import { ConfigManager } from '../storage/ConfigManager'
 import { LLMClient, LLMChatMessage, LLMToolCall, LLMToolSpec, LLMParamProp, LLMParamEntry, LLMParamsSchema } from './LLMClient'
 import { BCPEngine } from '../protocol/BCPEngine'
+import { AuditEventBus, AuditEventType, AUDIT_INTERNAL_SESSION } from './AuditEventBus'
 import { JSBridgeInjector } from '../protocol/JSBridgeInjector'
 import { SensitiveOperationDetector } from './SensitiveOperationDetector'
 import { BCPResult } from '../common/Types'
@@ -654,8 +655,26 @@ class AgentEngineImpl {
     return Number.isNaN(n) ? dflt : n
   }
 
-  /** 经 BCPEngine 执行单个工具调用；click 前经敏感操作检测 */
+  /** P54: 内部 agent 工具调用统一审计包装（sessionId=internal-agent；tabId=agent 配置 tab） */
   private async executeToolCall(agentId: string, call: LLMToolCall): Promise<BCPResult> {
+    const auditT0 = Date.now()
+    const result = await this.executeToolCallInner(agentId, call)
+    const cfg = this.agents.get(agentId)
+    const tab = cfg ? cfg.tabId : ''
+    let inText = ''
+    try {
+      inText = JSON.stringify({ name: call.function_name, args: JSON.parse(call.function_args) })
+    } catch (e) {
+      inText = call.function_name
+    }
+    AuditEventBus.record(AUDIT_INTERNAL_SESSION, tab, AuditEventType.TOOL_END, call.function_name,
+      result.success ? 'ok' : 'error', Date.now() - auditT0, inText,
+      result.error === null ? '' : `${result.error}`, '')
+    return result
+  }
+
+  /** 经 BCPEngine 执行单个工具调用；click 前经敏感操作检测 */
+  private async executeToolCallInner(agentId: string, call: LLMToolCall): Promise<BCPResult> {
     let args: Record<string, Object> = {}
     try {
       args = JSON.parse(call.function_args) as Record<string, Object>

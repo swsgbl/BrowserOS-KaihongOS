@@ -53,7 +53,8 @@ export struct ThreeDotMenu {
       { icon: $rawfile('ic_history.svg'), label: I18n.t('menuHistory'), action: 'history' },
       { icon: $rawfile('ic_star_outline.svg'), label: I18n.t('menuBookmarks'), action: 'bookmarks' },
       { icon: $rawfile('ic_download.svg'), label: I18n.t('menuDownloads'), action: 'downloads' },
-      { icon: $rawfile('ic_key.svg'), label: I18n.t('menuPasswords'), action: 'passwords' }
+      { icon: $rawfile('ic_key.svg'), label: I18n.t('menuPasswords'), action: 'passwords' },
+      { icon: $rawfile('ic_doc.svg'), label: I18n.t('menuAudit'), action: 'audit' }
     ]
   }
   private group3(): MenuEntry[] {
