@@ -1,4 +1,5 @@
 import { util } from '@kit.ArkTS'
+import { bundleManager } from '@kit.AbilityKit'
 import { redactSensitive } from '../common/Redact'
 import { MCPToolResponse } from '../common/Types'
 import { McpSessionStore } from './McpSessionStore'
@@ -64,10 +65,13 @@ class McpToolsCapability {
 
 class McpCapabilities {
   tools: McpToolsCapability = new McpToolsCapability()
+  resources: Object | null = null   // P52: 2026-07-28 spec shape (declared, not implemented)
+  prompts: Object | null = null     // P52: 2026-07-28 spec shape (declared, not implemented)
 }
 
 class McpServerInfo {
   name: string = ''
+  title: string = ''   // P52: 2026-07-28 human-readable title
   version: string = ''
 }
 
@@ -152,10 +156,16 @@ class McpJsonRpcCoreImpl {
       }
       const session = McpSessionStore.create(clientName)
       const result = new McpInitializeResult()
-      result.protocolVersion = '2024-11-05'
+      // P52: protocol version negotiation — echo 2026-07-28 when requested, else legacy 2024-11-05
+      let requestedVersion = ''
+      if (paramsObj && paramsObj['protocolVersion'] !== undefined && paramsObj['protocolVersion'] !== null) {
+        requestedVersion = `${paramsObj['protocolVersion']}`
+      }
+      result.protocolVersion = requestedVersion === '2026-07-28' ? '2026-07-28' : '2024-11-05'
       result.capabilities = new McpCapabilities()
-      result.serverInfo.name = 'browseros-kaihong'
-      result.serverInfo.version = '1.0.0'
+      result.serverInfo.name = 'browseros_mcp'
+      result.serverInfo.title = 'BrowserOS MCP Server'
+      result.serverInfo.version = await McpJsonRpcCoreImpl.appVersion()
       const sessionId = session.sessionId
       const outcome = this.outcome(rpcId, null, result)
       outcome.sessionId = sessionId
@@ -237,6 +247,16 @@ class McpJsonRpcCoreImpl {
     err.code = code
     err.message = message
     return err
+  }
+
+  /** P52: serverInfo.version from bundleManager (fallback '1.0.0') */
+  static async appVersion(): Promise<string> {
+    try {
+      const info = await bundleManager.getBundleInfoForSelf(bundleManager.BundleFlag.GET_BUNDLE_INFO_DEFAULT)
+      return info.versionName || '1.0.0'
+    } catch (e) {
+      return '1.0.0'
+    }
   }
 
   // ---------- 工具表（名字与 MCPServer ToolType 一一对应） ----------
