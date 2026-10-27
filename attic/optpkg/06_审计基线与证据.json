@@ -1,0 +1,150 @@
+{
+  "audit_date_local": "2026-10-27 Asia/Taipei",
+  "deep_repo": "https://github.com/swsgbl/BrowserOS-KaihongOS",
+  "deep_head": "d98d48da33d1782b3dc24f07c83e58012d13868b",
+  "deep_head_commit_time_utc": "2026-10-26T15:12:17Z",
+  "upstream_repo": "https://github.com/browseros-ai/BrowserOS",
+  "upstream_head": "10caad1d8d575cafe765b8e94e95f51ef0a4a744",
+  "upstream_head_commit_time_utc": "2026-10-26T16:38:43Z",
+  "target_scope": "Primary: BrowserOS neo behavior-equivalence on KaihongOS/OpenHarmony; secondary: BrowserOS main parity must be tracked separately.",
+  "evidence_boundary": "Repository sources and repo-contained evidence read. No independent HAP build, no independently run physical-device E2E in this session.",
+  "key_files": {
+    "deep_BrowserShell": {
+      "path": "entry/src/main/ets/pages/BrowserShell.ets",
+      "blob_sha": "0c867c162112312bf38dcd8a6a97e762a24868b2",
+      "notes": "ArkWeb Web component is real; getOrCreateController and TabManager.registerWebView; current shell is not an old placeholder."
+    },
+    "deep_AgentEngine": {
+      "path": "entry/src/main/ets/service/AgentEngine.ets",
+      "blob_sha": "1a466b8f69642324c50b8dd0a0b90cab9584f5b2",
+      "notes": "15 step agent loop; internal tool specs roughly 9; logs OperationLog with args preview."
+    },
+    "deep_MCPServer": {
+      "path": "entry/src/main/ets/service/MCPServer.ets",
+      "blob_sha": "705fc90b6efe192efdc97ad5ba016d3e7009e288",
+      "notes": "17 registered MCP tools; HTTP+WS start."
+    },
+    "deep_McpJsonRpcCore": {
+      "path": "entry/src/main/ets/service/McpJsonRpcCore.ets",
+      "blob_sha": "a32a3444478a3e60aa3072cec5c606845b311590",
+      "notes": "Protocol version 2024-11-05; session id minted but ownership requires work; upload/pdf unsupported, windows list only."
+    },
+    "deep_ConnectionManager": {
+      "path": "entry/src/main/ets/service/ConnectionManager.ets",
+      "blob_sha": "1b0258c0335380bcd4f129e8f895351d4e47f210",
+      "notes": "checkToolInstalled() returns false; config saved to app sandbox; generated JSON uses /sse path."
+    },
+    "deep_LoginStateManager": {
+      "path": "entry/src/main/ets/service/LoginStateManager.ets",
+      "blob_sha": "8e1e429f7e89d04390bc88ec7b4667a822b5c61b",
+      "notes": "detectChromeDataPath null; readChromeCookies empty; readChromeLocalStorage empty; manual cookie JSON path exists."
+    },
+    "deep_CredentialStore": {
+      "path": "entry/src/main/ets/service/CredentialStore.ets",
+      "blob_sha": "f42a89437c2b42f4fcc7e0d65a0313d9e1836f6c",
+      "notes": "credential array persisted via Preferences JSON; also mirrors each credential to Asset Store; Bitwarden export encrypted:false."
+    },
+    "deep_SessionManager": {
+      "path": "entry/src/main/ets/service/SessionManager.ets",
+      "blob_sha": "f497a06683d4ad0247857f5c412a49412a189430",
+      "notes": "captures screenshots periodically and has basic operation log/record replayer."
+    },
+    "deep_HttpMcpTransport": {
+      "path": "entry/src/main/ets/service/HttpMcpTransport.ets",
+      "blob_sha": "c7e2515c0a5f809dde502eb524f6c01dc99892de",
+      "notes": "minimal HTTP server; POST /mcp; GET returns 405; loopback only."
+    },
+    "deep_WsMcpTransport": {
+      "path": "entry/src/main/ets/service/WsMcpTransport.ets",
+      "blob_sha": "1427bc0399087f1e8b4bc955e2887fa6f2e166e2",
+      "notes": "manual WS upgrade/frame implementation; continuation fragments unsupported by documented implementation."
+    },
+    "upstream_Neo_README": {
+      "path": "README.md",
+      "notes": "Neo is an agent-driven secondary browser with one-click harness setup, parallel agents and replay."
+    },
+    "upstream_BrowserOS_README": {
+      "path": "README.BrowserOS.md",
+      "notes": "Separate product: Chromium fork, built-in agent, Cowork, scheduled tasks, 20+ tools, 40+ integrations, local models, MV2 ad blocking."
+    },
+    "upstream_browser_mcp_registry": {
+      "path": "packages/browseros-agent/packages/browser-mcp/src/tools/registry.ts",
+      "notes": "17 browser tools are registered in current upstream."
+    },
+    "upstream_Neo_replay_docs": {
+      "path": "docs/neo/audit-and-replay.mdx",
+      "notes": "documents page-state replay, rrweb style, per-tab timelines, audit search/filter."
+    },
+    "upstream_Neo_MCP_docs": {
+      "path": "docs/neo/mcp/index.mdx",
+      "notes": "one-click writes browseros-neo into actual AI tool config; lists 7 current harnesses."
+    }
+  },
+  "matrix_count": 99,
+  "status_counts": {
+    "需要固定范围": 1,
+    "部分实现": 31,
+    "文档过期": 2,
+    "未实现": 2,
+    "已实现（平台等价）": 1,
+    "平台限制/非等价": 1,
+    "平台限制/未实现": 2,
+    "缺失/部分实现": 2,
+    "已实现（有代码证据）": 1,
+    "待重新基准/差异未量化": 1,
+    "部分实现/缺完整对标": 1,
+    "部分实现/平台待验证": 1,
+    "未实现/桩代码": 4,
+    "未实现/部分实现": 2,
+    "存在安全风险": 3,
+    "有意差异/无需补齐": 1,
+    "部分实现/能力有限": 1,
+    "已实现（基本版）": 1,
+    "已实现（名称级）": 1,
+    "协议落后": 1,
+    "部分实现/协议语义差距": 1,
+    "部分实现/高优先级": 1,
+    "语义偏差": 1,
+    "未实现（stub/unsupported）": 2,
+    "未实现/平台限制": 1,
+    "需要功能/平台差异验收": 1,
+    "需要安全加固": 1,
+    "代码配置不一致": 1,
+    "配置/拓扑风险": 1,
+    "已实现（应保护）": 1,
+    "部分实现/测试口径需说明": 1,
+    "未实现/设计不完整": 1,
+    "部分实现/语义假阳性风险": 1,
+    "仅目录 UI/功能范围不同": 1,
+    "部分实现/文档待固化": 1,
+    "未实现/需重构": 1,
+    "未实现（当前方案不是等价物）": 1,
+    "未实现/链路缺失": 1,
+    "需要核验/可能竞态": 1,
+    "部分实现/安全差距": 1,
+    "范围外但用户若要求整个仓库则必需": 1,
+    "未实现/依赖外部 MCP": 1,
+    "部分实现/不同实现": 1,
+    "部分实现/待实机验证": 1,
+    "部分实现/待验证": 2,
+    "部分实现/测试缺失": 1,
+    "部分实现/未实现": 1,
+    "需要治理": 1,
+    "需要修订": 1,
+    "部分实现/需统一覆盖": 1,
+    "不属于当前 Neo 本地化目标/未实现": 1,
+    "未建立完整机制": 1,
+    "已实现（基础版）": 3,
+    "已实现（需持续验证）": 1,
+    "已实现（代码/证据）": 1
+  },
+  "priority_counts": {
+    "P0": 12,
+    "P1": 52,
+    "P2": 26,
+    "P1（仅 BrowserOS 主产品范围）": 1,
+    "P1（扩展范围）": 5,
+    "P2（扩展范围）": 2,
+    "P2（只有将来要跟上游完整能力时）": 1
+  }
+}

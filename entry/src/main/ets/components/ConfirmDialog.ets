@@ -61,6 +61,10 @@ export struct ConfirmDialog {
   build(): void {
     if (this.isVisible) {
       Column() {
+        // P51-C: localeVersion anchor (inside root container)
+        if (this.localeVersion < 0) {
+          Text('').fontSize(0)
+        }
         Column() {
           Text(I18n.t('dlgSensitiveTitle'))
             .fontSize(18)

@@ -56,6 +56,8 @@ const PAIRS: string[][] = [
   ['railExpand', '展开'],
   ['railCollapseSide', '收起侧栏'],
   ['railExpandSide', '展开侧栏'],
+  ['tabStripCollapse', '收起标签栏'],
+  ['tabStripExpand', '展开标签栏'],
   ['tabNewTab', '新标签页'],
   ['tabAgent', '代理'],
   ['tabCloseTab', '关闭标签页'],

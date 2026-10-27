@@ -193,6 +193,33 @@ struct BrowserShell {
     }
   }
 
+  /**
+   * P51-A: 地址栏唯一写入口 —— 所有 urlInput 赋值路径必须经此方法。
+   * - about:blank / 空串 → 显示为空（新标签页地址栏零残留）
+   * - 空显示时同步清空建议列表（简报要求#3）
+   * - 附 caretPosition(0) 消 TextInput 旧值回填（简报要求#2）
+   */
+  private setOmniboxText(url: string): void {
+    const display = url === 'about:blank' || url.length === 0 ? '' : url
+    if (display.length === 0) {
+      this.urlInput = ''
+      this.suggestItems = []
+      this.showSuggestions = false
+      // 空显示时显式清 caret，防止 TextInput 内部仍持旧文本
+      try {
+        this.omniController.caretPosition(0)
+      } catch (e) {
+        console.error('[P51] caretPosition clear fail: ' + e)
+      }
+      console.info('[P51] setOmniboxText -> EMPTY (raw=' + url + ')')
+    } else {
+      if (this.urlInput !== display) {
+        this.urlInput = display
+      }
+      console.info('[P51] setOmniboxText -> ' + display)
+    }
+  }
+
   private pal(): Palette {
     return Palette.of(this.darkMode)
   }
@@ -300,6 +327,7 @@ struct BrowserShell {
   aboutToAppear(): void {
     console.info('BrowserShell aboutToAppear start')
     this.initUltrafastPrefs()
+    this.initShellPrefs()
     // P47-B: 密码库初始化
     const p47ctx = this.getUIContext().getHostContext()
     if (p47ctx) {
@@ -415,10 +443,10 @@ struct BrowserShell {
       const activeTab = TabManager.getTab(this.activeTabId)
       if (activeTab) {
         this.showDashboard = activeTab.isDashboard
+        // P51-A: 无守卫——空/about:blank URL 也走收口，彻底清空地址栏（旧 if 守卫在空 URL 时不清空=残留源）
+        this.setOmniboxText(activeTab.currentUrl)
+        this.currentUrl = activeTab.currentUrl
         if (activeTab.currentUrl) {
-          // P48: about:blank 在地址栏显示为空（原生浏览器行为——新标签页地址栏无文字）
-          this.urlInput = activeTab.currentUrl === 'about:blank' ? '' : activeTab.currentUrl
-          this.currentUrl = activeTab.currentUrl
           this.refreshBookmarkState()
         }
       }
@@ -445,7 +473,7 @@ struct BrowserShell {
         this.activeTabId = activeId
         const tab = TabManager.getTab(activeId)
         this.showDashboard = tab ? tab.isDashboard : this.showDashboard
-        this.urlInput = tab && tab.currentUrl && tab.currentUrl !== 'about:blank' ? tab.currentUrl : ''
+        this.setOmniboxText(tab ? tab.currentUrl : '')
       }
     } catch (e) {
       console.error('BrowserShell onTabStatusChange error: ' + e)
@@ -1236,44 +1264,163 @@ struct BrowserShell {
   @State p47ReaderOpen: boolean = false
   @State p47ReaderTitle: string = ''
   @State p47ReaderHtml: string = ''
+  // P51-B: 标签栏折叠/调宽 —— 折叠=24vp 窄条(仅展开钮)；宽度 120-400vp 可拖拽，Preferences 持久化
+  @State tabStripCollapsed: boolean = false
+  @State tabStripWidth: number = 200
+  private shellPrefs: preferences.Preferences | null = null
+  private stripDragStart: number = 200
 
-  /** P28-A: 竖排标签区(左侧,固定宽 200) —— TabStrip vertical + chrome 色背景 */
+  /** P51-B: 标签栏状态持久化装载 */
+  private initShellPrefs(): void {
+    const ctx = this.getUIContext().getHostContext()
+    if (!ctx) {
+      return
+    }
+    preferences.getPreferences(ctx, 'browser_shell_store').then((p: preferences.Preferences) => {
+      this.shellPrefs = p
+      const w = p.getSync('tab_strip_width', 200) as number
+      this.tabStripWidth = Math.min(400, Math.max(120, w))
+      this.tabStripCollapsed = p.getSync('tab_strip_collapsed', false) as boolean
+      console.info('[P51] strip state loaded: w=' + this.tabStripWidth + ' collapsed=' + this.tabStripCollapsed)
+    }).catch((e: Object) => {
+      console.error('[P51] shell prefs init fail: ' + e)
+    })
+  }
+
+  /** P51-B: 标签栏状态持久化写入 */
+  private persistStripState(): void {
+    const p = this.shellPrefs
+    if (p !== null) {
+      p.put('tab_strip_width', this.tabStripWidth).then(() => {
+        return p.put('tab_strip_collapsed', this.tabStripCollapsed)
+      }).then(() => {
+        return p.flush()
+      }).catch((e: Object) => {
+        console.error('[P51] strip state persist fail: ' + e)
+      })
+      console.info('[P51] strip state persisted: w=' + this.tabStripWidth + ' collapsed=' + this.tabStripCollapsed)
+    }
+  }
+
+  /** P28-A: 竖排标签区(左侧) —— P51-B: 支持折叠(24vp 窄条)与拖拽调宽(120-400vp,Preferences 持久化) */
   @Builder
   VerticalTabArea(): void {
-    Column() {
-      TabStrip({
-        tabs: this.tabs,
-        activeTabId: this.activeTabId,
-        vertical: true,
-        onTabSwitch: (tabId: string) => {
-          TabManager.switchTab(tabId)
-          this.activeTabId = tabId
-          const tab = TabManager.getTab(tabId)
-          this.showDashboard = tab ? tab.isDashboard : false
-          this.currentUrl = tab && tab.currentUrl ? tab.currentUrl : ''
-          this.urlInput = this.currentUrl === 'about:blank' ? '' : this.currentUrl
-          this.refreshBookmarkState()
-          console.info('BrowserShell tab switched: ' + tabId)
-        },
-        onTabClose: (tabId: string) => {
-          this.closeTabById(tabId)
-        },
-        onTabCreate: () => {
-          this.createNewTab()
-        },
-        onSearchToggle: () => {
-          this.showTabSearch = !this.showTabSearch
-        },
-        tabCtxEntries: (tabId: string): CtxEntry[] => {
-          return this.buildTabCtxEntries(tabId)
+    if (this.tabStripCollapsed) {
+      // P51-B 折叠态: 24vp 窄条,仅垂直居中的展开按钮
+      Column() {
+        Button({ type: ButtonType.Normal }) {
+          Image($rawfile('ic_forward.svg'))
+            .width(16).height(16)
+            .fillColor(this.pal().text2)
+            .draggable(false)
         }
-      })
+        .width(22)
+        .height(30)
+        .borderRadius(6)
+        .backgroundColor(Color.Transparent)
+        .accessibilityText(I18n.t('tabStripExpand'))
+        .onClick(() => {
+          this.tabStripCollapsed = false
+          this.persistStripState()
+          console.info('[P51] strip expanded from rail')
+        })
+      }
+      .width(24)
+      .height('100%')
+      .justifyContent(FlexAlign.Center)
+      .backgroundColor(this.chromeBg())
+      .border({ width: { right: 1 }, color: this.pal().border })
+    } else {
+      Row() {
+        Column() {
+          // P51-B: 顶部折叠钮(Chromium vertical tabs 行为——点击收起标签栏)
+          Row() {
+            Button({ type: ButtonType.Normal }) {
+              Image($rawfile('ic_back.svg'))
+                .width(14).height(14)
+                .fillColor(this.pal().text2)
+                .draggable(false)
+            }
+            .width(24)
+            .height(24)
+            .borderRadius(6)
+            .backgroundColor(Color.Transparent)
+            .accessibilityText(I18n.t('tabStripCollapse'))
+            .onClick(() => {
+              this.tabStripCollapsed = true
+              this.persistStripState()
+              console.info('[P51] strip collapsed')
+            })
+          }
+          .width('100%')
+          .height(28)
+          .justifyContent(FlexAlign.End)
+          .padding({ right: 4 })
+
+          TabStrip({
+            tabs: this.tabs,
+            activeTabId: this.activeTabId,
+            vertical: true,
+            onTabSwitch: (tabId: string) => {
+              TabManager.switchTab(tabId)
+              this.activeTabId = tabId
+              const tab = TabManager.getTab(tabId)
+              this.showDashboard = tab ? tab.isDashboard : false
+              this.currentUrl = tab && tab.currentUrl ? tab.currentUrl : ''
+              this.setOmniboxText(this.currentUrl)
+              this.refreshBookmarkState()
+              console.info('BrowserShell tab switched: ' + tabId)
+            },
+            onTabClose: (tabId: string) => {
+              this.closeTabById(tabId)
+            },
+            onTabCreate: () => {
+              this.createNewTab()
+            },
+            onSearchToggle: () => {
+              this.showTabSearch = !this.showTabSearch
+            },
+            tabCtxEntries: (tabId: string): CtxEntry[] => {
+              return this.buildTabCtxEntries(tabId)
+            }
+          })
+        }
+        .layoutWeight(1)
+        .height('100%')
+        .padding({ top: 0, left: 4, right: 0, bottom: 0 })
+        .backgroundColor(this.chromeBg())
+
+        // P51-B: 右缘 4vp 拖拽手柄 —— 拖动调宽(clamp 120-400),松手持久化
+        Column()
+          .width(4)
+          .height('100%')
+          .backgroundColor(this.pal().border)
+          .gesture(
+            PanGesture({ fingers: 1, distance: 0 })
+              .onActionStart((e: GestureEvent) => {
+                this.stripDragStart = this.tabStripWidth
+              })
+              .onActionUpdate((e: GestureEvent) => {
+                let w = this.stripDragStart + e.offsetX
+                if (w < 120) {
+                  w = 120
+                }
+                if (w > 400) {
+                  w = 400
+                }
+                this.tabStripWidth = w
+              })
+              .onActionEnd(() => {
+                this.persistStripState()
+                console.info('[P51] strip resize end: w=' + this.tabStripWidth)
+              })
+          )
+      }
+      .width(this.tabStripWidth)
+      .height('100%')
+      .backgroundColor(this.chromeBg())
+      .border({ width: { right: 1 }, color: this.pal().border })
     }
-    .width(200)
-    .height('100%')
-    .padding({ top: 8, left: 4, right: 0, bottom: 0 })
-    .backgroundColor(this.chromeBg())
-    .border({ width: { right: 1 }, color: this.pal().border })
   }
 
   /** P28-A: chrome 区背景(标签条/工具栏统一) —— 浅 #DDE5E7 近似原生 / 深 #202124 */
@@ -2047,15 +2194,17 @@ struct BrowserShell {
                 console.error('BrowserShell getTitle error: ' + e)
               }
             }
-            // 历史记录 + Tab 元数据更新
-            HistoryManager.recordNavigation(tabId, url, title)
+            // 历史记录 + Tab 元数据更新（P51-A: about:blank 不入历史——新标签页的 Web 初始装载会触发 onPageEnd(about:blank)，旧代码把它记进历史污染建议列表）
+            if (url !== 'about:blank') {
+              HistoryManager.recordNavigation(tabId, url, title)
+            }
             TabManager.updateTabUrl(tabId, url)
             if (title) {
               TabManager.updateTabTitle(tabId, title)
             }
             if (tabId === this.activeTabId) {
               this.currentUrl = url
-              this.urlInput = url
+              this.setOmniboxText(url)
               this.refreshBookmarkState()
             }
             // 敏感导航检测（agentId 暂用 tabId 充当：手动导航场景）
@@ -2469,7 +2618,7 @@ struct BrowserShell {
     console.info('BrowserShell navigate to: ' + url)
     this.navError = ''
     this.currentUrl = url
-    this.urlInput = url
+    this.setOmniboxText(url)
     this.showDashboard = false
     const tab = TabManager.getTab(this.activeTabId)
     if (tab) {
@@ -2890,7 +3039,7 @@ struct BrowserShell {
     this.tabs = TabManager.getAllTabs()
     this.activeTabId = newTab.tabId
     this.showDashboard = true
-    this.urlInput = ''
+    this.setOmniboxText('')
     this.currentUrl = ''
     // P35-C: 每次进新标签页刷新 agent-command 数据
     this.loadDashProviders()

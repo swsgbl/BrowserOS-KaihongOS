@@ -1231,3 +1231,13 @@ python tools/smoke_reg.py         # 30 秒健康检查
 - **限流测试方法论**：urllib 每请求新建 TCP→窗口逐连接重置不触发；必须 http.client 单连接 keep-alive 压测
 - **smoke 环境注意**：设备当前被并发 AIOS 任务抢前台（HMH Desktop）→smoke 暂 7/9；最近完整验证=P43a 后 9/9；并发任务释放后可复跑
 - git 3910b5d+d5239c1 双远端已推；evidence/p43/（tools_list/mcp_client_e2e_out/rate_hilog）
+
+## P51 汇报（2026-10-27）
+
+**A 地址栏残留根除（第 3 次报告,已根治）**：根因=onPageEnd 回调无过滤写入 urlInput——Web 组件初始挂载必触发 onPageEnd(about:blank)。修复=setOmniboxText() 唯一写入口(过滤 about:blank/空+清建议+caretPosition(0)),收口 6 处程序化赋值,recordNavigation 过滤 about:blank。验证=冷启×3 dump text="",hilog 每次 onPageEnd(about:blank) 后必有 EMPTY 拦截日志,新建标签清空实锤。
+
+**B 标签栏折叠/调宽**：折叠=24vp 窄条仅展开钮;展开态顶部折叠钮+右缘 4vp PanGesture 手柄,宽 120-400 clamp,Preferences 持久化。验证=折叠 24px/展开 200/拖宽 300/重启恢复 300,全 dump+hilog 双证。
+
+**C 侧栏 i18n**：根因×2=子组件缺 localeVersion 渲染锚(9 个组件批量补)+@Builder 值参数缓存(RailIcon 传翻译结果被缓存,改传 key 内部求值——P48 回归同类第 2 例)。附带修复收起态图标无 onClick(触屏不可导航)。验证=en→Home/Scheduled/Connect/Settings/Help/Collapse,zh→主页/定时/连接/设置/帮助/收起,即时双向切换。
+
+**遗留**：SettingsPage 同会话切语言不即时刷新(同类 @Builder 缓存,P52 候选)。证据=.verify/p51/(EVIDENCE.md+4 jpeg+30 dump+hilog)。

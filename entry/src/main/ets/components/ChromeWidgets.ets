@@ -83,6 +83,10 @@ export struct ThreeDotMenu {
         if (this.themeVersion < 0) {
           Text('').fontSize(0)
         }
+        // P51-C: localeVersion anchor
+        if (this.localeVersion < 0) {
+          Text('').fontSize(0)
+        }
 
       // 全屏透明遮罩：点击任意处关闭
       Column()
@@ -186,6 +190,10 @@ export struct OmniboxSuggestions {
     Stack({ alignContent: Alignment.TopStart }) {
         // P44: themeVersion 渲染依赖锚（@Watch 递增触发全树重渲染——暗/浅切换时 @Builder 不重调的修复）
         if (this.themeVersion < 0) {
+          Text('').fontSize(0)
+        }
+        // P51-C: localeVersion anchor
+        if (this.localeVersion < 0) {
           Text('').fontSize(0)
         }
 
@@ -326,6 +334,10 @@ export struct BookmarkBubble {
     Stack({ alignContent: Alignment.TopEnd }) {
         // P44: themeVersion 渲染依赖锚（@Watch 递增触发全树重渲染——暗/浅切换时 @Builder 不重调的修复）
         if (this.themeVersion < 0) {
+          Text('').fontSize(0)
+        }
+        // P51-C: localeVersion anchor
+        if (this.localeVersion < 0) {
           Text('').fontSize(0)
         }
 

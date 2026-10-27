@@ -74,6 +74,10 @@ export struct ChangelogOverlay {
   build(): void {
     if (this.visible) {
       Stack() {
+        // P51-C: localeVersion anchor (inside root container — build allows single root only)
+        if (this.localeVersion < 0) {
+          Text('').fontSize(0)
+        }
         // 遮罩(点击不关闭——须点「知道了」,防误触跳过)
         Column()
           .width('100%')

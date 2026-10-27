@@ -269,6 +269,10 @@ export struct NeoDashboardPanel {
         if (this.themeVersion < 0) {
           Text('').fontSize(0)
         }
+        // P51-C: localeVersion anchor
+        if (this.localeVersion < 0) {
+          Text('').fontSize(0)
+        }
 
       if (this.showMcpBoard) {
         this.McpBoard()

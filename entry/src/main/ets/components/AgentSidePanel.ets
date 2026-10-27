@@ -690,6 +690,10 @@ export struct AgentSidePanel {
         if (this.themeVersion < 0) {
           Text('').fontSize(0)
         }
+        // P51-C: localeVersion anchor
+        if (this.localeVersion < 0) {
+          Text('').fontSize(0)
+        }
 
       // 顶部标题栏（对齐上游 ChatHeader：左 Agent 标题+视图切换，右 模型下拉+⚙+关闭）
       Row() {

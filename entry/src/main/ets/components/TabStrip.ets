@@ -69,6 +69,10 @@ export struct TabStrip {
         if (this.themeVersion < 0) {
           Text('').fontSize(0)
         }
+        // P51-C: localeVersion anchor (re-render on locale flip)
+        if (this.localeVersion < 0) {
+          Text('').fontSize(0)
+        }
 
       this.VerticalTabs()
     } else {
@@ -336,6 +340,10 @@ export struct TabSearchPanel {
     Stack({ alignContent: Alignment.TopEnd }) {
         // P44: themeVersion 渲染依赖锚（@Watch 递增触发全树重渲染——暗/浅切换时 @Builder 不重调的修复）
         if (this.themeVersion < 0) {
+          Text('').fontSize(0)
+        }
+        // P51-C: localeVersion anchor (re-render on locale flip)
+        if (this.localeVersion < 0) {
           Text('').fontSize(0)
         }
 
