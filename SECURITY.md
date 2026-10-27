@@ -4,8 +4,8 @@
 
 | 版本 | 支持状态 |
 |---|---|
-| main（P40+） | ✅ 安全修复 |
-| 历史 tag | ❌ 请升级到 main |
+| main（P56+）/ v0.1.0-beta | ✅ 安全修复 |
+| 历史 tag（含 v0.1.0-alpha） | ❌ 请升级到 main |
 
 ## 报告漏洞
 
@@ -22,7 +22,11 @@
 ## 本项目的安全设计（供审计参考）
 
 - **密钥存储**：LLM API Key 经 `@ohos.security.asset`（Asset Store Kit，硬件级安全存储）加密保管；`config.json` 落盘前一律脱敏（字段置空），磁盘上不存在明文密钥；首次启动自动完成明文→asset 的幂等迁移。
-- **设备端 MCP 服务**：HTTP（:9222）与 WebSocket（:8765）通道均要求 token 鉴权；token 每次应用冷启动轮换；敏感操作（支付/删除/设置类导航）弹窗人工确认（可配置）。
+- **凭据加密（P47→P51）**：密码管理器与登录态导入的凭据由 `CredentialStore` 统一管理，**Asset Store 为主真值源**（P51 完成加密迁移）；不落明文盘。
+- **MCP Session 隔离（P51 McpSessionStore）**：每个 MCP 连接独立 session——session-id 校验（未知/失效会话拒绝）+ tab ownership（会话只可操作自己开的 tab）+ 并发隔离（多 harness/客户端同时接入互不串台）；配合 McpRateLimiter 滑动窗口限流（默认 30req/10s/连接，超限 HTTP 429 / WS -32000）。
+- **审计脱敏（P51 AuditRedactor）**：内部 agent 与外部 MCP 工具调用的审计输出经统一脱敏（token/key/敏感 URL 参数遮蔽）后才落盘/展示（AuditPage）。
+- **连接状态真实化（P52）**：harness 连接状态不再假报 Connected——`connect()` 仅表示配置就绪，`testConnection()` 执行真实 MCP initialize 握手（HTTP 200 + serverInfo browseros_mcp）后才标记 connected 并持久化；用户可随时在 Connect 对话框复测。
+- **设备端 MCP 服务**：HTTP（:9222）与 WebSocket（:8765）通道均要求 token 鉴权；token 每次应用冷启动轮换（CSPRNG）；仅监听本机回环（loopback only，不暴露 0.0.0.0）；敏感操作（支付/删除/设置类导航）弹窗人工确认（可配置）。
 - **网络安全**：遵循平台禁令，应用内出网仅走 https（明文 http 会被系统层瞬断）；MCP 本机回环除外。
 - **无数据收集**：零遥测、零上传；历史/书签/会话仅存于应用沙盒。
 - **已知边界**（如实披露）：设备侧签名当前为本地调试证书；正式分发必须替换官方发布证书并走应用市场审核流程。

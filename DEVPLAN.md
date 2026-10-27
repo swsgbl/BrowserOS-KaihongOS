@@ -1241,3 +1241,43 @@ python tools/smoke_reg.py         # 30 秒健康检查
 **C 侧栏 i18n**：根因×2=子组件缺 localeVersion 渲染锚(9 个组件批量补)+@Builder 值参数缓存(RailIcon 传翻译结果被缓存,改传 key 内部求值——P48 回归同类第 2 例)。附带修复收起态图标无 onClick(触屏不可导航)。验证=en→Home/Scheduled/Connect/Settings/Help/Collapse,zh→主页/定时/连接/设置/帮助/收起,即时双向切换。
 
 **遗留**：SettingsPage 同会话切语言不即时刷新(同类 @Builder 缓存,P52 候选)。证据=.verify/p51/(EVIDENCE.md+4 jpeg+30 dump+hilog)。
+
+---
+
+## P44-P50 补录（2026-10-25 ~ 10-26；此段为 P56 台账同步时按 git 史补记，详细证据见各阶段 commit 与 evidence/）
+
+- **P44（67ec05d）**：全局深/浅主题实时渲染修复——@StorageProp @Watch + themeVersion 锚应用到全部 18 页/组件（此前仅 BrowserShell）；38 项证据含 3 页深浅并排；smoke 9/9 + e2e 14/15 + static 25/25。
+- **P45（88ca47b/629b8d0）**：标签关闭根因=TabStrip.tabs 缺 @Prop 装饰器（父更新不触发子重渲染）；+ 按钮移至末标签下方（上游对齐）；omnibox 聚焦全选；空标签清理；搜索引擎常驻入口。hilog 实证 closeTab 全链（total=2→1→0）。
+- **P46（dff2453/2617a38）**：侧栏展开/折叠开关（上游 w-14/w-64 对齐）；新标签默认标题 BrowserOS；聊天输入搜索图标；4 枚 Android 格式 SVG 转标准 SVG（ic_search/arrow_down/arrow_up/find——Android vector XML 在 ArkUI rawfile 不渲染）。
+- **P47（8f4508e/ef6d0af）**：密码管理器（CredentialStore+PasswordsPage+autofill/save bars）+ DevTools Console 页 + 无痕标签（Web incognitoMode）+ 缩放控制 + onInterceptRequest 网络日志；65/65 全量审计过。
+- **P48（3c94642）**：i18n 框架落地——zh/en UI 切换、473 词条语言包、350+ 硬编码字符串迁移 I18n.t()。
+- **P49（6c4a601/51a69db）**：i18n 收官 510/510 词条 + 6 harness 全互操作 41/41（claude-code/codex/cursor-ide/deepseek-generic/windsurf/vscode-generic × initialize+tools/list+call 链）+ MCP 安装板 5/5 + smoke 9/9。
+- **P50（78fd838）**：设置入口可达性——⋮ 菜单 Settings 升 group1 pos2（原 group3 row9 被 constraintSize 420 非滚动卡裁剪=用户找不到的根因）；设置导航外观优先；语言切换升外观顶部卡（pill 按钮）。
+
+## P52：MCP 协议协商 + 统一 endpoint + Harness Adapter + 真实连接状态（2026-10-27；git 5578692 + b7a12ef）
+
+- **协议**：initialize echo 请求的 protocolVersion（2026-07-28）或回退 2024-11-05；capabilities 声明 resources/prompts；serverInfo name=browseros_mcp+title；版本号取自 bundleManager（1.1.0）。
+- **统一 endpoint**：McpEndpointConfig 单一真值源（`/mcp` 路径 + hdc fport 命令生成）——MCP 面板/Connect 对话框/harness 配置全走同源。
+- **HarnessAdapters**：claude-code/codex/cursor/generic 四种 per-CLI 配置形状（B2 配置 JSON 契约）。
+- **连接状态真实化**：ConnectionManager.connect()=配置就绪（不再假 Connected）；testConnection()=真实 initialize 握手（200+serverInfo browseros_mcp）；harness_connected_<name> 持久化 harness_store prefs；NeoDashboardPanel Connect 对话框带 fport 命令块+Test 按钮实时判定。
+- **harness_compat_test.py 40/40**（设备两轮）：P51 session-id 适配 + per-harness 配置契约 + tabs{new} 先于 navigate + 收紧断言。
+
+## P53：登录态导入向导 + Profile 隔离 + Upload/PDF capability（2026-10-27；git cf4099e）
+
+- ImportWizardPage 分步导入向导；导入 Profile 与运行时隔离；upload/pdf 工具按平台能力如实上报与执行（能力探测闭环，替代此前一刀切 unsupported）。
+
+## P54：统一 AuditEventBus + tab 定向截图 + AuditPage（2026-10-27；git 69dd789）
+
+- AuditEventBus：内部 agent 循环与外部 MCP 工具调用同源汇聚审计事件；screenshot 支持指定 tab（非仅活动页）；AuditPage 时间线/来源/脱敏详情查看。
+
+## P55：Stable SnapshotRef + tab_groups + windows/wait/evaluate 语义（2026-10-27；git 5c1a13f）
+
+- 跨工具调用稳定的 SnapshotRef（navigate→snapshot→read/diff 引用一致）；tab_groups 创建/列取/清理（上游 da5f95e 语义）；windows 真实窗口/tab 维度；wait 条件等待（可超时）；evaluate 页内求值——MCP 17 工具语义级对齐收官。
+
+## P56：工程化发版——台账同步 + release gate（2026-10-28；本阶段）
+
+- **文档全量同步 P56 状态**：README（17 工具/API14+23 双环境/i18n 510 条/密码管理器/DevTools/无痕缩放阅读/Audit/Harness Adapter）、CHANGELOG（P41-P56 条目）、DEVPLAN（本节+P44-P50 补录）、docs/ARCHITECTURE.md（P51-P55 新模块）、SECURITY.md（session 隔离/AuditRedactor/凭据加密/真实连接状态）。
+- **Release 打包**：最新源码构建（hvigor assembleHap → build_api23_hap.py STORED 重打包 → VM 端 hap-sign-tool 签名）→ `release/BrowserOS-KaihongOS-v0.1.0-beta-signed.hap`（3,836,406 B）；INSTALL.md + SHA256SUMS.txt 更新；装机实测（bm install -r + aa start OK）。
+- **Release gate**：static 37/37（22 py_compile + 15 固定项）+ smoke 9/9（含图标像素门禁 24.2%）+ CI 覆盖 static_checks + tag `v0.1.0-beta` 双远端推送。
+- 外部优化方案（P42-P56）至此全收官。
+
