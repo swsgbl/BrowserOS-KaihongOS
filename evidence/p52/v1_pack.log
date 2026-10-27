@@ -1,0 +1,14 @@
+gen_final_ids: parsed 43 ic_* entries from V2 index
+  ic_add 0x1000018
+  ic_close 0x1000012
+  ic_zap 0x1000038
+wrote D:\v1tmp\final_ids
+V1 index: 4760 B head: b'Restool 5.0.1.011'
+old index head: b'RestoolV2 6.1.0.0' 5304 B
+OK   resources/base/media/app_icon.png
+OK   resources/base/media/app_icon_96.png
+OK   resources/base/media/app_icon_192.png
+OK   resources/base/media/app_icon_216.png
+OUT: D:\BrowserOS - KaihongOS\entry-p8-v1-unsigned.hap 1042628 B
+packed index head: b'Restool 5.0.1.011'
+app.icon: $media:app_icon label: $string:app_name minAPI: 14 bundle: com.browseros.kaihong

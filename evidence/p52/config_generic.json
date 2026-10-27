@@ -1,0 +1,5 @@
+{
+  "mcpServers": {
+    "browseros-kaihongos": {"type":"http","url":"http://127.0.0.1:9222/mcp?token=l0Map3HFAIynqKrqj4cFmENNiyJFNXzn"}
+  }
+}

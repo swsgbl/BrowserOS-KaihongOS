@@ -1,0 +1,12 @@
+> file send D:\BrowserOS - KaihongOS\entry-p8-v1-unsigned.hap /data/local/tmp/p52_entry.hap 
+   FileTransfer finish, Size:1042628, File count = 1, time:8ms rate:130328.50kB/s
+> shell /data/local/home/.local/bin/hap-sign-tool sign-app -keyAlias "OpenHarmony Application Release" 
+   10-27 18:23:07.855 INFO  - Start sign-app
+10-27 18:23:07.912 INFO  - sign-app success
+> shell bm install -p /data/local/tmp/p52_entry_signed.hap -r 
+   install bundle successfully.
+> shell aa force-stop com.browseros.kaihong 
+   force stop process successfully.
+> shell aa start -a EntryAbility -b com.browseros.kaihong 
+   start ability successfully.
+INSTALL+LAUNCH OK

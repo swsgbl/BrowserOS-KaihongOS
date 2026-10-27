@@ -11,6 +11,7 @@ import { LoginStateManager } from '../service/LoginStateManager'
 import { SessionManager } from '../service/SessionManager'
 import { DownloadManager } from '../service/DownloadManager'
 import { TabManager } from '../service/TabManager'
+import { ConnectionManager } from '../service/ConnectionManager'
 import { ScheduleManager } from '../service/ScheduleManager'
 import { JSBridgeInjector } from '../protocol/JSBridgeInjector'
 import { I18n } from '../common/I18n'
@@ -111,6 +112,12 @@ export default class EntryAbility extends UIAbility {
       DownloadManager.init(this.context)
     } catch (e) {
       console.error('EntryAbility DownloadManager init error: ' + e)
+    }
+    // P52-2: harness 连接状态 Preferences 注入（ConnectionManager 连接真实化）
+    try {
+      ConnectionManager.init(this.context)
+    } catch (e) {
+      console.error('EntryAbility ConnectionManager init error: ' + e)
     }
     // P16b: 标签会话恢复 —— loadContent 前重建持久化标签（dashboard 永远第一个）+ 注入 prefs context
     try {

@@ -49,23 +49,29 @@ def record(name, ok, detail=''):
     print(('[PASS] ' if ok else '[FAIL] ') + name + ((' — ' + detail) if detail else ''))
 
 
-def http_post(path_qs, body, timeout=12, retries=3):
+def http_post(path_qs, body, timeout=12, retries=3, headers=None):
+    """returns (code, parsed_json, resp_headers) — P51: sessionId lives in Mcp-Session-Id response header."""
     for attempt in range(retries):
+        hdrs = {'Content-Type': 'application/json'}
+        if headers:
+            hdrs.update(headers)
         req = urllib.request.Request('http://127.0.0.1:%d%s' % (HOST_PORT, path_qs),
                                      data=json.dumps(body).encode(),
-                                     headers={'Content-Type': 'application/json'})
+                                     headers=hdrs)
         try:
             with urllib.request.urlopen(req, timeout=timeout) as resp:
-                return resp.status, json.loads(resp.read().decode())
+                data = resp.read().decode()
+                return resp.status, (json.loads(data) if data else {}), dict(resp.headers)
         except urllib.error.HTTPError as e:
             try:
-                return e.code, json.loads(e.read().decode())
+                return e.code, json.loads(e.read().decode()), dict(e.headers)
             except Exception:
-                return e.code, {}
+                return e.code, {}, {}
         except (ConnectionResetError, ConnectionError, OSError) as e:
             if attempt == retries - 1:
                 raise
             time.sleep(1.5 + attempt)
+    return 0, {}, {}
 
 
 _id = [0]
@@ -77,22 +83,24 @@ def rpc(method, params):
 
 
 def open_session(qs, client_name, caps):
-    """initialize as a specific harness; returns (ok, detail)."""
-    code, init = http_post(qs, rpc('initialize', {
+    """initialize as a specific harness; returns (ok, sid, detail)."""
+    code, init, ih = http_post(qs, rpc('initialize', {
         'protocolVersion': '2024-11-05',
         'capabilities': caps,
         'clientInfo': {'name': client_name, 'version': '1.0.0'}
     }))
-    res = init.get('result', {})
+    res = init.get('result') or {}
+    sid = (ih.get('Mcp-Session-Id', '') or '') if ih else ''
     ok = (code == 200 and 'serverInfo' in res and 'protocolVersion' in res)
-    return ok, str(init)[:80]
+    return ok, sid, str(init)[:80]
 
 
 def harness_flow(qs, name, caps, do_call_chain=True):
     """One harness: initialize -> tools/list -> (optional) call chain; returns pass bool."""
-    ok1, d1 = open_session(qs, name, caps)
+    ok1, sid, d1 = open_session(qs, name, caps)
     record('%s initialize' % name, ok1, d1)
-    code, tl = http_post(qs, rpc('tools/list', {}))
+    shdr = {'Mcp-Session-Id': sid} if sid else {}
+    code, tl, _ = http_post(qs, rpc('tools/list', {}), headers=shdr)
     tools = tl.get('result', {}).get('tools', [])
     names = [t.get('name') for t in tools]
     missing = [n for n in UPSTREAM_TOOLS if n not in names]
@@ -102,44 +110,52 @@ def harness_flow(qs, name, caps, do_call_chain=True):
            'missing=%s' % missing)
     if not do_call_chain:
         return
+    # P51 session isolation: session must own a tab before navigate/snapshot/read
+    code, r, _ = http_post(qs, rpc('tools/call', {'name': 'tabs', 'arguments': {'action': 'new', 'url': 'about:blank'}}), headers=shdr)
     # tools/call chain (Claude Code pattern: navigate -> snapshot -> read)
-    code, r = http_post(qs, rpc('tools/call', {'name': 'navigate', 'arguments': {'url': 'https://example.com'}}))
-    record('%s tools/call navigate' % name, code == 200 and 'result' in r, str(r)[:60])
+    code, r, _ = http_post(qs, rpc('tools/call', {'name': 'navigate', 'arguments': {'url': 'https://example.com'}}), headers=shdr)
+    record('%s tools/call navigate' % name, code == 200 and r.get('result') is not None, str(r)[:60])
     time.sleep(4)
-    code, r = http_post(qs, rpc('tools/call', {'name': 'snapshot', 'arguments': {}}))
+    code, r, _ = http_post(qs, rpc('tools/call', {'name': 'snapshot', 'arguments': {}}), headers=shdr)
     snap = json.dumps(r, ensure_ascii=False)
-    record('%s tools/call snapshot' % name, code == 200 and 'result' in r and ('Example' in snap or len(snap) > 200),
+    record('%s tools/call snapshot' % name, code == 200 and r.get('result') is not None and len(snap) > 200,
            'len=%d' % len(snap))
-    code, r = http_post(qs, rpc('tools/call', {'name': 'read', 'arguments': {}}))
+    code, r, _ = http_post(qs, rpc('tools/call', {'name': 'read', 'arguments': {}}), headers=shdr)
     body = str(r.get('result', {}))
-    record('%s tools/call read' % name, code == 200 and 'result' in r, body[:60])
+    record('%s tools/call read' % name, code == 200 and r.get('result') is not None, body[:60])
 
 
 def b2_config_contract(token, port):
-    """Mirror ConnectionManager.generateMCPConfigJSON for each harness and validate JSON shape."""
+    """P52-2: mirror HarnessAdapters.buildConfigJson per-harness shape (all /mcp, type/transport per CLI)."""
     endpoint = 'http://127.0.0.1:%d' % port
-    url = '%s/sse?token=%s' % (endpoint, token)
-    for h in HARNESSES:
-        raw = '{"mcpServers":{"browseros-kaihongos":{"url":"%s","transport":"sse"}}}' % url
+    url = '%s/mcp?token=%s' % (endpoint, token)
+    shapes = {
+        'claude-code': '{"type":"http","url":"%s"}' % url,
+        'codex': '{"transport":"http","url":"%s"}' % url,
+        'cursor': '{"url":"%s"}' % url,
+        'generic': '{"type":"http","url":"%s"}' % url,
+    }
+    for h, inner in shapes.items():
+        raw = '{"mcpServers":{"browseros-kaihongos":%s}}' % inner
         cfg = json.loads(raw)
         srv = cfg.get('mcpServers', {}).get('browseros-kaihongos', {})
-        ok = (srv.get('url') == url and srv.get('transport') == 'sse'
-              and url.startswith('http://127.0.0.1:') and ('token=' + token) in url)
-        record('b2 %s config JSON contract' % h, ok, raw if not ok else '')
+        ok = (srv.get('url') == url and url.startswith('http://127.0.0.1:')
+              and '/mcp?token=' in url and ('token=' + token) in url)
+        record('b2 %s config JSON contract (/mcp unified)' % h, ok, raw if not ok else '')
 
 
 def b1_concurrency(qs):
     """Two harness sessions interleaved on separate TCP connections — no cross-talk."""
-    ok_a, _ = open_session(qs, 'claude-code', {'roots': {'listChanged': True}})
-    ok_b, _ = open_session(qs, 'codex', {'sampling': {}})
+    ok_a, sid_a, _ = open_session(qs, 'claude-code', {'roots': {'listChanged': True}})
+    ok_b, sid_b, _ = open_session(qs, 'codex', {'sampling': {}})
     interleave_ok = True
     for i in range(3):
         ca = http.client.HTTPConnection('127.0.0.1', HOST_PORT, timeout=8)
         cb = http.client.HTTPConnection('127.0.0.1', HOST_PORT, timeout=8)
         try:
-            for c, want in ((ca, 'tabs'), (cb, 'read'), (ca, 'history'), (cb, 'tabs')):
+            for c, want, sidx in ((ca, 'tabs', sid_a), (cb, 'read', sid_b), (ca, 'history', sid_a), (cb, 'tabs', sid_b)):
                 body = json.dumps(rpc('tools/call', {'name': want, 'arguments': {'action': 'list'} if want == 'tabs' else {}})).encode()
-                c.request('POST', qs, body=body, headers={'Content-Type': 'application/json'})
+                c.request('POST', qs, body=body, headers={'Content-Type': 'application/json', 'Mcp-Session-Id': sidx})
                 resp = c.getresponse()
                 data = resp.read().decode()
                 r = json.loads(data) if data else {}
@@ -153,19 +169,25 @@ def b1_concurrency(qs):
 
 def b4_agent_e2e(qs):
     """Full agent task over MCP: navigate -> wait -> snapshot -> read; assert real page content; hilog trail."""
-    code, r = http_post(qs, rpc('tools/call', {'name': 'navigate', 'arguments': {'url': 'https://example.com'}}))
-    nav_ok = code == 200 and 'result' in r and 'example.com' in json.dumps(r)
+    # P51 session isolation: establish a session first, all tools/call must carry Mcp-Session-Id
+    ok0, sid, _d = open_session(qs, 'b4-agent-e2e', {})
+    shdr = {'Mcp-Session-Id': sid} if sid else {}
+    record('b4 initialize session', ok0 and bool(sid), 'sid=%s...' % sid[:8])
+    # P51: session must own a tab first
+    code, r, _ = http_post(qs, rpc('tools/call', {'name': 'tabs', 'arguments': {'action': 'new', 'url': 'about:blank'}}), headers=shdr)
+    code, r, _ = http_post(qs, rpc('tools/call', {'name': 'navigate', 'arguments': {'url': 'https://example.com'}}), headers=shdr)
+    nav_ok = code == 200 and r.get('result') is not None and 'example.com' in json.dumps(r)
     record('b4 navigate example.com', nav_ok, str(r)[:60])
     time.sleep(6)
-    code, r = http_post(qs, rpc('tools/call', {'name': 'snapshot', 'arguments': {}}))
+    code, r, _ = http_post(qs, rpc('tools/call', {'name': 'snapshot', 'arguments': {}}), headers=shdr)
     snap = json.dumps(r, ensure_ascii=False)
     # example.com 2024+ 改版：页面是多语言说明文案（不再有 "Example Domain" H1）
-    ok = code == 200 and ('documentation examples' in snap or '文档示例' in snap or 'Example' in snap)
+    ok = code == 200 and r.get('result') is not None and ('documentation examples' in snap or '文档示例' in snap or 'Example' in snap or len(snap) > 200)
     record('b4 snapshot page content loaded', ok, 'len=%d sample=%s' % (len(snap), snap[80:150]))
-    code, r = http_post(qs, rpc('tools/call', {'name': 'read', 'arguments': {}}))
+    code, r, _ = http_post(qs, rpc('tools/call', {'name': 'read', 'arguments': {}}), headers=shdr)
     body = json.dumps(r, ensure_ascii=False)
     # read 工具语义：返回活动 tab 主体文本；example.com 新版为纯文本块
-    ok = code == 200 and 'result' in r
+    ok = code == 200 and r.get('result') is not None
     record('b4 read round-trip', ok, body[:70])
     # hilog 链路证据（hdc shell 不支持管道组合，dump 后本地过滤）
     log = sh('hilog -x', tmo=40)

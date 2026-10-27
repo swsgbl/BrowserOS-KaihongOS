@@ -1,0 +1,4 @@
+# run on PC (harness CLI side):
+hdc fport tcp:9222 tcp:9222 -t 192.168.161.137:10178
+# verify:
+# curl -X POST "http://127.0.0.1:9222/mcp?token=l0Map3HFAIynqKrqj4cFmENNiyJFNXzn" -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2026-07-28","capabilities":{},"clientInfo":{"name":"curl","version":"1.0"}}}'

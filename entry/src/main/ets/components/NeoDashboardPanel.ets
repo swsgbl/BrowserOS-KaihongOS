@@ -8,6 +8,9 @@ import { ConfigManager } from '../storage/ConfigManager'
 import { AppConfigUpdate } from '../model/AppConfig'
 import { TabManager } from '../service/TabManager'
 import { MCPServer } from '../service/MCPServer'
+import { McpEndpointConfig } from '../service/McpEndpointConfig'
+import { HarnessAdapters } from '../service/HarnessAdapters'
+import { ConnectTestResult } from '../service/ConnectionManager'
 import { SessionManager } from '../service/SessionManager'
 import { SessionRecord } from '../model/SessionRecord'
 import { pasteboard } from '@kit.BasicServicesKit'
@@ -108,6 +111,12 @@ export struct NeoDashboardPanel {
   @State showMcpBoard: boolean = false
   @State connectHarness: string = ''
   @State connectJson: string = ''
+  // P52-2: Connect dialog state machine (config ready -> copy -> fport -> test -> connected)
+  @State connectFportCmd: string = ''
+  @State connectTesting: boolean = false
+  @State connectTested: boolean = false
+  @State connectOk: boolean = false
+  @State connectTestMsg: string = ''
   @State copiedHint: string = ''
   @State heroCopiedHint: string = ''
   @State sessionsRefreshTick: number = 0
@@ -1125,6 +1134,14 @@ export struct NeoDashboardPanel {
                       .onClick(() => {
                         this.connectHarness = h.name
                         this.connectJson = this.buildHarnessJson(h.name)
+                        // P52-2: fport 隧道命令 + 连接记录（config-ready 状态,真实握手走 Test）
+                        const key = h.name === 'Claude Code' ? 'claude-code' : (h.name === 'Codex' ? 'codex' : (h.name === 'Cursor' ? 'cursor' : 'generic'))
+                        ConnectionManager.connect(key)
+                        this.connectFportCmd = McpEndpointConfig.fromServer().fportCommand('192.168.161.137:10178')
+                        this.connectTesting = false
+                        this.connectTested = false
+                        this.connectOk = false
+                        this.connectTestMsg = ''
                         this.copyToClipboard(this.connectJson, 1)
                         console.info('McpBoard connect harness=' + h.name + ' (config copied)')
                       })
@@ -1181,6 +1198,46 @@ export struct NeoDashboardPanel {
           .constraintSize({ maxHeight: 180 })
           .margin({ top: 10 })
 
+          // P52-2: fport 隧道命令（宿主 PC 执行）— 点击复制
+          Text(this.connectFportCmd)
+            .fontSize(11)
+            .fontFamily('monospace')
+            .fontColor('#81C995')
+            .backgroundColor('#1F1F22')
+            .borderRadius(8)
+            .padding(10)
+            .width('100%')
+            .margin({ top: 8 })
+            .onClick(() => {
+              this.copyToClipboard(this.connectFportCmd, 1)
+              console.info('McpBoard fport cmd copied')
+            })
+
+          // P52-2: 真实握手 Test — POST initialize 到 127.0.0.1:{port}/mcp?token=
+          Row() {
+            if (this.connectTesting) {
+              LoadingProgress().width(16).height(16).margin({ right: 6 })
+              Text('Testing...')
+                .fontSize(12)
+                .fontColor('#FFFFFF')
+            } else if (this.connectTested) {
+              Text(this.connectOk ? 'Connected ✓ ' : '✗ ')
+                .fontSize(12)
+                .fontWeight(FontWeight.Bold)
+                .fontColor(this.connectOk ? '#81C995' : '#F28B82')
+              Text(this.connectTestMsg)
+                .fontSize(11)
+                .fontColor('#BDC1C6')
+                .maxLines(2)
+                .textOverflow({ overflow: TextOverflow.Ellipsis })
+                .layoutWeight(1)
+            } else {
+              Text('')
+            }
+          }
+          .width('100%')
+          .margin({ top: 8 })
+
           Row() {
             Button(this.copiedHint.length > 0 ? this.copiedHint : I18n.t('ndCopyJson'))
               .fontSize(12)
@@ -1190,6 +1247,30 @@ export struct NeoDashboardPanel {
               .borderRadius(8)
               .onClick(() => {
                 this.copyToClipboard(this.connectJson, 1)
+              })
+
+            // P52-2: Test Connection — 真实 initialize 握手
+            Button('Test')
+              .fontSize(12)
+              .height(32)
+              .backgroundColor(this.connectOk ? '#22A06B' : '#3C4043')
+              .fontColor('#FFFFFF')
+              .borderRadius(8)
+              .margin({ left: 10 })
+              .enabled(!this.connectTesting)
+              .onClick(async () => {
+                this.connectTesting = true
+                this.connectTested = false
+                this.connectTestMsg = ''
+                const key = this.connectHarness === 'Claude Code' ? 'claude-code'
+                  : (this.connectHarness === 'Codex' ? 'codex' : (this.connectHarness === 'Cursor' ? 'cursor' : 'generic'))
+                const r: ConnectTestResult = await ConnectionManager.testConnection(key)
+                this.connectTesting = false
+                this.connectTested = true
+                this.connectOk = r.ok
+                this.connectTestMsg = r.message
+                this.connectedTools = ConnectionManager.getConnectedTools().map(t => t.displayName)
+                console.info('McpBoard test ' + key + ' -> ' + (r.ok ? 'OK' : 'FAIL') + ' ' + r.message)
               })
 
             Button(I18n.t('close'))

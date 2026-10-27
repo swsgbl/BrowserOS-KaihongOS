@@ -1,0 +1,4 @@
+=== P52 Phase A: protocol negotiation verification 2026-10-27 === 
+serverInfo: name=browseros_mcp title=BrowserOS MCP Server version=1.1.0 (bundleManager) 
+capabilities: tools.listChanged=false resources=null prompts=null 
+install: entry-p8-v1-unsigned.hap signed on VM bm install -r OK, token 2BRdNAZ7LEB14ssLE5voEbVo4BMraYDz via fport 9222
