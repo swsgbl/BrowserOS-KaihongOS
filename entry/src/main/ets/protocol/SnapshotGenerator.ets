@@ -15,15 +15,35 @@ class SnapshotGeneratorImpl {
     const timer = PerformanceMonitor.startTimer('snapshot_generate', 'Snapshot')
     // P12b: 直接产出紧凑 Markdown（页面侧已剔除噪音+可见性过滤+30000 截断），
     // 不再走 JSON 树 parse/compress（旧路径 data 为空时 compress(null.tag) 会崩）
-    const result = await BCPEngine.snapshotMarkdown()
+    const mdResult = await BCPEngine.snapshotMarkdown()
+    if (!mdResult.success) {
+      timer()
+      return mdResult
+    }
+    // P55: refs JSON string collected inline (empty on failure; snapshot still usable)
+    const md = `${mdResult.data}`
+    let refsJson = ''
+    try {
+      const refsResult = await BCPEngine.collectRefs()
+      if (refsResult.success && refsResult.data) {
+        refsJson = `${refsResult.data}`
+      }
+    } catch (e) {
+      console.warn('[SnapshotGenerator] collectRefs failed: ' + e)
+    }
+    const combined: Record<string, Object> = { 'content': md, 'refs': refsJson }
+    let combinedStr = md
+    try {
+      combinedStr = JSON.stringify(combined)
+    } catch (e) {
+    }
     timer()
-    if (result.success && result.data) {
-      PerformanceMonitor.record('snapshot_original_size', result.data.length, 'Snapshot')
-      PerformanceMonitor.record('snapshot_compressed_size', result.data.length, 'Snapshot')
+    if (combinedStr.length > 0) {
+      PerformanceMonitor.record('snapshot_original_size', combinedStr.length, 'Snapshot')
+      PerformanceMonitor.record('snapshot_compressed_size', combinedStr.length, 'Snapshot')
       PerformanceMonitor.record('snapshot_compression_ratio', 1.0, 'Snapshot')
     }
-    return result
-  }
+    return { success: true, data: combinedStr, error: null }}
 
   private compress(node: SnapshotNode): SnapshotNode {
     const compressed: SnapshotNode = {

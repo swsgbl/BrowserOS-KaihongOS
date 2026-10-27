@@ -212,6 +212,26 @@ class BCPEngineImpl {
     return { success: true, data: dataStr, error: null }
   }
 
+  /** P55: Stable SnapshotRef —— 页面注入 data-bcp-ref 并收集 refs JSON（bridge 不在则先注入一次） */
+  async collectRefs(): Promise<BCPResult> {
+    const bridgeReady = await this.ensureBridge()
+    if (!bridgeReady) {
+      return { success: false, data: null, error: ErrorCodes.getMessage(ErrorCodes.BCP_001) }
+    }
+    let result = await this.executeJS(`window.__bcp_refs ? window.__bcp_refs() : 'undefined'`)
+    let dataStr = `${result.data}`
+    if (!result.success || !dataStr || dataStr === 'undefined' || dataStr.startsWith('"undefined"')) {
+      return { success: false, data: null, error: 'refs collection returned empty' }
+    }
+    if (dataStr.startsWith('"') && dataStr.endsWith('"')) {
+      try {
+        dataStr = JSON.parse(dataStr) as string
+      } catch (e) {
+      }
+    }
+    return { success: true, data: dataStr, error: null }
+  }
+
   async getText(): Promise<BCPResult> {
     const timer = PerformanceMonitor.startTimer('bcp_get_text', 'BCP')
     const bridgeReady = await this.ensureBridge()

@@ -279,6 +279,8 @@ struct BrowserShell {
   /** P5: 覆盖态标记 —— NeoDashboardPage/Onboarding 覆盖时 BrowserShell 不可见 */
   private covering: boolean = false
   private attachedTabs: Set<string> = new Set()
+  /** P55: tabs whose URL was already loaded into their Web component (avoid double-load) */
+  private urlLoadedTabs: Set<string> = new Set()
   /** P19c: 站点权限请求弹层 —— origin + 资源列表 + 待决 request */
   @State permOrigin: string = ''
   @State permKinds: string = ''
@@ -2139,12 +2141,28 @@ struct BrowserShell {
             console.info('BrowserShell onControllerAttached tabId=' + tabId)
             this.attachedTabs.add(tabId)
             this.registerController(tabId)
+            // P55: MCP-created tabs carry a URL in TabManager but nothing dispatched it.
+            // On attach, if the tab already has a real URL and we have not loaded one yet, load it.
+            if (!this.urlLoadedTabs.has(tabId)) {
+              const mTab = TabManager.getTab(tabId)
+              const mUrl = mTab ? mTab.currentUrl : ''
+              if (mUrl.length > 0 && mUrl !== 'about:blank') {
+                this.urlLoadedTabs.add(tabId)
+                try {
+                  this.getControllerFor(tabId)?.loadUrl(mUrl)
+                  console.info('BrowserShell P55 attach-load: ' + mUrl + ' tab=' + tabId)
+                } catch (e) {
+                  console.error('BrowserShell P55 attach-load error: ' + e)
+                }
+              }
+            }
             if (this.pendingUrl && this.pendingUrlTab === tabId) {
               const url = this.pendingUrl
               this.pendingUrl = ''
               this.pendingUrlTab = ''
               try {
                 this.getControllerFor(tabId)?.loadUrl(url)
+              this.urlLoadedTabs.add(tabId)
                 console.info('BrowserShell pendingUrl loaded after attach: ' + url)
               } catch (e) {
                 console.error('BrowserShell pendingUrl load error: ' + e)
@@ -2156,6 +2174,7 @@ struct BrowserShell {
               this.restoreUrlMap.delete(tabId)
               try {
                 this.getControllerFor(tabId)?.loadUrl(rUrl)
+                this.urlLoadedTabs.add(tabId)
                 console.info('BrowserShell restoreUrl loaded after attach: ' + rUrl + ' tab=' + tabId)
               } catch (e) {
                 console.error('BrowserShell restoreUrl load error: ' + e)

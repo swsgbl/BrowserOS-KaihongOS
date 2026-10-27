@@ -21,6 +21,7 @@ import { McpHttpDelegate } from './McpJsonRpcCore'
 import { WsMcpTransport } from './WsMcpTransport'
 import { StorageManager } from '../storage/StorageManager'
 import { TabManager } from './TabManager'
+import { TabGroupManager } from './TabGroupManager'
 import { HistoryManager } from './HistoryManager'
 import { DownloadManager, DownloadItem } from './DownloadManager'
 import { TabInfo } from '../model/TabInfo'
@@ -105,6 +106,13 @@ class McpGrepMatch {
 class McpWindowLine {
   windowId: string = ''
   tabs: number = 0
+}
+
+/** [P55] windows list 详情（含完整 tab 行） */
+class McpWindowDetail {
+  windowId: string = ''
+  tabs: McpTabLine[] = []
+  tabCount: number = 0
 }
 
 /** [P43] diff 输出行 */
@@ -397,6 +405,8 @@ class MCPServerImpl implements McpHttpDelegate {
       if (sessionId) {
         McpSessionStore.releaseTab(sessionId, tabId)
       }
+      // P55: tab removed from any named group on close
+      TabGroupManager.cleanupTab(tabId)
       const rec13: Record<string, Object> = { 'tabId': tabId, 'closed': true }
     return this.okResponse(rec13)
     }
@@ -415,54 +425,102 @@ class MCPServerImpl implements McpHttpDelegate {
     return this.errorResponse(ErrorCodes.MCP_003, `tabs: unsupported action ${action}`)
   }
 
-  // ---------- [P43] tab_groups：最小组语义（按 agentId 归组；action: list/ungroup） ----------
+  // ---------- [P55] tab_groups: named groups (create/join/leave/list/ungroup) via TabGroupManager ----------
 
   private handleTabGroups: ToolHandler = async (params, agentId) => {
     const action = params['action'] as string || 'list'
     if (action === 'list') {
-      const rec15: Record<string, Object> = { 'groups': this.collectTabGroups(), 'count': this.collectTabGroups().length }
-    return this.okResponse(rec15)
+      const groups = TabGroupManager.list()
+      const lines: McpGroupLine[] = []
+      for (const g of groups) {
+        const line = new McpGroupLine()
+        line.group = g.name
+        line.tabIds = g.tabIds.slice()
+        lines.push(line)
+      }
+      const recGl: Record<string, Object> = { 'groups': lines, 'count': lines.length }
+    return this.okResponse(recGl)
+    }
+    if (action === 'create') {
+      const name = params['name'] as string
+      if (!name) {
+        return this.errorResponse(ErrorCodes.MCP_003, 'tab_groups create: name is required')
+      }
+      const g = TabGroupManager.create(name)
+      if (!g) {
+        return this.errorResponse(ErrorCodes.MCP_003, 'tab_groups create: invalid name')
+      }
+      const recGc: Record<string, Object> = { 'groupId': g.groupId, 'name': g.name, 'tabIds': g.tabIds.length }
+    return this.okResponse(recGc)
+    }
+    if (action === 'join') {
+      const group = (params['group'] as string) || (params['name'] as string)
+      const tabIdsRaw = params['tabIds']
+      const tabId = params['tabId'] as string
+      const ids: string[] = []
+      if (tabIdsRaw !== undefined && tabIdsRaw !== null) {
+        const arr = tabIdsRaw as Object[]
+        if (Array.isArray(arr)) {
+          for (const x of arr) { ids.push(`${x}`) }
+        }
+      }
+      if (tabId) {
+        ids.push(tabId)
+      }
+      if (!group || ids.length === 0) {
+        return this.errorResponse(ErrorCodes.MCP_003, 'tab_groups join: group and tabIds (or tabId) are required')
+      }
+      const g = TabGroupManager.findByName(group)
+      if (!g) {
+        return this.errorResponse(ErrorCodes.MCP_003, `tab_groups join: no such group ${group}`)
+      }
+      let joined = 0
+      const failed: string[] = []
+      for (const id of ids) {
+        if (TabGroupManager.join(g.groupId, id)) {
+          joined++
+        } else {
+          failed.push(id)
+        }
+      }
+      const recGj: Record<string, Object> = { 'group': group, 'joined': joined, 'failed': failed }
+    return this.okResponse(recGj)
+    }
+    if (action === 'leave') {
+      const group = (params['group'] as string) || (params['name'] as string)
+      const tabId = params['tabId'] as string
+      if (!group || !tabId) {
+        return this.errorResponse(ErrorCodes.MCP_003, 'tab_groups leave: group and tabId are required')
+      }
+      const g = TabGroupManager.findByName(group)
+      if (!g) {
+        return this.errorResponse(ErrorCodes.MCP_003, `tab_groups leave: no such group ${group}`)
+      }
+      const ok = TabGroupManager.leave(g.groupId, tabId)
+      if (!ok) {
+        return this.errorResponse(ErrorCodes.MCP_003, `tab_groups leave: tab ${tabId} not in group ${group}`)
+      }
+      const recGlv: Record<string, Object> = { 'group': group, 'tabId': tabId, 'left': true }
+    return this.okResponse(recGlv)
     }
     if (action === 'ungroup') {
-      const group = params['group'] as string
+      const group = (params['group'] as string) || (params['name'] as string)
       if (!group) {
         return this.errorResponse(ErrorCodes.MCP_003, 'tab_groups ungroup: group is required')
       }
-      const hit = this.collectTabGroups().find(g => g.group === group)
-      if (!hit) {
+      const g = TabGroupManager.findByName(group)
+      if (!g) {
         return this.errorResponse(ErrorCodes.MCP_003, `tab_groups ungroup: no such group ${group}`)
       }
-      let closed = 0
-      for (const tid of hit.tabIds) {
-        if (TabManager.closeTab(tid)) {
-          closed++
-        }
+      const kept = g.tabIds.slice()
+      const ok = TabGroupManager.ungroup(g.groupId)
+      if (!ok) {
+        return this.errorResponse(ErrorCodes.MCP_003, `tab_groups ungroup: failed for ${group}`)
       }
-      const rec16: Record<string, Object> = { 'group': group, 'closedTabs': closed }
-    return this.okResponse(rec16)
+      const recGu: Record<string, Object> = { 'group': group, 'ungrouped': true, 'keptTabs': kept.length }
+    return this.okResponse(recGu)
     }
     return this.errorResponse(ErrorCodes.MCP_003, `tab_groups: unsupported action ${action}`)
-  }
-
-  private collectTabGroups(): McpGroupLine[] {
-    const map: Map<string, string[]> = new Map()
-    for (const t of TabManager.getAllTabs()) {
-      const key = t.agentId !== '' ? t.agentId : 'default'
-      let arr = map.get(key)
-      if (!arr) {
-        arr = []
-        map.set(key, arr)
-      }
-      arr.push(t.tabId)
-    }
-    const out: McpGroupLine[] = []
-    map.forEach((tabIds, group) => {
-      const line = new McpGroupLine()
-      line.group = group
-      line.tabIds = tabIds
-      out.push(line)
-    })
-    return out
   }
 
   // ---------- [P43] history：HistoryManager/BCP 直通（action: back/forward/list；旧 back/forward 工具收编为别名） ----------
@@ -537,8 +595,31 @@ class MCPServerImpl implements McpHttpDelegate {
 
   private handleSnapshot: ToolHandler = async (params, agentId) => {
     const result = await SnapshotGenerator.generate()
-    const data: MCPResponseData = { result: result.data === null ? null : `${result.data}` }
-    return this.bcpToMcpResponse(result, data)
+    if (!result.success) {
+      const dataFail: MCPResponseData = { result: result.data === null ? null : `${result.data}` }
+      return this.bcpToMcpResponse(result, dataFail)
+    }
+    // P55: data is {content, refs} JSON; refs string needs second parse into array
+    let content = ''
+    let refs: Object[] = []
+    try {
+      const parsed = JSON.parse(`${result.data}`) as Record<string, Object>
+      content = `${parsed['content'] || ''}`
+      const refsRaw = `${parsed['refs'] || ''}`
+      if (refsRaw.length > 0) {
+        const arr = JSON.parse(refsRaw) as Record<string, Object>[]
+        if (Array.isArray(arr)) {
+          refs = arr
+        }
+      }
+    } catch (e) {
+      content = `${result.data}`
+    }
+    const recSnap: Record<string, Object> = { 'content': content, 'refs': refs, 'refCount': refs.length }
+    const snapResp: MCPToolResponse = {
+      status: 'success', data: recSnap, error: null, requestId: this.generateRequestId()
+    }
+    return snapResp
   }
 
   // ---------- [P43] diff：两段文本行级 diff（LCS；baseline/current 直传，简化自上游快照 id 对） ----------
@@ -625,6 +706,13 @@ class MCPServerImpl implements McpHttpDelegate {
       return this.errorResponse(ErrorCodes.MCP_003, 'act: kind is required')
     }
     const ref = (params['ref'] as string) || (params['selector'] as string)
+    // P55: Stable SnapshotRef - e<N> refs from snapshot resolve to [data-bcp-ref] CSS selector
+    let sel = ''
+    if (ref && /^e\d+$/.test(ref)) {
+      sel = `[data-bcp-ref="${ref}"]`
+    } else {
+      sel = ref
+    }
     const text = params['text'] as string
     const value = params['value'] as string
     const key = params['key'] as string
@@ -640,7 +728,7 @@ class MCPServerImpl implements McpHttpDelegate {
             return this.errorResponse(ErrorCodes.AGT_003, 'Operation rejected by user')
           }
         }
-        const result = await BCPEngine.click(ref)
+        const result = await BCPEngine.click(sel)
         const rec3: MCPResponseData = { result: kind }
     return this.bcpToMcpResponse(result, rec3)
       }
@@ -664,7 +752,7 @@ class MCPServerImpl implements McpHttpDelegate {
             return this.errorResponse(ErrorCodes.AGT_003, 'Operation rejected by user')
           }
         }
-        const result = await BCPEngine.type(ref, text)
+        const result = await BCPEngine.type(sel, text)
         const rec4: MCPResponseData = { result: kind }
     return this.bcpToMcpResponse(result, rec4)
       }
@@ -680,7 +768,7 @@ class MCPServerImpl implements McpHttpDelegate {
       if (ref && value !== undefined) {
         const clear = params['clear'] === true
         return await this.evalDom(agentId, kind,
-          `H.q(${JSON.stringify(ref)},'fill',${JSON.stringify(value)},${clear})`)
+          `H.q(${JSON.stringify(sel)},'fill',${JSON.stringify(value)},${clear})`)
       }
       return this.errorResponse(ErrorCodes.MCP_003, 'act fill: ref and value are required')
     }
@@ -697,7 +785,7 @@ class MCPServerImpl implements McpHttpDelegate {
         if (!ref) {
           return this.errorResponse(ErrorCodes.MCP_003, 'act hover: ref is required')
         }
-        return await this.evalDom(agentId, kind, `H.q(${JSON.stringify(ref)},'hover')`)
+        return await this.evalDom(agentId, kind, `H.q(${JSON.stringify(sel)},'hover')`)
       }
       if (x === undefined || y === undefined) {
         return this.errorResponse(ErrorCodes.MCP_003, 'act hover_at: x and y are required')
@@ -709,21 +797,21 @@ class MCPServerImpl implements McpHttpDelegate {
       if (!ref) {
         return this.errorResponse(ErrorCodes.MCP_003, 'act focus: ref is required')
       }
-      return await this.evalDom(agentId, kind, `H.q(${JSON.stringify(ref)},'focus')`)
+      return await this.evalDom(agentId, kind, `H.q(${JSON.stringify(sel)},'focus')`)
     }
 
     if (kind === 'check' || kind === 'uncheck') {
       if (!ref) {
         return this.errorResponse(ErrorCodes.MCP_003, `act ${kind}: ref is required`)
       }
-      return await this.evalDom(agentId, kind, `H.q(${JSON.stringify(ref)},'check',${kind === 'check'})`)
+      return await this.evalDom(agentId, kind, `H.q(${JSON.stringify(sel)},'check',${kind === 'check'})`)
     }
 
     if (kind === 'select') {
       if (!ref || value === undefined) {
         return this.errorResponse(ErrorCodes.MCP_003, 'act select: ref and value are required')
       }
-      return await this.evalDom(agentId, kind, `H.q(${JSON.stringify(ref)},'select',${JSON.stringify(value)})`)
+      return await this.evalDom(agentId, kind, `H.q(${JSON.stringify(sel)},'select',${JSON.stringify(value)})`)
     }
 
     if (kind === 'scroll') {
@@ -732,7 +820,7 @@ class MCPServerImpl implements McpHttpDelegate {
       // 无 ref：整页滚（换算 notches→像素 100/格）；有 ref：先滚元素入视口再整页滚
       let preScroll = ''
       if (ref) {
-        preScroll = `var el=document.querySelector(${JSON.stringify(ref)});if(el){el.scrollIntoView({block:'center'})}else{throw new Error('no match for selector')};`
+        preScroll = `var el=document.querySelector(${JSON.stringify(sel)});if(el){el.scrollIntoView({block:'center'})}else{throw new Error('no match for selector')};`
       }
       const js = `(function(){${preScroll}window.scrollBy({left:${direction === 'left' ? '-' : direction === 'right' ? '' : '0'}${amount * 100},top:${direction === 'up' ? '-' : direction === 'down' ? '' : '0'}${amount * 100},behavior:'instant'});return {ok:true,scrollX:window.scrollX,scrollY:window.scrollY}})()`
       const result = await BCPEngine.evaluate(js)
@@ -746,7 +834,7 @@ class MCPServerImpl implements McpHttpDelegate {
         return this.errorResponse(ErrorCodes.MCP_003, 'act drag: ref and targetRef are required')
       }
       return await this.evalDom(agentId, kind,
-        `H.drag(${JSON.stringify(ref)},${JSON.stringify(targetRef)})`)
+        `H.drag(${JSON.stringify(sel)},${JSON.stringify(targetRef)})`)
     }
 
     if (kind === 'drag_at') {
@@ -999,34 +1087,83 @@ class MCPServerImpl implements McpHttpDelegate {
     }
   }
 
-  // ---------- [P43] windows：单窗口形态（list 返回 main 窗口+tab 数；focus/new/close 返回 unsupported 标注） ----------
+  // ---------- [P55] windows: single-window build (list with full tabs; focus ok; new/close unsupported) ----------
 
   private handleWindows: ToolHandler = async (params, agentId) => {
     const action = params['action'] as string || 'list'
     if (action === 'list') {
-      const line = new McpWindowLine()
-      line.windowId = 'main'
-      line.tabs = TabManager.getTabCount()
-      const rec26: Record<string, Object> = { 'windows': [line] }
-    return this.okResponse(rec26)
+      const tabs = TabManager.getAllTabs()
+      const activeId = TabManager.getActiveTabId()
+      const tabLines: McpTabLine[] = []
+      for (const t2 of tabs) {
+        const line = new McpTabLine()
+        line.tabId = t2.tabId
+        line.url = t2.currentUrl
+        line.title = t2.title
+        line.active = t2.tabId === activeId
+        tabLines.push(line)
+      }
+      const winDetail = new McpWindowDetail()
+      winDetail.windowId = 'main'
+      winDetail.tabs = tabLines
+      winDetail.tabCount = tabLines.length
+      const winArr: McpWindowDetail[] = [winDetail]
+      const recWin: Record<string, Object> = { 'windows': winArr }
+    return this.okResponse(recWin)
     }
-    const rec27: Record<string, Object> = { 'error': 'unsupported on single-window build', 'supported': false, 'action': action }
-    return this.okResponse(rec27)
+    if (action === 'focus') {
+      const recWf: Record<string, Object> = { 'success': true, 'note': 'single window mode' }
+    return this.okResponse(recWf)
+    }
+    if (action === 'new' || action === 'close') {
+      return this.errorResponse(ErrorCodes.MCP_003, `windows ${action}: unsupported on single-window platform`)
+    }
+    return this.errorResponse(ErrorCodes.MCP_003, `windows: unsupported action ${action}`)
   }
 
-  // ---------- [P43] evaluate：runJavaScript 表达式求值（P12 管线复用） ----------
+  // ---------- [P55] evaluate: hardened (10s timeout, 64KB truncation, navigation ban) ----------
+
+  private static readonly EVAL_TIMEOUT_MS: number = 10000
+  private static readonly EVAL_MAX_RESULT: number = 65536
 
   private handleEvaluate: ToolHandler = async (params, agentId) => {
     const expression = params['expression'] as string
     if (!expression) {
       return this.errorResponse(ErrorCodes.MCP_003, 'evaluate: expression is required')
     }
-    const result = await BCPEngine.evaluate(expression)
-    const rec9: Record<string, Object> = { 'expression': expression, 'result': result.data === null ? '' : JSON.stringify(result.data) }
-    return this.bcpToMcpResponse(result, rec9)
+    // P55: ban navigation via location assignment (use navigate tool instead)
+    if (/(?:window\.)?location\s*(?:\.href\s*=[^=]|\.assign|\.replace\s*\()/.test(expression)) {
+      return this.errorResponse(ErrorCodes.MCP_003, 'evaluate: navigation via window.location is banned; use the navigate tool')
+    }
+    // P55: 10s timeout via Promise.race
+    let evalPromise = BCPEngine.evaluate(expression)
+    let timeoutHit = false
+    const timeoutPromise = new Promise<BCPResult>((resolve) => {
+      setTimeout(() => {
+        timeoutHit = true
+        resolve({ success: false, data: null, error: 'evaluate timeout after 10s' })
+      }, MCPServerImpl.EVAL_TIMEOUT_MS)
+    })
+    const result = await Promise.race([evalPromise, timeoutPromise])
+    if (timeoutHit) {
+      return this.errorResponse(ErrorCodes.MCP_003, 'evaluate: timed out after 10s')
+    }
+    if (!result.success) {
+      return this.bcpToMcpResponse(result, {})
+    }
+    // P55: 64KB result cap with truncation marker
+    let resultStr = result.data === null ? '' : `${result.data}`
+    let truncated = false
+    if (resultStr.length > MCPServerImpl.EVAL_MAX_RESULT) {
+      resultStr = resultStr.substring(0, MCPServerImpl.EVAL_MAX_RESULT)
+      truncated = true
+    }
+    const recEv: Record<string, Object> = { 'expression': expression, 'result': resultStr, 'truncated': truncated }
+    const evResp: MCPToolResponse = {
+      status: 'success', data: recEv, error: null, requestId: this.generateRequestId()
+    }
+    return evResp
   }
-
-  // ---------- [P43] run：顺序执行一组 act/navigate 步骤的宏（最小可用） ----------
 
   private handleRun: ToolHandler = async (params, agentId) => {
     const stepsRaw = params['steps']

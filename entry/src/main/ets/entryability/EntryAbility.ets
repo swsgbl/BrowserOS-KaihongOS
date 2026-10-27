@@ -11,6 +11,7 @@ import { LoginStateManager } from '../service/LoginStateManager'
 import { SessionManager } from '../service/SessionManager'
 import { DownloadManager } from '../service/DownloadManager'
 import { TabManager } from '../service/TabManager'
+import { TabGroupManager } from '../service/TabGroupManager'
 import { ConnectionManager } from '../service/ConnectionManager'
 import { ScheduleManager } from '../service/ScheduleManager'
 import { JSBridgeInjector } from '../protocol/JSBridgeInjector'
@@ -122,6 +123,8 @@ export default class EntryAbility extends UIAbility {
     // P16b: 标签会话恢复 —— loadContent 前重建持久化标签（dashboard 永远第一个）+ 注入 prefs context
     try {
       TabManager.setContext(this.context)
+      // P55: named tab groups persistence context
+      TabGroupManager.setContext(this.context)
       const restoredCount = TabManager.restoreTabs()
       console.info('EntryAbility tabs restored: ' + restoredCount)
     } catch (e) {

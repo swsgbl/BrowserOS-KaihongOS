@@ -51,6 +51,11 @@ class TabManagerImpl {
       tab.title = 'BrowserOS'
     }
 
+        // P55 fix: tab must enter the registry before TAB_STATUS_CHANGE emits,
+    // otherwise UI ForEach re-render + switchTab see 'Tab not found' and the Web
+    // component never renders -> MCP tabs.new -> navigate/snapshot all fail
+    this.tabs.set(tabId, tab)
+
     AuditEventBus.record(AUDIT_INTERNAL_SESSION, tabId, AuditEventType.TAB_CREATED, '', 'ok', 0, isDashboard ? 'dashboard' : 'normal', '', '')
     EventBus.emit(EventBusEvents.TAB_STATUS_CHANGE, tab.toJSON())
     this.schedulePersist()

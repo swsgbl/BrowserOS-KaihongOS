@@ -158,6 +158,43 @@ const BCP_BRIDGE_SCRIPT = `
     }
   };
 
+  // P55: Stable SnapshotRef —— 给页面可交互元素(a/button/input/select/textarea/[contenteditable])
+  // 分配 data-bcp-ref="e<N>" 属性并返回 refs JSON。每次调用全量重分配（先清旧属性），
+  // 页面导航后文档重建、函数随 bridge 重注入，ref 计数天然归零（旧 ref 自动失效）。
+  window.__bcp_refs = function() {
+    try {
+      document.querySelectorAll('[data-bcp-ref]').forEach(function(n) { n.removeAttribute('data-bcp-ref'); });
+      const sel = 'a,button,input,select,textarea,[contenteditable="true"],[contenteditable=""]';
+      const els = document.querySelectorAll(sel);
+      const refs = [];
+      let i = 0;
+      els.forEach(function(el) {
+        const cs = window.getComputedStyle(el);
+        if (cs.display === 'none' || cs.visibility === 'hidden' || cs.pointerEvents === 'none') return;
+        const r = el.getBoundingClientRect();
+        if (r.width === 0 && r.height === 0) return;
+        i++;
+        const ref = 'e' + i;
+        el.setAttribute('data-bcp-ref', ref);
+        const tag = el.tagName.toLowerCase();
+        const it = el.getAttribute('type') || '';
+        let kind = tag;
+        if (tag === 'input' && it) kind = 'input[type=' + it + ']';
+        let text = '';
+        if (tag === 'input' || tag === 'textarea') {
+          text = el.getAttribute('placeholder') || el.value || '';
+        } else {
+          text = (el.textContent || '').replace(/\\s+/g, ' ').trim();
+        }
+        refs.push({ref: ref, tag: kind, text: String(text).substring(0, 80),
+          href: tag === 'a' ? (el.getAttribute('href') || '') : ''});
+      });
+      return JSON.stringify({refs: refs, count: refs.length});
+    } catch(e) {
+      return JSON.stringify({refs: [], count: 0, error: String(e)});
+    }
+  };
+
   window.__bcp_wait_for = function(selector, timeout, callbackId) {
     try {
       const el = document.querySelector(selector);
