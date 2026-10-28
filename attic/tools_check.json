@@ -1,0 +1,1 @@
+{"jsonrpc":"2.0","id":2,"result":null,"error":{"code":-32001,"message":"Session required: unknown or expired Mcp-Session-Id (initialize first)"}}
