@@ -109,16 +109,32 @@ async function llmChat(messages) {
   return res.json.choices[0].message;
 }
 
-// ---------- 工具调用解析（双协议：原生 tool_calls + 文本 JSON 兜底） ----------
+// ---------- 工具调用解析（三协议：原生 tool_calls + 文本 JSON + XML 风格兜底） ----------
 function parseToolCallFromText(content) {
   if (!content) return null;
+  // 1) JSON 协议: {"tool_call": {"name": ..., "arguments": {...}}}
   const m = content.match(/\{[\s\S]*\}/);
-  if (!m) return null;
-  try {
-    const obj = JSON.parse(m[0]);
-    const tc = obj.tool_call || obj.toolcall || obj.tool;
-    if (tc && tc.name) return { name: tc.name, arguments: tc.arguments || {} };
-  } catch (e) { /* not JSON */ }
+  if (m) {
+    try {
+      const obj = JSON.parse(m[0]);
+      const tc = obj.tool_call || obj.toolcall || obj.tool;
+      if (tc && tc.name) return { name: tc.name, arguments: tc.arguments || {} };
+    } catch (e) { /* not JSON */ }
+  }
+  // 2) XML 风格协议: <tool_call><function=NAME><parameter=KEY>VALUE ... （agnes 偶发漂移格式）
+  const tcBlock = content.match(/<tool_call>([\s\S]*?)(?:<\/tool_call>|$)/);
+  if (tcBlock) {
+    const fn = tcBlock[1].match(/<function=([^>]+)>/);
+    if (fn) {
+      const args = {};
+      const pre = /<parameter=([^>]+)>([\s\S]*?)(?=<parameter=|<\/tool_call>|$)/g;
+      let pm;
+      while ((pm = pre.exec(tcBlock[1])) !== null) {
+        args[pm[1].trim()] = pm[2].trim();
+      }
+      return { name: fn[1].trim(), arguments: args };
+    }
+  }
   return null;
 }
 
@@ -151,6 +167,7 @@ function parseToolCallFromText(content) {
     '可用工具列表（name + schema）：\n' + toolCatalog + '\n\n' +
     '调用工具时，只回复一个 JSON 对象（不要加其他文字、不要用 markdown 代码块）：\n' +
     '{"tool_call": {"name": "工具名", "arguments": {...}}}\n' +
+    '重要：click/fill 等会触发页面导航的操作之后，必须先调用 wait（约 2000-3000ms）再 snapshot/read，否则会读到过渡态页面。\n' +
     '拿到足够信息、完成任务后，用纯文本（非 JSON）给出最终答案。答案用中文。\n' +
     '标签页用完后请关闭自己创建的标签页（tabs close）。';
 
