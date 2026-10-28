@@ -4,6 +4,26 @@
 
 格式参考 Keep a Changelog；版本以仓库主分支阶段号标记。
 
+## [P61] - 2026-10-29
+### 里程碑：首个 VM 内驻 AI Agent 实测（设备本地 agent 生态）
+- **vm_agent.js（tools/）**：完全运行在 KaihongOS 设备内的 AI agent（Node.js v24.19.0）——LLM 决策（经 HOST 中继出网）+ MCP loopback 直连（127.0.0.1:9222，无 fport 隧道）+ 自主工具循环（原生 tool_calls + 文本 JSON 兜底双协议）
+- **llm_relay.js（tools/）**：HOST 端零依赖 LLM 中继（:19223 → apihub.agnes-ai.com），VM 经 VMware NAT 网关访问
+- **实测 3 任务**：example.com（5 步正确标题+首段）/ IANA 保留域名（7 步完整总结+标签数+主动关 tab）/ baidu 搜索"上海天气"（act type_at+click 真实生效，地址栏 wd=上海天气+天气卡片截图铁证）
+- **agent 涌现行为**：错误自主恢复×2（P51 会话守卫拦截→改 tabs.new；read null→activate+snapshot）、任务后主动清理标签（与 P60 Claude Code 一致）
+- **P51/P60 回归**：会话隔离 -32000、通知 202 空 body 在真实 agent 流量下通过
+### 缺陷发现（待 P62）
+- act 触发导航后 snapshot 返回旧页面内容（stale，P1）
+- tabs.new 后立即 read 返回 null（目标解析竞态，P2）
+- VM Node.js 全局 fetch 不可用（WebAssembly undefined，绕法：原生 http）
+- agnes 免费档限流 429（~30 req/日）
+
+## [P57-P60] - 2026-10-28
+### 上游对齐与真实 Agent E2E
+- **P57**：evaluate 更名 evaluate_in_page（保留 alias，上游 #3065）+ read 走 snapshot 管线去 script
+- **P58**：initialize instructions 改"任务结束请整理标签"（上游 c8ac3ca #3078）
+- **P59**：生产落地修复——DOM Storage/桌面 UA/MCP 建页白屏/复制选中文字/Skills 返回键；WPS 在线使用菜单恢复
+- **P60**：首次真实 AI agent E2E（Claude Code 2.1.311 经 fport 驱动浏览器全链）+ 3 个 SDK 严格兼容修复（通知 202 空 body / success 无 error 键 / capabilities 无 null）+ netstack 空 body 守卫
+
 ## [P56 / v0.1.0-beta] - 2026-10-28
 ### 工程化
 - **release 打包**：`release/BrowserOS-KaihongOS-v0.1.0-beta-signed.hap`（3,836,406 B，API 23，VM 端签名）；INSTALL.md/SHA256SUMS.txt 同步更新；git tag `v0.1.0-beta`

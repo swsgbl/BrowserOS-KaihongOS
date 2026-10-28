@@ -1281,3 +1281,22 @@ python tools/smoke_reg.py         # 30 秒健康检查
 - **Release gate**：static 37/37（22 py_compile + 15 固定项）+ smoke 9/9（含图标像素门禁 24.2%）+ CI 覆盖 static_checks + tag `v0.1.0-beta` 双远端推送。
 - 外部优化方案（P42-P56）至此全收官。
 
+## P57-P60：上游漂移对齐 → 真实 Agent E2E（2026-10-28；git 3f96d12…893b87c，台账 P61 时补记）
+
+- **P57**（3f96d12/9828144）：evaluate 更名 evaluate_in_page（保留 alias，上游 #3065）；read 走 snapshot 管线去 script。
+- **P58**（114f432）：initialize instructions 改"任务结束请整理标签页"（上游 c8ac3ca #3078）。
+- **P59**（7c9bbb6/b436639）：生产落地修复——ArkWeb 默认关 DOM Storage 致 WPS 崩（.domStorageAccess/.databaseAccess）；设备 UA=Phone 全站移动版（改 Chrome/124 Win64 桌面 UA）；MCP tabs.new 建页白屏（Web 初始 src 硬编码 about:blank 覆盖真实导航）；右键"复制选中文字"；Skills 返回键。证据 evidence/p59/。
+- **P60**（893b87c）：**首次真实 AI agent E2E**——Claude Code 2.1.311（宿主）经 fport 隧道驱动浏览器：建 tab→example.com→IANA 总结→主动关 tab 全链通过；挖出 3 个 SDK 严格兼容 bug 并修复：①通知必须 202+空 body（原返回 error body 致 ZodError）②success 响应不得带 "error":null ③capabilities null 字段必须缺省；另修 netstack 空 body 崩溃。证据 evidence/p60/。
+
+## P61：VM 内驻 AI Agent 实测——设备本地 agent 生态（2026-10-29；本阶段）
+
+**用户命题**：把 AI 智能体直接装到虚拟机上，实测浏览器与本地 agent 的连接与页面控制能力（区别于 P60 的宿主 agent）。
+
+- **架构落地（全部实测通过）**：`tools/vm_agent.js` 完全运行在 KaihongOS 内（Node v24.19.0）——LLM 决策经 HOST 中继（`tools/llm_relay.js` :19223 → apihub.agnes-ai.com，VM 经 VMware NAT 网关 192.168.161.1 出网）；MCP 工具执行走 loopback 127.0.0.1:9222（无 fport 隧道，证明同机 agent 生态）。
+- **实测 3 任务**（evidence/p61/）：①example.com 5 步 14 秒正确标题+首段；②IANA 保留域名 7 步完整总结（11 个 IDN TLD 全对）+ tabs list 数量+主动关 tab；③baidu 搜索"上海天气"——act type_at+click 真实生效，截图铁证地址栏 `wd=上海天气`+天气卡片。
+- **涌现行为**：错误自主恢复×2（P51 会话守卫 -32000→改 tabs.new；read null→activate+snapshot）；任务后主动清理标签（P58 instructions 生效，与 Claude Code 行为一致）。
+- **回归**：P51 会话隔离、P60 通知 202 空 body 在真实 agent 流量下通过（hilog 53 行 RPC 流水）。
+- **VM 环境发现**：Node 全局 fetch 不可用（WebAssembly undefined→原生 http 绕法）；agnes 免费档 ~30 req/日 429 限流。
+- **缺陷台账（→P62）**：①act 触发导航后 snapshot 返回旧内容（stale，P1）②tabs.new 后立即 read 返回 null（目标解析竞态，P2）。
+- **验证矩阵与证据**：evidence/p61/VERIFY.md（10 项验证+3 任务详情+3 截图+2 决策日志+hilog）。
+

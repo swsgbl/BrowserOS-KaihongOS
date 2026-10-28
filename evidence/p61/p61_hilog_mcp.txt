@@ -1,0 +1,53 @@
+10-29 03:05:21.183 16596 16596 I A03d00/JSAPP: [MCP-HTTP] client connected id=14 total=1
+10-29 03:05:21.184 16596 16596 I A03d00/JSAPP: [MCP-HTTP] onMessage id=14 bytes=321
+10-29 03:05:21.184 16596 16596 I A03d00/JSAPP: [MCP-HTTP] onBytes id=14 len=321 head=50 4f 53 54 20 2f 6d 63 70 3f 74 6f 6b 65 6e 3d 4b 64 58 38 68 53 6a 71 
+10-29 03:05:21.184 16596 16596 I A03d00/JSAPP: [MCP-HTTP] POST /mcp?token=KdX8hSjqU0ZVZZ4AwuPSdHjKxngGa706 client=14 bodyLen=161
+10-29 03:05:21.184 16596 16596 I A03d00/JSAPP: [MCP-RPC] method=initialize id=1 via=mcp_http sid=
+10-29 03:05:21.184 16596 16596 I A03d00/JSAPP: [P51] session created id=f6b675f6-2b3b-480f-84e4-61fbac7bad18 client=vm-agent-p61 profile=default total=2
+10-29 03:05:21.187 16596 16596 I A03d00/JSAPP: [MCP-HTTP] onMessage id=14 bytes=267
+10-29 03:05:21.187 16596 16596 I A03d00/JSAPP: [MCP-HTTP] onBytes id=14 len=267 head=50 4f 53 54 20 2f 6d 63 70 3f 74 6f 6b 65 6e 3d 4b 64 58 38 68 53 6a 71 
+10-29 03:05:21.188 16596 16596 I A03d00/JSAPP: [MCP-HTTP] POST /mcp?token=KdX8hSjqU0ZVZZ4AwuPSdHjKxngGa706 client=14 bodyLen=54
+10-29 03:05:21.188 16596 16596 I A03d00/JSAPP: [MCP-RPC] method=notifications/initialized id=null via=mcp_http sid=f6b675f6
+10-29 03:05:21.188 16596 16596 I A03d00/JSAPP: [MCP-RPC] notification notifications/initialized accepted (202, empty body)
+10-29 03:05:21.188 16596 16596 I A03d00/JSAPP: [MCP-HTTP] onMessage id=14 bytes=271
+10-29 03:05:21.188 16596 16596 I A03d00/JSAPP: [MCP-HTTP] onBytes id=14 len=271 head=50 4f 53 54 20 2f 6d 63 70 3f 74 6f 6b 65 6e 3d 4b 64 58 38 68 53 6a 71 
+10-29 03:05:21.188 16596 16596 I A03d00/JSAPP: [MCP-HTTP] POST /mcp?token=KdX8hSjqU0ZVZZ4AwuPSdHjKxngGa706 client=14 bodyLen=58
+10-29 03:05:21.188 16596 16596 I A03d00/JSAPP: [MCP-RPC] method=tools/list id=2 via=mcp_http sid=f6b675f6
+10-29 03:05:23.227 16596 16596 I A03d00/JSAPP: [MCP-HTTP] onMessage id=14 bytes=360
+10-29 03:05:23.227 16596 16596 I A03d00/JSAPP: [MCP-HTTP] onBytes id=14 len=360 head=50 4f 53 54 20 2f 6d 63 70 3f 74 6f 6b 65 6e 3d 4b 64 58 38 68 53 6a 71 
+10-29 03:05:23.227 16596 16596 I A03d00/JSAPP: [MCP-HTTP] POST /mcp?token=KdX8hSjqU0ZVZZ4AwuPSdHjKxngGa706 client=14 bodyLen=146
+10-29 03:05:23.227 16596 16596 I A03d00/JSAPP: [MCP-RPC] method=tools/call id=3 via=mcp_http sid=f6b675f6
+10-29 03:05:24.114 16596 16596 I A03d00/JSAPP: [MCP-HTTP] onMessage id=14 bytes=299
+10-29 03:05:24.114 16596 16596 I A03d00/JSAPP: [MCP-HTTP] onBytes id=14 len=299 head=50 4f 53 54 20 2f 6d 63 70 3f 74 6f 6b 65 6e 3d 4b 64 58 38 68 53 6a 71 
+10-29 03:05:24.114 16596 16596 I A03d00/JSAPP: [MCP-HTTP] POST /mcp?token=KdX8hSjqU0ZVZZ4AwuPSdHjKxngGa706 client=14 bodyLen=86
+10-29 03:05:24.114 16596 16596 I A03d00/JSAPP: [MCP-RPC] method=tools/call id=4 via=mcp_http sid=f6b675f6
+10-29 03:05:24.114 16596 16596 I A03d00/JSAPP: [P51] setOmniboxText -> https://www.iana.org/domains/reserved
+10-29 03:05:24.114 16596 16596 I A03d00/JSAPP: [P51] route sid=f6b675f6 -> tab tab_10_1793214323228 read wvReady=true
+10-29 03:05:25.196 16596 16596 I A03d00/JSAPP: [P51] setOmniboxText -> https://www.iana.org/domains/reserved
+10-29 03:05:25.673 16596 16596 I A03d00/JSAPP: [MCP-HTTP] onMessage id=14 bytes=350
+10-29 03:05:25.673 16596 16596 I A03d00/JSAPP: [MCP-HTTP] onBytes id=14 len=350 head=50 4f 53 54 20 2f 6d 63 70 3f 74 6f 6b 65 6e 3d 4b 64 58 38 68 53 6a 71 
+10-29 03:05:25.673 16596 16596 I A03d00/JSAPP: [MCP-HTTP] POST /mcp?token=KdX8hSjqU0ZVZZ4AwuPSdHjKxngGa706 client=14 bodyLen=136
+10-29 03:05:25.673 16596 16596 I A03d00/JSAPP: [MCP-RPC] method=tools/call id=5 via=mcp_http sid=f6b675f6
+10-29 03:05:25.674 16596 16596 I A03d00/JSAPP: [P51] route sid=f6b675f6 -> tab tab_10_1793214323228 tabs wvReady=true
+10-29 03:05:30.677 16596 16596 I A03d00/JSAPP: [MCP-HTTP] client closed id=14 total=0
+10-29 03:05:32.650 16596 16596 I A03d00/JSAPP: [MCP-HTTP] client connected id=15 total=1
+10-29 03:05:32.651 16596 16596 I A03d00/JSAPP: [MCP-HTTP] onMessage id=15 bytes=303
+10-29 03:05:32.651 16596 16596 I A03d00/JSAPP: [MCP-HTTP] onBytes id=15 len=303 head=50 4f 53 54 20 2f 6d 63 70 3f 74 6f 6b 65 6e 3d 4b 64 58 38 68 53 6a 71 
+10-29 03:05:32.651 16596 16596 I A03d00/JSAPP: [MCP-HTTP] POST /mcp?token=KdX8hSjqU0ZVZZ4AwuPSdHjKxngGa706 client=15 bodyLen=90
+10-29 03:05:32.651 16596 16596 I A03d00/JSAPP: [MCP-RPC] method=tools/call id=6 via=mcp_http sid=f6b675f6
+10-29 03:05:32.652 16596 16596 I A03d00/JSAPP: [P51] route sid=f6b675f6 -> tab tab_10_1793214323228 snapshot wvReady=true
+10-29 03:05:33.720 16596 16596 I A03d00/JSAPP: [MCP-HTTP] onMessage id=15 bytes=315
+10-29 03:05:33.720 16596 16596 I A03d00/JSAPP: [MCP-HTTP] onBytes id=15 len=315 head=50 4f 53 54 20 2f 6d 63 70 3f 74 6f 6b 65 6e 3d 4b 64 58 38 68 53 6a 71 
+10-29 03:05:33.720 16596 16596 I A03d00/JSAPP: [MCP-HTTP] POST /mcp?token=KdX8hSjqU0ZVZZ4AwuPSdHjKxngGa706 client=15 bodyLen=101
+10-29 03:05:33.720 16596 16596 I A03d00/JSAPP: [MCP-RPC] method=tools/call id=7 via=mcp_http sid=f6b675f6
+10-29 03:05:33.721 16596 16596 I A03d00/JSAPP: [P51] route sid=f6b675f6 -> tab tab_10_1793214323228 tabs wvReady=true
+10-29 03:05:35.612 16596 16596 I A03d00/JSAPP: [MCP-HTTP] onMessage id=15 bytes=347
+10-29 03:05:35.612 16596 16596 I A03d00/JSAPP: [MCP-HTTP] onBytes id=15 len=347 head=50 4f 53 54 20 2f 6d 63 70 3f 74 6f 6b 65 6e 3d 4b 64 58 38 68 53 6a 71 
+10-29 03:05:35.612 16596 16596 I A03d00/JSAPP: [MCP-HTTP] POST /mcp?token=KdX8hSjqU0ZVZZ4AwuPSdHjKxngGa706 client=15 bodyLen=133
+10-29 03:05:35.612 16596 16596 I A03d00/JSAPP: [MCP-RPC] method=tools/call id=8 via=mcp_http sid=f6b675f6
+10-29 03:05:35.613 16596 16596 I A03d00/JSAPP: [P51] route sid=f6b675f6 -> tab tab_10_1793214323228 tabs wvReady=true
+10-29 03:05:35.613 16596 16596 I A03d00/JSAPP: [P51] setOmniboxText -> EMPTY (raw=about:blank)
+10-29 03:05:40.617 16596 16596 I A03d00/JSAPP: [MCP-HTTP] client closed id=15 total=0
+10-29 03:06:09.794 16596 16596 I A03d00/JSAPP: [P51] setOmniboxText -> https://apihub.agnes-ai.com/v1
+10-29 03:06:17.809 16596 16596 I A03d00/JSAPP: [P51] setOmniboxText -> EMPTY (raw=about:blank)
+10-29 03:06:20.876 16596 16596 I A03d00/JSAPP: [P51] setOmniboxText -> EMPTY (raw=about:blank)

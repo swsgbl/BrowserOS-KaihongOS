@@ -1,0 +1,147 @@
+[
+  {
+    "t": "2026-10-28T19:02:31.943Z",
+    "kind": "agent_start",
+    "data": {
+      "task": "打开 https://example.com 并告诉我页面标题和第一段内容",
+      "model": "agnes-3.0-flash",
+      "mcp": "127.0.0.1:9222",
+      "relay": "192.168.161.1:19223"
+    }
+  },
+  {
+    "t": "2026-10-28T19:02:31.945Z",
+    "kind": "mcp_token",
+    "data": "loaded (32 chars)"
+  },
+  {
+    "t": "2026-10-28T19:02:31.953Z",
+    "kind": "mcp_initialize",
+    "data": {
+      "status": 200,
+      "sessionId": "429d91a7-da27-4de7-a2ec-ee5e38dfe201",
+      "serverInfo": {
+        "name": "browseros_mcp",
+        "title": "BrowserOS MCP Server",
+        "version": "1.1.0"
+      }
+    }
+  },
+  {
+    "t": "2026-10-28T19:02:31.955Z",
+    "kind": "mcp_tools",
+    "data": "tabs,tab_groups,history,navigate,snapshot,diff,act,download,upload,read,grep,screenshot,pdf,wait,windows,evaluate_in_page,run"
+  },
+  {
+    "t": "2026-10-28T19:02:31.955Z",
+    "kind": "llm_request",
+    "data": "step 1, messages=2"
+  },
+  {
+    "t": "2026-10-28T19:02:33.905Z",
+    "kind": "tool_exec",
+    "data": {
+      "name": "navigate",
+      "arguments": {
+        "url": "https://example.com",
+        "waitUntil": "load"
+      }
+    }
+  },
+  {
+    "t": "2026-10-28T19:02:33.907Z",
+    "kind": "tool_result",
+    "data": {
+      "name": "navigate",
+      "isError": true,
+      "text": "MCP error {\"code\":-32000,\"message\":\"P51: session owns no tab; call tabs{action:new} first\"}"
+    }
+  },
+  {
+    "t": "2026-10-28T19:02:33.907Z",
+    "kind": "llm_request",
+    "data": "step 2, messages=4"
+  },
+  {
+    "t": "2026-10-28T19:02:34.980Z",
+    "kind": "tool_exec",
+    "data": {
+      "name": "tabs",
+      "arguments": {
+        "action": "new",
+        "url": "https://example.com"
+      }
+    }
+  },
+  {
+    "t": "2026-10-28T19:02:34.982Z",
+    "kind": "tool_result",
+    "data": {
+      "name": "tabs",
+      "isError": false,
+      "text": "{\"tabId\":\"tab_8_1793214154981\",\"url\":\"https://example.com\"}"
+    }
+  },
+  {
+    "t": "2026-10-28T19:02:34.982Z",
+    "kind": "llm_request",
+    "data": "step 3, messages=6"
+  },
+  {
+    "t": "2026-10-28T19:02:35.922Z",
+    "kind": "tool_exec",
+    "data": {
+      "name": "snapshot",
+      "arguments": {}
+    }
+  },
+  {
+    "t": "2026-10-28T19:02:35.929Z",
+    "kind": "tool_result",
+    "data": {
+      "name": "snapshot",
+      "isError": false,
+      "text": "{\"content\":\"该域名仅用于文档示例，无需获得许可。这并非一项服务，请勿将其用于测试和监控目的。\\nThis domain is for use in documentation examples without needing permission. This is not a service; avoid relying on it for testing and monitoring purposes.\\nهذا النطاق مُخصص للاستخدام في أمثلة التوثيق دون الحاجة إلى إذن. هذه ليست خدمة، يُرجى تجنب الاعتماد عليها لأغراض الاختبار والمراقبة.\\nL’usage de ce domaine est réservé à des exemples de documentation, sans autorisation préalable. Il ne s’agit pas d’un service ; son utilisation à des fins de test ou de surveillance est à éviter.\\nДанный домен предназначен для использования в примерах документации без необходимости получения предварительного разрешения. Это не сервис; не рекомендуется его использование для тестирования и мониторинга.\\nEste dominio está destinado al uso en ejemplos de documentación sin necesidad de permiso. Esto no es un servicio; evitar utilizarlo para realizar pruebas o monitoreos.\\n[Learn more](https://iana.org/help/example-domains)\",\"refs\":[],\"refCount\":0}"
+    }
+  },
+  {
+    "t": "2026-10-28T19:02:35.929Z",
+    "kind": "llm_request",
+    "data": "step 4, messages=8"
+  },
+  {
+    "t": "2026-10-28T19:02:36.874Z",
+    "kind": "tool_exec",
+    "data": {
+      "name": "read",
+      "arguments": {}
+    }
+  },
+  {
+    "t": "2026-10-28T19:02:36.880Z",
+    "kind": "tool_result",
+    "data": {
+      "name": "read",
+      "isError": false,
+      "text": "{\"source\":\"snapshot\",\"text\":\"该域名仅用于文档示例，无需获得许可。这并非一项服务，请勿将其用于测试和监控目的。\\nThis domain is for use in documentation examples without needing permission. This is not a service; avoid relying on it for testing and monitoring purposes.\\nهذا النطاق مُخصص للاستخدام في أمثلة التوثيق دون الحاجة إلى إذن. هذه ليست خدمة، يُرجى تجنب الاعتماد عليها لأغراض الاختبار والمراقبة.\\nL’usage de ce domaine est réservé à des exemples de documentation, sans autorisation préalable. Il ne s’agit pas d’un service ; son utilisation à des fins de test ou de surveillance est à éviter.\\nДанный домен предназначен для использования в примерах документации без необходимости получения предварительного разрешения. Это не сервис; не рекомендуется его использование для тестирования и мониторинга.\\nEste dominio está destinado al uso en ejemplos de documentación sin necesidad de permiso. Esto no es un servicio; evitar utilizarlo para realizar pruebas o monitoreos.\\n[Learn more](https://iana.org/help/example-domains)\",\"refCount\":0}"
+    }
+  },
+  {
+    "t": "2026-10-28T19:02:36.880Z",
+    "kind": "llm_request",
+    "data": "step 5, messages=10"
+  },
+  {
+    "t": "2026-10-28T19:02:46.045Z",
+    "kind": "final_answer",
+    "data": "页面标题为“Example Domain”。\n\n第一段内容（中文）为：“该域名仅用于文档示例，无需获得许可。这并非一项服务，请���将其用于测试和监控目的。”"
+  },
+  {
+    "t": "2026-10-28T19:02:46.045Z",
+    "kind": "agent_done",
+    "data": {
+      "task": "打开 https://example.com 并告诉我页面标题和第一段内容",
+      "answer": "页面标题为“Example Domain”。\n\n第一段内容（中文）为：“该域名仅用于文档示例，无需获得许可。这并非一项服务，请���将其用于测试和监控目的。”"
+    }
+  }
+]
