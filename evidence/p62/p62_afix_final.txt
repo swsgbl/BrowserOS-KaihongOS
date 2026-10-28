@@ -1,0 +1,6 @@
+tabs.new: {"tabId":"tab_2_1793224502871","url":"https://www.iana.org"}
+snapshot BEFORE len=3529 head: {"content":"Domain Names\n\nManagement of the DNS Root Zone (assignments of ccTLDs and gTL
+click a[href=/domains]: {"result":"click","url":"https://www.iana.org/domains","title":"Domain Name Services"}
+snapshot AFTER len=6359 fresh=true
+href now: {"expression":"location.href","result":"{\"ok\":true,\"result\":\"https://www.iana.org/domains\"}","truncated":false}
+*** A-FIX VERIFIED: snapshot reflects post-click navigation ***

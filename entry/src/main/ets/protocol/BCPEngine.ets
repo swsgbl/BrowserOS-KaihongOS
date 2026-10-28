@@ -1,4 +1,3 @@
-
 import { BCPResult } from '../common/Types'
 import { util } from '@kit.ArkTS'
 import { IWebviewController } from '../common/IWebviewController'
@@ -65,12 +64,45 @@ class BCPEngineImpl {
       if (!this.webviewController) {
         return { success: false, data: null, error: 'WebView not bound' }
       }
-      const result = await this.webviewController.runJavaScript(jsCode)
+      // [P62-A/G] a runJavaScript promise NEVER settles if the page navigates mid-eval —
+      // race it; on timeout return a loud failure instead of hanging the tool forever.
+      const raced = await Promise.race([
+        this.webviewController.runJavaScript(jsCode),
+        new Promise<string>((res) => {
+          setTimeout(() => res('__BCP_TIMEOUT__'), timeoutMs)
+        })
+      ])
+      if (raced === '__BCP_TIMEOUT__') {
+        timer()
+        return { success: false, data: null, error: 'script timeout after ' + timeoutMs + 'ms (page navigating?)' }
+      }
+      const result = raced
       timer()
       return { success: true, data: result, error: null }
     } catch (e) {
       timer()
       return { success: false, data: null, error: `${e}` }
+    }
+  }
+
+  /** [P62-G] unwrap sync-expression result: strip runJavaScript JSON quoting, parse {success,data,error} */
+  private unwrapSyncJson(result: BCPResult): BCPResult {
+    if (!result.success) {
+      return result
+    }
+    let text = result.data === null || result.data === undefined ? '' : `${result.data}`
+    if (text.length >= 2 && text.startsWith('"') && text.endsWith('"')) {
+      try { text = JSON.parse(text) as string } catch (e) { }
+    }
+    try {
+      const parsed = JSON.parse(text) as Record<string, Object>
+      const ok: boolean = parsed['success'] === true
+      const data: string | null = parsed['data'] === undefined || parsed['data'] === null ? null : `${parsed['data']}`
+      const err: string | null = parsed['error'] === undefined || parsed['error'] === null ? null : `${parsed['error']}`
+      const out: BCPResult = { success: ok, data: data, error: err }
+      return out
+    } catch (e) {
+      return result
     }
   }
 
@@ -116,10 +148,14 @@ class BCPEngineImpl {
       timer()
       return { success: false, data: null, error: ErrorCodes.getMessage(ErrorCodes.BCP_001) }
     }
-    const js = `window.__bcp_click(${JSON.stringify(selector)}, 0);`
+    // [P62-G] self-contained sync click — the old __bcp_click called __bcp_arkts_callback (a
+    // registerJavaScriptProxy callback) in BOTH its try and catch paths; after navigation that proxy
+    // is gone, the uncaught exception left runJavaScript's promise unsettled and callTool hung
+    // unbounded (P61 90s+ hang). Same proven sync pattern; no bridge dependency.
+    const js = '(function(){try{var el=document.querySelector(' + JSON.stringify(selector) + ');if(!el){return JSON.stringify({success:false,data:null,error:"Element not found: "+' + JSON.stringify(selector) + '})}el.click();return JSON.stringify({success:true,data:' + JSON.stringify(selector) + ',error:null})}catch(e){return JSON.stringify({success:false,data:null,error:String(e)})}})()'
     const result = await this.executeJS(js)
     timer()
-    return result
+    return this.unwrapSyncJson(result)
   }
 
   async type(selector: string, text: string): Promise<BCPResult> {
@@ -129,10 +165,11 @@ class BCPEngineImpl {
       timer()
       return { success: false, data: null, error: ErrorCodes.getMessage(ErrorCodes.BCP_001) }
     }
-    const js = `window.__bcp_type(${JSON.stringify(selector)}, ${JSON.stringify(text)}, 0);`
+    // [P62-G] sync type — same dead-proxy fix as click
+    const js = '(function(){try{var el=document.querySelector(' + JSON.stringify(selector) + ');if(!el){return JSON.stringify({success:false,data:null,error:"Element not found: "+' + JSON.stringify(selector) + '})}if(el.focus){el.focus()}el.value=' + JSON.stringify(text) + ';el.dispatchEvent(new Event("input",{bubbles:true}));el.dispatchEvent(new Event("change",{bubbles:true}));return JSON.stringify({success:true,data:' + JSON.stringify(text) + ',error:null})}catch(e){return JSON.stringify({success:false,data:null,error:String(e)})}})()'
     const result = await this.executeJS(js)
     timer()
-    return result
+    return this.unwrapSyncJson(result)
   }
 
   async scroll(deltaX: number, deltaY: number): Promise<BCPResult> {
@@ -174,42 +211,79 @@ class BCPEngineImpl {
     return result
   }
 
-  /** P12b: 紧凑 Markdown 快照（可见内容、剔除噪音、30000 字符上限；同步表达式求值，不依赖回调 proxy） */
+  /** [P62-A] self-contained markdown snapshot expression — zero injected-bridge dependency.
+   *  [P62-A final] Text skeleton comes from body.innerText (rendered-only: excludes style/script
+   *  payloads by spec). The old clone+walk ingested a literal style-tag-source TEXT NODE on
+   * baidu result pages (md = 30k chars of CSS while innerText was a clean 3k). Structure
+   * (headings/links/buttons/imgs/tables) is collected via querySelectorAll + visibility filter.
+   *  Returns {href,ready,md,err} JSON. */
+  private buildSnapshotMdExpr(): string {
+    return "(function(){try{"
+      + "if(!document.body){return JSON.stringify({href:location.href,ready:document.readyState,md:'',err:'no body'})}"
+      + "function vis(el){try{var cs=window.getComputedStyle(el);if(cs.display==='none'||cs.visibility==='hidden')return false}catch(e){}return true}"
+      + "function txt(el){return (el.textContent||'').replace(/\\s+/g,' ').trim()}"
+      + "function txtB(el,n){var t=txt(el);return t.length>n?t.substring(0,n):t}"
+      + "var out=[];"
+      + "var it=(document.body.innerText||'').replace(/\\n{3,}/g,String.fromCharCode(10)+String.fromCharCode(10));"
+      + "if(it.length>0){out.push(it.substring(0,24000))}"
+      + "document.querySelectorAll('h1,h2,h3,h4,h5,h6').forEach(function(h){if(!vis(h))return;var t=txtB(h,120);if(t){var lv=parseInt(h.tagName.charAt(1),10);var pf='';for(var k=0;k<lv;k++)pf+='#';out.push('');out.push(pf+' '+t)}});"
+      + "var nL=0;"
+      + "document.querySelectorAll('a').forEach(function(a){if(nL>=200)return;if(!vis(a))return;var t=txtB(a,80);if(!t)return;var href=a.getAttribute('href')||'';if(href&&href.indexOf('http')!==0){try{href=new URL(href,location.href).href}catch(e){}}nL++;out.push('- ['+t+']('+href+')')});"
+      + "document.querySelectorAll('button,input[type=submit],input[type=button]').forEach(function(b){if(!vis(b))return;var t=txtB(b,60);if(t)out.push('[按钮 '+t+']')});"
+      + "document.querySelectorAll('img').forEach(function(im){if(!vis(im))return;var alt=(im.getAttribute('alt')||'').trim();if(alt)out.push('[图: '+alt.substring(0,80)+']')});"
+      + "document.querySelectorAll('table').forEach(function(tb){if(!vis(tb))return;tb.querySelectorAll('tr').forEach(function(tr){var cells=[];tr.querySelectorAll('th,td').forEach(function(c){cells.push(txtB(c,60))});if(cells.length)out.push('| '+cells.join(' | ')+' |')})});"
+      + "var md=out.join(String.fromCharCode(10)).replace(/\\n{3,}/g,String.fromCharCode(10)+String.fromCharCode(10));"
+      + "if(md.length>30000)md=md.substring(0,30000)+String.fromCharCode(10)+'...[截断]';"
+      + "return JSON.stringify({href:location.href,ready:document.readyState,md:md})"
+      + "}catch(e){return JSON.stringify({href:'',ready:'err',md:'',err:String(e)})}})()"
+  }
+
+  /** P12b: 紧凑 Markdown 快照（可见内容、剔除噪音、30000 字符上限）。
+   * [P62-A] bridge-free：自包含表达式 + settle 重试 + payload 校验。表单提交导航后注入桥已死，
+   * 旧探针会读到半提交文档的原始 HTML——现在对结果做三重校验：
+   * ① 可解析为 {href,ready,md} ② md 非 raw-HTML 前缀且非过短 ③ readyState 已 settle。 */
   async snapshotMarkdown(): Promise<BCPResult> {
     const timer = PerformanceMonitor.startTimer('bcp_snapshot_md', 'BCP')
-    const bridgeReady = await this.ensureBridge()
-    if (!bridgeReady) {
+    if (!this.webviewController) {
       timer()
-      return { success: false, data: null, error: ErrorCodes.getMessage(ErrorCodes.BCP_001) }
+      return { success: false, data: null, error: 'WebView not bound' }
     }
-    // 先尝试直接执行（bridge 若在当前文档存活）；undefined 则重注入一次再执行（换页后 window 函数会丢）
-    let result = await this.executeJS(`window.__bcp_snapshot_md ? window.__bcp_snapshot_md() : 'undefined'`)
-    if (!result.data || `${result.data}` === 'undefined' || `${result.data}`.startsWith('"undefined"')) {
-      try {
-        this.webviewController!.runJavaScript(JSBridgeInjector.getBridgeScript())
-        result = await this.executeJS(`window.__bcp_snapshot_md ? window.__bcp_snapshot_md() : 'undefined'`)
-      } catch (e) {
-        timer()
-        return { success: false, data: null, error: `re-inject failed: ${e}` }
+    const expr = this.buildSnapshotMdExpr()
+    let lastErr = ''
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const r = await this.executeJS(expr, Constants.BCP_SCRIPT_INJECT_TIMEOUT_MS)
+      if (!r.success) {
+        lastErr = `${r.error}`
+      } else {
+        let text = `${r.data}`
+        if (text.length >= 2 && text.startsWith('"') && text.endsWith('"')) {
+          try { text = JSON.parse(text) as string } catch (e) { }
+        }
+        try {
+          const parsed = JSON.parse(text) as Record<string, Object>
+          const md: string = parsed['md'] === undefined || parsed['md'] === null ? '' : `${parsed['md']}`
+          const ready: string = parsed['ready'] === undefined || parsed['ready'] === null ? '' : `${parsed['ready']}`
+          const perr: string = parsed['err'] === undefined || parsed['err'] === null ? '' : `${parsed['err']}`
+          const head = md.trim().substring(0, 40)
+          const rawHtml = /^<(style|html|head|script|meta|link|!|body)/i.test(head)
+          if (perr) {
+            lastErr = perr
+          } else if (md.trim().length >= 5 && !rawHtml && (ready === 'complete' || ready === 'interactive')) {
+            timer()
+            return { success: true, data: md, error: null }
+          } else {
+            lastErr = rawHtml ? 'stale raw-HTML snapshot payload (mid-navigation document)' : 'document not settled (ready=' + ready + ', len=' + md.length + ')'
+          }
+        } catch (e) {
+          lastErr = 'unparseable snapshot payload head: ' + text.substring(0, 60)
+        }
+      }
+      if (attempt < 2) {
+        await new Promise<void>((res) => setTimeout(res, 700))
       }
     }
     timer()
-    let dataStr = `${result.data}`
-    // runJavaScript 对字符串结果会再包一层 JSON 引号，解包
-    if (dataStr.length >= 2 && dataStr.startsWith('"') && dataStr.endsWith('"')) {
-      try {
-        dataStr = JSON.parse(dataStr) as string
-      } catch (e) {
-        // 保持原样
-      }
-    }
-    if (dataStr.startsWith('__SNAP_ERR__')) {
-      return { success: false, data: null, error: dataStr.substring('__SNAP_ERR__'.length) }
-    }
-    if (!dataStr || dataStr === 'undefined') {
-      return { success: false, data: null, error: 'snapshot_md returned empty' }
-    }
-    return { success: true, data: dataStr, error: null }
+    return { success: false, data: null, error: 'snapshot_md failed after retries: ' + lastErr }
   }
 
   /** P55: Stable SnapshotRef —— 页面注入 data-bcp-ref 并收集 refs JSON（bridge 不在则先注入一次） */
@@ -346,7 +420,17 @@ class BCPEngineImpl {
     try {
       // IIFE 包裹：表达式求值；页面侧异常以 {ok:false,error} 带回而非 reject
       const wrapped = `(function(){try{const r=(${expression});return JSON.stringify({ok:true,result:(r===undefined?null:r)})}catch(e){return JSON.stringify({ok:false,error:String(e)})}})()`
-      const raw = await this.webviewController!.runJavaScript(wrapped)
+      // [P62-A] same never-settling hazard as executeJS — race with the standard inject timeout
+      const raw = await Promise.race([
+        this.webviewController!.runJavaScript(wrapped),
+        new Promise<string>((res) => {
+          setTimeout(() => res('__BCP_TIMEOUT__'), Constants.BCP_SCRIPT_INJECT_TIMEOUT_MS)
+        })
+      ])
+      if (raw === '__BCP_TIMEOUT__') {
+        timer()
+        return { success: false, data: null, error: 'evaluate timeout (page navigating?)' }
+      }
       timer()
       return { success: true, data: this.parseEvalJson(`${raw}`), error: null }
     } catch (e) {

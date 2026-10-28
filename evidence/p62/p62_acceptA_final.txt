@@ -1,0 +1,4 @@
+1) click #su -> navigated to results
+2) read len=25806 (>1556: true) 天气=true degree=true noRawCSS=true
+3) grep 天气 hits=46
+ACCEPTANCE-A: PASS

@@ -1,0 +1,8 @@
+PASS [E-discover-32601] code=-32601 msg=Method not found: server/discover
+PASS [B-read-session-owned] tabA=tab_1_1793222512916 tabB=tab_2_1793222515422 read120={"source":"snapshot","text":"该域名仅用于文档示例，无需获得许可。这并非一项服务，请勿将其用于测试和监控目的。\nThis domain is for use in documentation examples 
+FAIL [A-snapshot-fresh-after-act] click=ok len 130->130 resultsHit=false after120=rpc-error: {"code":-32000,"message":"snapshot_md failed after retries: stale raw-HTML snapshot paylo
+PASS [C-history-back-body] body={"url":"https://example.com/","title":"Example Domain","action":"back"}
+PASS [D-grep-hits] hits=2 raw={"matches":[{"line":6,"text":"# IANA-managed Reserved Domains"},{"line":81,"text":"- Reserved Domains"}],"count":2,"truncated":false}
+
+===== P62 VERIFY: 4/5 PASS =====
+FAILED: A-snapshot-fresh-after-act

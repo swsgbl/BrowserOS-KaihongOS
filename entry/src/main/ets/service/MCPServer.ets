@@ -54,6 +54,8 @@ interface MCPToolResponseEventData {
 
 interface MCPResponseData {
   url?: string
+  title?: string
+  action?: string
   selector?: string
   text?: string
   quality?: string
@@ -113,6 +115,12 @@ class McpWindowDetail {
   windowId: string = ''
   tabs: McpTabLine[] = []
   tabCount: number = 0
+}
+
+/** [P62-C] post-transition page info (url/title after settle poll) */
+class MCPPageInfo {
+  url: string = ''
+  title: string = ''
 }
 
 /** [P43] diff 输出行 */
@@ -297,12 +305,28 @@ class MCPServerImpl implements McpHttpDelegate {
     const callData: MCPToolCallData = { requestId: requestId, agentId: agentId, toolName: canonical, params: params }
     EventBus.emit(EventBusEvents.MCP_TOOL_CALL, callData)
 
+    // [P62-G] 30s hard bound on every tool call — a wedged handler (dead JS proxy, mid-nav doc)
+    // must fail loudly instead of hanging the request/session indefinitely.
+    const TOOL_TIMEOUT_MS = 30000
+    let toolTimedOut = false
+    const toolRace = Promise.race([
+      handler(adapted, agentId, sessionId),
+      new Promise<MCPToolResponse>((res) => {
+        setTimeout(() => {
+          toolTimedOut = true
+          res({ status: 'error', data: null, error: 'P62: tool ' + canonical + ' timed out after 30s', requestId: this.generateRequestId() })
+        }, TOOL_TIMEOUT_MS)
+      })
+    ])
     try {
-    const response = await handler(adapted, agentId, sessionId)
+    const response = await toolRace
       auditEntry.setResult(response.status, response.error || '')
       AuditLogger.log(auditEntry)
       const responseData: MCPToolResponseEventData = { requestId: requestId, response: response }
       EventBus.emit(EventBusEvents.MCP_TOOL_RESPONSE, responseData)
+      if (toolTimedOut) {
+        auditEntry.setResult('error', 'timeout-30s')
+      }
       return response
     } catch (e) {
       auditEntry.setResult('error', `${e}`)
@@ -533,12 +557,16 @@ class MCPServerImpl implements McpHttpDelegate {
     const action = params['action'] as string || 'list'
     if (action === 'back') {
       const result = await BCPEngine.back()
-      const rec1: MCPResponseData = {}
+      // [P62-C] structured body: settle-poll the transition, then report url/title (was empty {})
+      const info = await this.pageInfoAfterTransition()
+      const rec1: MCPResponseData = { url: info.url, title: info.title, action: 'back' }
     return this.bcpToMcpResponse(result, rec1)
     }
     if (action === 'forward') {
       const result = await BCPEngine.forward()
-      const rec2: MCPResponseData = {}
+      // [P62-C] structured body for forward as well
+      const info = await this.pageInfoAfterTransition()
+      const rec2: MCPResponseData = { url: info.url, title: info.title, action: 'forward' }
     return this.bcpToMcpResponse(result, rec2)
     }
     if (action === 'list') {
@@ -733,6 +761,13 @@ class MCPServerImpl implements McpHttpDelegate {
           }
         }
         const result = await BCPEngine.click(sel)
+        // [P62-A] a click may submit a form / follow a link — settle before returning so an
+        // immediately following snapshot reads the NEW page, not the stale pre-nav document.
+        if (result.success) {
+          const info = await this.pageInfoAfterTransition()
+          const rec3: MCPResponseData = { result: kind, url: info.url, title: info.title }
+          return this.bcpToMcpResponse(result, rec3)
+        }
         const rec3: MCPResponseData = { result: kind }
     return this.bcpToMcpResponse(result, rec3)
       }
@@ -1000,6 +1035,11 @@ class MCPServerImpl implements McpHttpDelegate {
         const lines = content.split('\n').filter((ln) => !wanted || ln.includes(wanted))
         content = lines.join('\n')
       }
+      // [P62-B] never hand back a literal "null"/empty body as success — explicit error instead
+      if (!content || content.trim().length === 0 || content.trim() === 'null' || content.trim() === 'undefined') {
+        return this.errorResponse(ErrorCodes.MCP_003,
+          'read: page text unavailable (empty snapshot for routed tab — page may be mid-navigation or unrendered)')
+      }
       const recRd: Record<string, Object> = { 'source': 'snapshot', 'text': content, 'refCount': refs.length }
       return this.okResponse(recRd)
     }
@@ -1028,12 +1068,29 @@ class MCPServerImpl implements McpHttpDelegate {
     } catch (e) {
       return this.errorResponse(ErrorCodes.MCP_003, `grep: invalid pattern ${pattern}`)
     }
-    const textResult = await BCPEngine.getText()
-    if (!textResult.success) {
-      const rec8: MCPResponseData = {}
-    return this.bcpToMcpResponse(textResult, rec8)
+    // [P62-D] grep must read the SAME source as read (SnapshotGenerator markdown); the old
+    // getText path rides the dead-after-nav bridge proxy and returned "null" => 0 hits.
+    let body = ''
+    const snapResult = await SnapshotGenerator.generate()
+    if (snapResult.success) {
+      try {
+        const parsed = JSON.parse(`${snapResult.data}`) as Record<string, Object>
+        body = `${parsed['content'] || ''}`
+      } catch (e) {
+        body = `${snapResult.data}`
+      }
     }
-    const body = `${textResult.data}`
+    if (!body) {
+      const textResult = await BCPEngine.getText()
+      if (!textResult.success) {
+        const rec8: MCPResponseData = {}
+        return this.bcpToMcpResponse(textResult, rec8)
+      }
+      body = `${textResult.data}`
+      if (body === 'null' || body === 'undefined') {
+        body = ''
+      }
+    }
     const lines = body.split('\n')
     const matches: McpGrepMatch[] = []
     for (let li = 0; li < lines.length; li++) {
@@ -1237,6 +1294,55 @@ class MCPServerImpl implements McpHttpDelegate {
       requestId: this.generateRequestId()
     }
     return resp
+  }
+
+  /** [P62-C/A] wait for the post-action document to settle (readyState complete, url stable),
+   *  then read location.href/document.title. Self-contained expression — no bridge dependency. */
+  private async pageInfoAfterTransition(maxMs: number = 4000): Promise<MCPPageInfo> {
+    const info = new MCPPageInfo()
+    // [P62-C] concat-built probe expression so quotes never nest; bridge-free
+    const js = '(function(){try{return JSON.stringify({url:location.href,title:document.title,ready:document.readyState})}catch(e){return JSON.stringify({url:"",title:"",ready:"err"})}})()'
+    let lastUrl = ''
+    let stableSince = 0
+    const t0 = Date.now()
+    while (Date.now() - t0 < maxMs) {
+      const r = await BCPEngine.evaluate(js)
+      let url = ''
+      let title = ''
+      let ready = ''
+      try {
+        // evaluate returns a JSON string; the probe object is the payload (maybe wrapped {ok,result})
+        const outer = JSON.parse(`${r.data}`) as Record<string, Object>
+        let probeJson = ''
+        if (outer['ok'] !== undefined && outer['result'] !== undefined && outer['result'] !== null) {
+          const innerRaw = outer['result']
+          probeJson = typeof innerRaw === 'string' ? innerRaw : JSON.stringify(innerRaw)
+        } else {
+          probeJson = `${r.data}`
+        }
+        const obj = JSON.parse(probeJson) as Record<string, Object>
+        url = `${obj['url'] || ''}`
+        title = `${obj['title'] || ''}`
+        ready = `${obj['ready'] || ''}`
+      } catch (e) { }
+      if (url === lastUrl && url.length > 0 && (ready === 'complete' || ready === 'interactive')) {
+        if (stableSince === 0) {
+          stableSince = Date.now()
+        }
+        if (Date.now() - stableSince >= 500) {
+          info.url = url
+          info.title = title
+          return info
+        }
+      } else {
+        stableSince = 0
+        lastUrl = url
+      }
+      info.url = url
+      info.title = title
+      await new Promise<void>((res) => setTimeout(res, 250))
+    }
+    return info
   }
 
   private bcpToMcpResponse(bcpResult: BCPResult, data: MCPResponseData): MCPToolResponse {

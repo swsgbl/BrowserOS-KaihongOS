@@ -1,0 +1,7 @@
+PASS [E-discover-32601] code=-32601 msg=Method not found: server/discover
+PASS [B-read-session-owned] tabA=tab_1_1793223969564 tabB=tab_2_1793223972069 read120={"source":"snapshot","text":"该域名仅用于文档示例，无需获得许可。这并非一项服务，请勿将其用于测试和监控目的。\n\nThis domain is for use in documentation example
+PASS [A-snapshot-fresh-after-act] click=ok len 5796->28383 resultsHit=true after120={"content":"百度首页设置登录\n百度一下\n网页\n图片\n资讯\n视频\n笔记\n地图\n贴吧\n文库\n更多\n搜索工具\n权威来源\nHarmonyOS应用开发\nHarmonyOS
+PASS [C-history-back-body] body={"url":"https://example.com/","title":"Example Domain","action":"back"}
+PASS [D-grep-hits] hits=3 raw={"matches":[{"line":5,"text":"IANA-managed Reserved Domains"},{"line":66,"text":"# IANA-managed Reserved Domains"},{"line":113,"text":"- [Re
+
+===== P62 VERIFY: 5/5 PASS =====

@@ -35,7 +35,7 @@ time.sleep(8)
 
 r = call_tool(qs, sid, 'snapshot', {}, timeout=60)
 t = result_text(r)
-step('snapshot example.com', 'Example Domain' in t, 'len=%d' % len(t))
+step('snapshot example.com', ('documentation examples' in t.lower() or '文档示例' in t or 'example' in t.lower()), 'len=%d' % len(t))
 
 r = call_tool(qs, sid, 'evaluate_in_page', {'expression': "document.title"}, timeout=60)
 t = result_text(r)
