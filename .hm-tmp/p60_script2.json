@@ -1,0 +1,12 @@
+[
+  { "tool": "tabs", "args": { "action": "new" }, "expect": ["tab"] },
+  { "tool": "navigate", "args": { "url": "https://example.com" }, "expect": ["example.com"] },
+  { "tool": "read", "args": {}, "expect": ["documentation examples", "文档示例"] },
+  { "tool": "snapshot", "args": {}, "expect": ["Example"] },
+  { "tool": "evaluate_in_page", "args": { "expression": "document.title" }, "expect": ["Example Domain"] },
+  { "tool": "navigate", "args": { "url": "https://www.iana.org/help/example-domains" }, "expect": ["iana"] },
+  { "tool": "read", "args": {}, "expect": ["IANA"] },
+  { "tool": "history", "args": { "action": "back" }, "expect": ["example.com"] },
+  { "tool": "read", "args": {}, "expect": ["documentation examples", "文档示例"] },
+  { "tool": "tabs", "args": { "action": "close" }, "expect": ["tab"] }
+]

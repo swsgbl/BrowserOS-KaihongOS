@@ -1,0 +1,77 @@
+[
+  {
+    "t": "2026-10-28T14:54:11.491Z",
+    "kind": "initialize_req",
+    "data": {
+      "url": "http://127.0.0.1:19222/mcp?token=***"
+    }
+  },
+  {
+    "t": "2026-10-28T14:54:11.518Z",
+    "kind": "initialize_res",
+    "data": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": {
+        "protocolVersion": "2024-11-05",
+        "capabilities": {
+          "tools": {
+            "listChanged": false
+          },
+          "resources": null,
+          "prompts": null
+        },
+        "serverInfo": {
+          "name": "browseros_mcp",
+          "title": "BrowserOS MCP Server",
+          "version": "1.1.0"
+        },
+        "instructions": "You are driving the BrowserOS webview via MCP tools.\n- Prefer finishing in the current page: navigate, click, type, scroll, read text, take snapshots.\n- Give each step a concrete check: snapshot or getText to verify the effect before moving on.\n- Tidy up when a task finishes: close tabs you opened for this task unless the user\n  asked to keep them or a page is still useful for inspection.\n- The back/forward tools share the page history; use them instead of re-navigating when possible."
+      },
+      "error": null
+    }
+  },
+  {
+    "t": "2026-10-28T14:54:11.528Z",
+    "kind": "tools_list",
+    "data": []
+  },
+  {
+    "t": "2026-10-28T14:54:11.528Z",
+    "kind": "call:navigate",
+    "data": {
+      "url": "https://example.com"
+    }
+  },
+  {
+    "t": "2026-10-28T14:54:11.530Z",
+    "kind": "result:navigate",
+    "data": null
+  },
+  {
+    "t": "2026-10-28T14:54:11.530Z",
+    "kind": "rpc_error",
+    "data": {
+      "code": -32001,
+      "message": "Session required: unknown or expired Mcp-Session-Id (initialize first)"
+    }
+  },
+  {
+    "t": "2026-10-28T14:54:11.530Z",
+    "kind": "call:read",
+    "data": {}
+  },
+  {
+    "t": "2026-10-28T14:54:11.532Z",
+    "kind": "result:read",
+    "data": null
+  },
+  {
+    "t": "2026-10-28T14:54:11.532Z",
+    "kind": "rpc_error",
+    "data": {
+      "code": -32001,
+      "message": "Session required: unknown or expired Mcp-Session-Id (initialize first)"
+    }
+  }
+]

@@ -1,0 +1,100 @@
+[
+  {
+    "t": "2026-10-28T14:54:34.989Z",
+    "kind": "initialize_req",
+    "data": {
+      "url": "http://127.0.0.1:19222/mcp?token=***"
+    }
+  },
+  {
+    "t": "2026-10-28T14:54:35.017Z",
+    "kind": "session_id",
+    "data": "0a2878b4-48ab-4886-a234-e84068d54569"
+  },
+  {
+    "t": "2026-10-28T14:54:35.018Z",
+    "kind": "initialize_res",
+    "data": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": {
+        "protocolVersion": "2024-11-05",
+        "capabilities": {
+          "tools": {
+            "listChanged": false
+          },
+          "resources": null,
+          "prompts": null
+        },
+        "serverInfo": {
+          "name": "browseros_mcp",
+          "title": "BrowserOS MCP Server",
+          "version": "1.1.0"
+        },
+        "instructions": "You are driving the BrowserOS webview via MCP tools.\n- Prefer finishing in the current page: navigate, click, type, scroll, read text, take snapshots.\n- Give each step a concrete check: snapshot or getText to verify the effect before moving on.\n- Tidy up when a task finishes: close tabs you opened for this task unless the user\n  asked to keep them or a page is still useful for inspection.\n- The back/forward tools share the page history; use them instead of re-navigating when possible."
+      },
+      "error": null
+    }
+  },
+  {
+    "t": "2026-10-28T14:54:35.025Z",
+    "kind": "tools_list",
+    "data": [
+      "tabs",
+      "tab_groups",
+      "history",
+      "navigate",
+      "snapshot",
+      "diff",
+      "act",
+      "download",
+      "upload",
+      "read",
+      "grep",
+      "screenshot",
+      "pdf",
+      "wait",
+      "windows",
+      "evaluate_in_page",
+      "run"
+    ]
+  },
+  {
+    "t": "2026-10-28T14:54:35.025Z",
+    "kind": "call:navigate",
+    "data": {
+      "url": "https://example.com"
+    }
+  },
+  {
+    "t": "2026-10-28T14:54:35.031Z",
+    "kind": "result:navigate",
+    "data": null
+  },
+  {
+    "t": "2026-10-28T14:54:35.032Z",
+    "kind": "rpc_error",
+    "data": {
+      "code": -32000,
+      "message": "P51: session owns no tab; call tabs{action:new} first"
+    }
+  },
+  {
+    "t": "2026-10-28T14:54:35.032Z",
+    "kind": "call:read",
+    "data": {}
+  },
+  {
+    "t": "2026-10-28T14:54:35.034Z",
+    "kind": "result:read",
+    "data": null
+  },
+  {
+    "t": "2026-10-28T14:54:35.034Z",
+    "kind": "rpc_error",
+    "data": {
+      "code": -32000,
+      "message": "P51: session owns no tab; call tabs{action:new} first"
+    }
+  }
+]

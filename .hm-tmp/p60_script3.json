@@ -1,0 +1,10 @@
+[
+  { "tool": "tabs", "args": { "action": "new" }, "expect": ["tab"] },
+  { "tool": "navigate", "args": { "url": "https://example.com" }, "expect": ["example.com"] },
+  { "tool": "evaluate_in_page", "args": { "expression": "JSON.stringify({title: document.title, url: location.href, h1: document.querySelector('h1')?.textContent})" }, "expect": ["Example Domain"] },
+  { "tool": "navigate", "args": { "url": "https://www.iana.org/help/example-domains" }, "expect": ["iana"] },
+  { "tool": "grep", "args": { "pattern": "Reserved" }, "expect": ["RFC"] },
+  { "tool": "history", "args": { "action": "back" }, "expect": [] },
+  { "tool": "evaluate_in_page", "args": { "expression": "location.href" }, "expect": ["example.com"] },
+  { "tool": "tabs", "args": { "action": "list" }, "expect": ["tab"] }
+]

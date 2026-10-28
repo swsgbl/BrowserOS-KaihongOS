@@ -1,0 +1,236 @@
+[
+  {
+    "t": "2026-10-28T14:57:00.242Z",
+    "kind": "initialize_req",
+    "data": {
+      "url": "http://127.0.0.1:19222/mcp?token=***"
+    }
+  },
+  {
+    "t": "2026-10-28T14:57:00.270Z",
+    "kind": "session_id",
+    "data": "45d201b2-571e-4c30-bbcf-bccce41fe690"
+  },
+  {
+    "t": "2026-10-28T14:57:00.271Z",
+    "kind": "initialize_res",
+    "data": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": {
+        "protocolVersion": "2024-11-05",
+        "capabilities": {
+          "tools": {
+            "listChanged": false
+          },
+          "resources": null,
+          "prompts": null
+        },
+        "serverInfo": {
+          "name": "browseros_mcp",
+          "title": "BrowserOS MCP Server",
+          "version": "1.1.0"
+        },
+        "instructions": "You are driving the BrowserOS webview via MCP tools.\n- Prefer finishing in the current page: navigate, click, type, scroll, read text, take snapshots.\n- Give each step a concrete check: snapshot or getText to verify the effect before moving on.\n- Tidy up when a task finishes: close tabs you opened for this task unless the user\n  asked to keep them or a page is still useful for inspection.\n- The back/forward tools share the page history; use them instead of re-navigating when possible."
+      },
+      "error": null
+    }
+  },
+  {
+    "t": "2026-10-28T14:57:00.315Z",
+    "kind": "tools_list",
+    "data": [
+      "tabs",
+      "tab_groups",
+      "history",
+      "navigate",
+      "snapshot",
+      "diff",
+      "act",
+      "download",
+      "upload",
+      "read",
+      "grep",
+      "screenshot",
+      "pdf",
+      "wait",
+      "windows",
+      "evaluate_in_page",
+      "run"
+    ]
+  },
+  {
+    "t": "2026-10-28T14:57:00.315Z",
+    "kind": "call:tabs",
+    "data": {
+      "action": "new"
+    }
+  },
+  {
+    "t": "2026-10-28T14:57:00.323Z",
+    "kind": "result:tabs",
+    "data": "{\"tabId\":\"tab_4_1793199420322\",\"url\":\"about:blank\"}"
+  },
+  {
+    "t": "2026-10-28T14:57:00.323Z",
+    "kind": "assert:tabs",
+    "data": {
+      "expect": [
+        "tab"
+      ],
+      "pass": true
+    }
+  },
+  {
+    "t": "2026-10-28T14:57:00.323Z",
+    "kind": "call:navigate",
+    "data": {
+      "url": "https://example.com"
+    }
+  },
+  {
+    "t": "2026-10-28T14:57:03.342Z",
+    "kind": "result:navigate",
+    "data": "{\"url\":\"https://example.com\",\"result\":\"https://example.com\"}"
+  },
+  {
+    "t": "2026-10-28T14:57:03.342Z",
+    "kind": "assert:navigate",
+    "data": {
+      "expect": [
+        "example.com"
+      ],
+      "pass": true
+    }
+  },
+  {
+    "t": "2026-10-28T14:57:03.342Z",
+    "kind": "call:evaluate_in_page",
+    "data": {
+      "expression": "JSON.stringify({title: document.title, url: location.href, h1: document.querySelector('h1')?.textContent})"
+    }
+  },
+  {
+    "t": "2026-10-28T14:57:06.364Z",
+    "kind": "result:evaluate_in_page",
+    "data": "{\"expression\":\"JSON.stringify({title: document.title, url: location.href, h1: document.querySelector('h1')?.textContent})\",\"result\":\"{\\\"ok\\\":true,\\\"result\\\":\\\"{\\\\\\\"title\\\\\\\":\\\\\\\"Example Domain\\\\\\\",\\\\\\\"url\\\\\\\":\\\\\\\"https://example.com/\\\\\\\"}\\\"}\",\"truncated\":false}"
+  },
+  {
+    "t": "2026-10-28T14:57:06.364Z",
+    "kind": "assert:evaluate_in_page",
+    "data": {
+      "expect": [
+        "Example Domain"
+      ],
+      "pass": true
+    }
+  },
+  {
+    "t": "2026-10-28T14:57:06.364Z",
+    "kind": "call:navigate",
+    "data": {
+      "url": "https://www.iana.org/help/example-domains"
+    }
+  },
+  {
+    "t": "2026-10-28T14:57:09.383Z",
+    "kind": "result:navigate",
+    "data": "{\"url\":\"https://www.iana.org/help/example-domains\",\"result\":\"https://www.iana.org/help/example-domains\"}"
+  },
+  {
+    "t": "2026-10-28T14:57:09.383Z",
+    "kind": "assert:navigate",
+    "data": {
+      "expect": [
+        "iana"
+      ],
+      "pass": true
+    }
+  },
+  {
+    "t": "2026-10-28T14:57:09.383Z",
+    "kind": "call:grep",
+    "data": {
+      "pattern": "Reserved"
+    }
+  },
+  {
+    "t": "2026-10-28T14:57:12.406Z",
+    "kind": "result:grep",
+    "data": "{\"matches\":[],\"count\":0,\"truncated\":false}"
+  },
+  {
+    "t": "2026-10-28T14:57:12.406Z",
+    "kind": "assert:grep",
+    "data": {
+      "expect": [
+        "RFC"
+      ],
+      "pass": false
+    }
+  },
+  {
+    "t": "2026-10-28T14:57:12.406Z",
+    "kind": "call:history",
+    "data": {
+      "action": "back"
+    }
+  },
+  {
+    "t": "2026-10-28T14:57:15.423Z",
+    "kind": "result:history",
+    "data": "{}"
+  },
+  {
+    "t": "2026-10-28T14:57:15.423Z",
+    "kind": "assert:history",
+    "data": {
+      "expect": [],
+      "pass": false
+    }
+  },
+  {
+    "t": "2026-10-28T14:57:15.423Z",
+    "kind": "call:evaluate_in_page",
+    "data": {
+      "expression": "location.href"
+    }
+  },
+  {
+    "t": "2026-10-28T14:57:18.446Z",
+    "kind": "result:evaluate_in_page",
+    "data": "{\"expression\":\"location.href\",\"result\":\"{\\\"ok\\\":true,\\\"result\\\":\\\"https://example.com/\\\"}\",\"truncated\":false}"
+  },
+  {
+    "t": "2026-10-28T14:57:18.446Z",
+    "kind": "assert:evaluate_in_page",
+    "data": {
+      "expect": [
+        "example.com"
+      ],
+      "pass": true
+    }
+  },
+  {
+    "t": "2026-10-28T14:57:18.446Z",
+    "kind": "call:tabs",
+    "data": {
+      "action": "list"
+    }
+  },
+  {
+    "t": "2026-10-28T14:57:21.462Z",
+    "kind": "result:tabs",
+    "data": "{\"tabs\":[{\"tabId\":\"tab_3_1793183304984\",\"url\":\"https://www.browseros.com/\",\"title\":\"BrowserOS neo: The Missing Browser for Claude, Cowork & Codex\",\"active\":false},{\"tabId\":\"tab_1_1793187140862\",\"url\":\"https://www.wps.cn/\",\"title\":\"WPS-支持多人在线协作编辑Word、Excel和PPT文档_WPS官方网站\",\"active\":false},{\"tabId\":\"tab_1_1793187298042\",\"url\":\"https://www.wps.cn/\",\"title\":\"WPS-支持多人在线协作编辑Word、Excel和PPT文档_WPS官方网站\",\"active\":false},{\"tabId\":\"tab_1_1793187463360\",\"url\":\"https://www.wps.cn/\",\"title\":\"WPS-支持多人在线协作编辑Word、Excel和PPT文档_WPS官方网站\",\"active\":false},{\"tabId\":\"tab_1_1793187651157\",\"url\":\"https://www.wps.cn/\",\"title\":\"WPS-支持多人在线协作编辑Word、Excel和PPT文档_WPS官方网站\",\"active\":false},{\"tabId\":\"tab_1_1793187835645\",\"url\":\"https://www.wps.cn/\",\"title\":\"WPS-支持多人在线协作编辑Word、Excel和PPT文档_WPS官方网站\",\"active\":false},{\"tabId\":\"tab_1_1793188085014\",\"url\":\"https://account.wps.cn/?cb=https%3A%2F%2Fwww.kdocs.cn%2Flatest&form=www.wps.cn\",\"title\":\"登录 - 金山办公账号\",\"active\":false},{\"tabId\":\"tab_1_1793192328931\",\"url\":\"https://example.com/\",\"title\":\"Example Domain\",\"active\":false},{\"tabId\":\"tab_2_1793199311940\",\"url\":\"about:blank\",\"title\":\"\",\"active\":false},{\"tabId\":\"tab_3_1793199340465\",\"url\":\"about:blank\",\"title\":\"\",\"active\":false},{\"tabId\":\"tab_4_1793199420322\",\"url\":\"about:blank\",\"title\":\"\",\"active\":true}],\"count\":11}"
+  },
+  {
+    "t": "2026-10-28T14:57:21.462Z",
+    "kind": "assert:tabs",
+    "data": {
+      "expect": [
+        "tab"
+      ],
+      "pass": true
+    }
+  }
+]

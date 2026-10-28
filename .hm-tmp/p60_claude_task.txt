@@ -1,0 +1,9 @@
+Use the browseros-kaihong MCP server to drive the KaihongOS browser and complete this task:
+
+1. First create a new tab (tabs action=new)
+2. Navigate to https://example.com
+3. Read the page text and report the page title and first heading
+4. Navigate to https://www.iana.org/help/example-domains
+5. Read that page and report what it says about reserved domains (one sentence)
+
+Answer concisely in Chinese. This is a real E2E test of the BrowserOS MCP integration.

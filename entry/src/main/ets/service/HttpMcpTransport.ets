@@ -303,12 +303,14 @@ class HttpMcpTransportImpl {
     if (outcome.sessionId !== '') {
       this.sessions.add(outcome.sessionId)
     }
-    await this.sendSimple(conn, '200 OK', outcome.bodyText, outcome.extraHeaders)
+    await this.sendSimple(conn, outcome.statusText, outcome.bodyText, outcome.extraHeaders)
   }
 
   private async sendSimple(conn: ConnectionState, statusLine: string, bodyText: string,
     extraHeaders: string[] = []): Promise<void> {
-    const bodyBytes = new util.TextEncoder().encodeInto(bodyText)
+    // P60: encodeInto('') returns undefined on this netstack (same family as P4 decodeWithStream)
+    // — notification responses carry an EMPTY body, so guard the empty case explicitly.
+    const bodyBytes = bodyText.length === 0 ? new Uint8Array(0) : new util.TextEncoder().encodeInto(bodyText)
     const headers: string[] = [
       `HTTP/1.1 ${statusLine}`,
       'Content-Type: application/json',
@@ -321,10 +323,17 @@ class HttpMcpTransportImpl {
     }
     const headText = headers.join('\r\n') + '\r\n\r\n'
     const headBytes = new util.TextEncoder().encodeInto(headText)
-    const out = new Uint8Array(headBytes.length + bodyBytes.length)
-    out.set(headBytes, 0)
-    out.set(bodyBytes, headBytes.length)
-    const data = out.buffer.slice(out.byteOffset, out.byteOffset + out.length)
+    // P60 netstack: sending a 0-length ArrayBuffer throws — for empty bodies (202 notifications)
+    // send the header bytes alone instead of concatenating an empty tail.
+    let data: ArrayBuffer
+    if (bodyBytes.length === 0) {
+      data = headBytes.buffer.slice(headBytes.byteOffset, headBytes.byteOffset + headBytes.length)
+    } else {
+      const out = new Uint8Array(headBytes.length + bodyBytes.length)
+      out.set(headBytes, 0)
+      out.set(bodyBytes, headBytes.length)
+      data = out.buffer.slice(out.byteOffset, out.byteOffset + out.length)
+    }
     try {
       await conn.client.send({ data: data })
     } catch (e) {

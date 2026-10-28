@@ -1,0 +1,5 @@
+[
+  { "tool": "tabs", "args": { "action": "new" }, "expect": ["tab"] },
+  { "tool": "navigate", "args": { "url": "https://example.com" }, "expect": ["example", "Example"] },
+  { "tool": "read", "args": {}, "expect": ["Example Domain"] }
+]

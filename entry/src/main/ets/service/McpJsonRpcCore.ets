@@ -66,8 +66,8 @@ class McpToolsCapability {
 
 class McpCapabilities {
   tools: McpToolsCapability = new McpToolsCapability()
-  resources: Object | null = null   // P52: 2026-07-28 spec shape (declared, not implemented)
-  prompts: Object | null = null     // P52: 2026-07-28 spec shape (declared, not implemented)
+  // P60 interop: strict SDK Zod rejects explicit null here ("expected object, received null").
+  // We do not implement resources/prompts — key absence is the valid representation.
 }
 
 class McpServerInfo {
@@ -142,6 +142,18 @@ class McpJsonRpcCoreImpl {
       ? root['params'] as Record<string, Object> : null
 
     console.info(`[${TAG_RPC}] method=${rpcMethod} id=${JSON.stringify(rpcId)} via=${agentId} sid=${incomingSessionId.substring(0, 8)}`)
+
+    // P60: JSON-RPC notification (no id) — MCP Streamable HTTP spec requires 202 + empty body.
+    // Returning an error body with id:null breaks strict clients (Claude Code official SDK
+    // Zod-parses every response body and fails on id:null / error union) — 实测 ZodError 断连。
+    if (rpcId === null) {
+      McpSessionStore.touch(incomingSessionId)   // 通知也顺手续期（结果忽略）
+      const accepted = new RpcOutcome()
+      accepted.statusText = '202 Accepted'
+      accepted.bodyText = ''
+      console.info(`[${TAG_RPC}] notification ${rpcMethod} accepted (202, empty body)`)
+      return accepted
+    }
 
     if (rpcMethod === 'initialize') {
       // P51 (1a): clientInfo.name 入库；会话真值源 = McpSessionStore
@@ -244,14 +256,18 @@ class McpJsonRpcCoreImpl {
   }
 
   private outcome(id: Object | null, error: JsonRpcErrorObj | null, result?: Object): RpcOutcome {
-    const resp = new JsonRpcResponse()
-    resp.id = id
-    resp.error = error
-    if (error === null && result !== undefined) {
-      resp.result = result
-    }
+    // P60 interop: strict SDK clients (official TS SDK >=1.10, Claude Code 2.x) Zod-reject
+    // any SUCCESS response carrying an "error" key (even null). Build the JSON manually
+    // so success/error responses each emit only their own key.
     const outcome = new RpcOutcome()
-    outcome.bodyText = JSON.stringify(resp)
+    const idPart: string = id === null ? 'null' : JSON.stringify(id)
+    if (error !== null) {
+      outcome.bodyText = `{"jsonrpc":"2.0","id":${idPart},"error":${JSON.stringify(error)}}`
+    } else if (result !== undefined) {
+      outcome.bodyText = `{"jsonrpc":"2.0","id":${idPart},"result":${JSON.stringify(result)}}`
+    } else {
+      outcome.bodyText = `{"jsonrpc":"2.0","id":${idPart},"result":null}`
+    }
     return outcome
   }
 

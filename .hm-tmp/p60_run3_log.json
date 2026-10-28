@@ -1,0 +1,127 @@
+[
+  {
+    "t": "2026-10-28T14:55:11.896Z",
+    "kind": "initialize_req",
+    "data": {
+      "url": "http://127.0.0.1:19222/mcp?token=***"
+    }
+  },
+  {
+    "t": "2026-10-28T14:55:11.923Z",
+    "kind": "session_id",
+    "data": "63f2951b-fb55-4885-bb13-c840ec2678d9"
+  },
+  {
+    "t": "2026-10-28T14:55:11.924Z",
+    "kind": "initialize_res",
+    "data": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": {
+        "protocolVersion": "2024-11-05",
+        "capabilities": {
+          "tools": {
+            "listChanged": false
+          },
+          "resources": null,
+          "prompts": null
+        },
+        "serverInfo": {
+          "name": "browseros_mcp",
+          "title": "BrowserOS MCP Server",
+          "version": "1.1.0"
+        },
+        "instructions": "You are driving the BrowserOS webview via MCP tools.\n- Prefer finishing in the current page: navigate, click, type, scroll, read text, take snapshots.\n- Give each step a concrete check: snapshot or getText to verify the effect before moving on.\n- Tidy up when a task finishes: close tabs you opened for this task unless the user\n  asked to keep them or a page is still useful for inspection.\n- The back/forward tools share the page history; use them instead of re-navigating when possible."
+      },
+      "error": null
+    }
+  },
+  {
+    "t": "2026-10-28T14:55:11.933Z",
+    "kind": "tools_list",
+    "data": [
+      "tabs",
+      "tab_groups",
+      "history",
+      "navigate",
+      "snapshot",
+      "diff",
+      "act",
+      "download",
+      "upload",
+      "read",
+      "grep",
+      "screenshot",
+      "pdf",
+      "wait",
+      "windows",
+      "evaluate_in_page",
+      "run"
+    ]
+  },
+  {
+    "t": "2026-10-28T14:55:11.933Z",
+    "kind": "call:tabs",
+    "data": {
+      "action": "new"
+    }
+  },
+  {
+    "t": "2026-10-28T14:55:11.941Z",
+    "kind": "result:tabs",
+    "data": "{\"tabId\":\"tab_2_1793199311940\",\"url\":\"about:blank\"}"
+  },
+  {
+    "t": "2026-10-28T14:55:11.941Z",
+    "kind": "assert:tabs",
+    "data": {
+      "expect": [
+        "tab"
+      ],
+      "pass": true
+    }
+  },
+  {
+    "t": "2026-10-28T14:55:11.942Z",
+    "kind": "call:navigate",
+    "data": {
+      "url": "https://example.com"
+    }
+  },
+  {
+    "t": "2026-10-28T14:55:14.959Z",
+    "kind": "result:navigate",
+    "data": "{\"url\":\"https://example.com\",\"result\":\"https://example.com\"}"
+  },
+  {
+    "t": "2026-10-28T14:55:14.959Z",
+    "kind": "assert:navigate",
+    "data": {
+      "expect": [
+        "example",
+        "Example"
+      ],
+      "pass": true
+    }
+  },
+  {
+    "t": "2026-10-28T14:55:14.959Z",
+    "kind": "call:read",
+    "data": {}
+  },
+  {
+    "t": "2026-10-28T14:55:17.980Z",
+    "kind": "result:read",
+    "data": "{\"source\":\"snapshot\",\"text\":\"该域名仅用于文档示例，无需获得许可。这并非一项服务，请勿将其用于测试和监控目的。\\nThis domain is for use in documentation examples without needing permission. This is not a service; avoid relying on it for testing and monitoring purposes.\\nهذا النطاق مُخصص للاستخدام في أمثلة التوثيق دون الحاجة إلى إذن. هذه ليست خدمة، يُرجى تجنب الاعتماد عليها لأغراض الاختبار والمراقبة.\\nL’usage de ce domaine est réservé à des exemples de documentation, sans autorisation préalable. Il ne s’agit pas d’un service ; son utilisation à des fins de test ou de surveillance est à éviter.\\nДанный домен предназначен для использования в примерах документации без необходимости получения предварительного разрешения. Это не сервис; не рекомендуется его использование для тестирования и мониторинга.\\nEste dominio está destinado al uso en ejemplos de documentación sin necesidad de permiso. Esto no es un servicio; evitar utilizarlo para realizar pruebas o monitoreos.\\n[Learn more](https://iana.org/help/example-domains)\",\"refCount\":0}"
+  },
+  {
+    "t": "2026-10-28T14:55:17.980Z",
+    "kind": "assert:read",
+    "data": {
+      "expect": [
+        "Example Domain"
+      ],
+      "pass": false
+    }
+  }
+]
