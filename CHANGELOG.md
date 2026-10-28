@@ -4,6 +4,20 @@
 
 格式参考 Keep a Changelog；版本以仓库主分支阶段号标记。
 
+## [P63] - 2026-10-29
+### 安全：敏感检测语义修正——FORM_SUBMIT 字面量档移除（Zodex 裁决）
+- **裁决依据**：'form'/'submit' 子串匹配可绕过（同一按钮 `#su` vs `input[type=submit]`=假安全）、打断最常见 agent 操作（搜索提交）、上游 BrowserOS 无工具级确认档
+- **变更**：`SensitiveOperationDetector` 删 FORM_SUBMIT 规则及死代码（detectFormSubmit/isSensitive）；PAYMENT/DELETE/SETTINGS 三档关键词检测保留；SECURITY.md 重定位检测层为"尽力而为的关键词层"（不应作唯一防线）
+- **验收**：p62_verify **5/5 @ sensitiveConfirm=true**（A 探针 input[type=submit] 直接执行，hmh+Zodex 双证）；支付导航确认挂起保持（15s 探针）；表单导航 9ms 直通；static 全过；smoke 8/9（第 7 步=窗口化坐标漂移，P40 期已知测试基建问题→P64）
+
+## [P62] - 2026-10-29
+### MCP 工具语义修复——真实 agent 实测缺陷 7 项（hmh 两轮 + Zodex 独立终验 7/7）
+- **G（P1）act 无界挂起+app 死亡**：根因=click/type 依赖 `__bcp_arkts_callback` proxy，导航后 proxy 死亡致 runJavaScript 永不 settle；修复=自包含同步表达式 + callTool 30s 硬超时 + executeJS/evaluate 5s race——超时干净报错、app 存活
+- **A（P1）act 导航后快照残缺**：根因=百度结果页 DOM 内嵌字面 `<style>` 源码文本节点，旧构建器全 textNode 采集被 CSS 吃满截断（非桥死亡）；修复=快照文本骨架改 `document.body.innerText` + 结构化元素单独收集——终验 read 25927B 含天气/零 CSS 污染/grep 49 命中
+- **B** read-null → MCP_003 明确错误；**C** history back/forward 返回 `{url,title,action}`；**D** grep 与 read 同源（hits 0→2/3）；**E** server/discover 保持 -32601；**F** 冒烟断言更新（example.com 新文案）
+- **澄清**：`input[type=submit]` 挂死是 FORM_SUBMIT 人工确认设计（P8）的正常表现，agent 用 `#su` 即执行；**P63 议题**=敏感检测按选择器字面量可被绕过，需按语义检测或对齐上游
+- 回归：static 全过 + smoke 9/9 + p62_verify 5/5（confirm=false）/ 4/5+A 终验 PASS（confirm=true 安全态）
+
 ## [P61] - 2026-10-29
 ### 里程碑：首个 VM 内驻 AI Agent 实测（设备本地 agent 生态）
 - **vm_agent.js（tools/）**：完全运行在 KaihongOS 设备内的 AI agent（Node.js v24.19.0）——LLM 决策（经 HOST 中继出网）+ MCP loopback 直连（127.0.0.1:9222，无 fport 隧道）+ 自主工具循环（原生 tool_calls + 文本 JSON 兜底双协议）

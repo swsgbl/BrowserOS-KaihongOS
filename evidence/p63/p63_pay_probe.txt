@@ -1,0 +1,3 @@
+setup tabs new: {"jsonrpc":"2.0","id":9,"result":{"content":[{"type":"text","text":"{\"tabId\":\"tab_5_1793230171274
+PASS [PAY-nav-hangs] client-timeout after 15001ms (waiting for confirmation)
+PASS [FORMSUBMIT-nav-direct] returned in 9ms body={"jsonrpc":"2.0","id":3,"result":{"content":[{"type":"text","text":"{\"url\":\"https://example.com/?q=formsubmit\",\"res

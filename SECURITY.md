@@ -26,7 +26,8 @@
 - **MCP Session 隔离（P51 McpSessionStore）**：每个 MCP 连接独立 session——session-id 校验（未知/失效会话拒绝）+ tab ownership（会话只可操作自己开的 tab）+ 并发隔离（多 harness/客户端同时接入互不串台）；配合 McpRateLimiter 滑动窗口限流（默认 30req/10s/连接，超限 HTTP 429 / WS -32000）。
 - **审计脱敏（P51 AuditRedactor）**：内部 agent 与外部 MCP 工具调用的审计输出经统一脱敏（token/key/敏感 URL 参数遮蔽）后才落盘/展示（AuditPage）。
 - **连接状态真实化（P52）**：harness 连接状态不再假报 Connected——`connect()` 仅表示配置就绪，`testConnection()` 执行真实 MCP initialize 握手（HTTP 200 + serverInfo browseros_mcp）后才标记 connected 并持久化；用户可随时在 Connect 对话框复测。
-- **设备端 MCP 服务**：HTTP（:9222）与 WebSocket（:8765）通道均要求 token 鉴权；token 每次应用冷启动轮换（CSPRNG）；仅监听本机回环（loopback only，不暴露 0.0.0.0）；敏感操作（支付/删除/设置类导航）弹窗人工确认（可配置）。
+- **设备端 MCP 服务**：HTTP（:9222）与 WebSocket（:8765）通道均要求 token 鉴权；token 每次应用冷启动轮换（CSPRNG）；仅监听本机回环（loopback only，不暴露 0.0.0.0）。
+- **敏感操作确认（尽力而为的关键词层）**：导航/click/type 上的 PAYMENT/DELETE/SETTINGS 三类关键词命中触发弹窗人工确认（可配置，`sensitiveConfirm`）。客户端无法做语义级保证——关键词层只提供尽力而为的拦截，绕过（换选择器命名/间接路径）在原理上可行，不应作为唯一防线。FORM_SUBMIT 字面量档（'form'/'submit' 子串匹配）已移除（P63）：同一按钮 `#su` vs `input[type=submit]` 即可绕过，且搜索框提交是最常见的常规 agent 操作，上游 BrowserOS 亦无工具级确认档；表单提交不再触发确认。
 - **网络安全**：遵循平台禁令，应用内出网仅走 https（明文 http 会被系统层瞬断）；MCP 本机回环除外。
 - **无数据收集**：零遥测、零上传；历史/书签/会话仅存于应用沙盒。
 - **已知边界**（如实披露）：设备侧签名当前为本地调试证书；正式分发必须替换官方发布证书并走应用市场审核流程。

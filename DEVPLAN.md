@@ -1300,3 +1300,22 @@ python tools/smoke_reg.py         # 30 秒健康检查
 - **缺陷台账（→P62）**：①act 触发导航后 snapshot 返回旧内容（stale，P1）②tabs.new 后立即 read 返回 null（目标解析竞态，P2）。
 - **验证矩阵与证据**：evidence/p61/VERIFY.md（10 项验证+3 任务详情+3 截图+2 决策日志+hilog）。
 
+## P62：MCP 工具语义修复——真实 agent 实测缺陷 7 项（2026-10-29；hmh web-mvsk5n1r 两轮，Zodex 独立终验 7/7 PASS）
+
+**触发**：P61 VM 内 agent 实测 + Zodex 基线探针（tools/p62_verify.cjs）挖出 7 项。
+
+- **G（P1）**：act click 无界挂起 90s+ 且 app 死亡 → 根因=click/type 走 `__bcp_arkts_callback` proxy、导航后 proxy 死亡致 runJavaScript 永不 settle → 修复=自包含同步表达式 + callTool 30s 硬超时 + executeJS/evaluate 5s race（超时干净 -32000、app 存活）。
+- **A（P1）**：act 导航后 snapshot/read/grep 残缺（P61 遗留）→ **真根因（两轮收敛）**=百度结果页 DOM 内嵌字面 `<style>` 源码文本节点，旧快照构建器全 textNode 采集（26 万字符）被 CSS 吃满 30k 截断；iana 简单页无此节点故不复现 → 修复=buildSnapshotMdExpr 重写（innerText 骨架+结构化元素单独收集+payload 校验哨兵）。终验（confirm=true）：click #su 带回结果页 URL，read 25927B 含天气零污染，grep 49 命中。
+- **B** read-null → MCP_003；**C** history 返回 {url,title,action}；**D** grep 同源化；**E** -32601 保持；**F** 冒烟断言新文案。
+- **验收方澄清**：input[type=submit] 探针挂死=FORM_SUBMIT 人工确认设计（P8）×G 兜底的正确组合，非 bug；agent 用 #su（同一按钮）即执行。**P63 立案**：敏感检测按选择器字面量（#su 绕过 input[type=submit] 确认）——需语义检测或对齐上游（上游无表单确认档）。
+- **回归**：static 全过+smoke 9/9+p62_verify 5/5（confirm=false）/4/5+finalA PASS（confirm=true）。证据 evidence/p62/（VERIFY.md+VERDICT.md+VERIFY_ROUND1.md+4 轮 verify 日志+终验脚本）。
+
+## P63：敏感检测语义修正——FORM_SUBMIT 字面量档移除（2026-10-29；hmh wz3egw，Zodex 裁决+独立终验 PASS）
+
+**触发**：P62 验收发现 detectClick 对选择器含 form/submit 子串即触发 FORM_SUBMIT 人工确认——同一按钮 #su 可绕过（假安全）+打断搜索提交（最常见 agent 流）+上游无此设计。
+
+- **变更**：SensitiveOperationDetector 删 FORM_SUBMIT 规则+死代码；PAYMENT/DELETE/SETTINGS 三档保留（P51 验收要求的安全层）；SECURITY.md 检测层重定位为尽力而为关键词层。
+- **验收**：p62_verify **5/5 @ sensitiveConfirm=true**（input[type=submit] 直接执行，hmh+Zodex 双证）；支付导航确认挂起保持；表单导航 9ms 直通；static 全过；smoke 8/9（第 7 步窗口化坐标漂移=P40 期已知测试基建问题，→P64 与 P59-F 20 项回归整合）。sensitiveConfirm=true 终态实测。
+- 证据 evidence/p63/。hmh 无 final 中断（第 9 次），Zodex 接管收尾（VERIFY.md/台账/提交）。
+
+

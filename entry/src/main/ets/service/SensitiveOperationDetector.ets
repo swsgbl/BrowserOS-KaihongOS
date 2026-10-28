@@ -46,10 +46,8 @@ class SensitiveOperationDetectorImpl {
       }
     }
 
-    if (lowerSelector.includes('form') || lowerSelector.includes('submit')) {
-      return SensitiveOperationType.FORM_SUBMIT
-    }
-
+    // P63: FORM_SUBMIT 字面量档已移除（Zodex 裁决）——'form'/'submit' 子串匹配可绕过（#su vs input[type=submit]）、
+    // 打断搜索提交这类常规 agent 流、上游 BrowserOS 无工具级确认档。PAYMENT/DELETE/SETTINGS 关键词层保留。
     return null
   }
 
@@ -73,32 +71,6 @@ class SensitiveOperationDetectorImpl {
           return type
         }
       }
-    }
-
-    return null
-  }
-
-  detectFormSubmit(agentId: string, selector: string): SensitiveOperationType | null {
-    if (selector.toLowerCase().includes('form')) {
-      return SensitiveOperationType.FORM_SUBMIT
-    }
-    return null
-  }
-
-  isSensitive(agentId: string, operation: string, target: string, extra?: string): SensitiveOperationType | null {
-    const clickResult = this.detectClick(agentId, target, extra || '')
-    if (clickResult) {
-      return clickResult
-    }
-
-    const navResult = this.detectNavigation(agentId, target)
-    if (navResult) {
-      return navResult
-    }
-
-    const formResult = this.detectFormSubmit(agentId, target)
-    if (formResult) {
-      return formResult
     }
 
     return null
