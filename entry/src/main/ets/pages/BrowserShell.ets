@@ -1248,6 +1248,8 @@ struct BrowserShell {
   // P11c: 网页右键菜单(Web.onContextMenuShow 拦截,手动覆盖层)
   @State ctxMenuX: number = -1
   @State ctxMenuY: number = -1
+  // P59-B: 页面当前是否有选中文本（右键菜单打开前异步刷新）
+  @State hasPageSelection: boolean = false
   @State ctxEntries: CtxEntry[] = []
   @State ctxLinkUrl: string = ''
   // P47-B: 密码填充提示条 / 保存密码弹层
@@ -1516,6 +1518,11 @@ struct BrowserShell {
         onTap: () => { this.copyUrl(pageUrl) }
       },
       {
+        // P59-B: 复制页面选中文本（无选区时禁用——JS 异步查询结果缓存到 this.hasPageSelection）
+        icon: $rawfile('ic_content_copy.svg'), label: I18n.t('cmCopySel'), enabled: this.hasPageSelection, divider: false,
+        onTap: () => { this.copyPageSelection() }
+      },
+      {
         icon: $rawfile('ic_code.svg'), label: I18n.t('cmViewSource'), enabled: pageUrl.startsWith('http'), divider: false,
         onTap: () => { this.openViewSource(pageUrl) }
       }
@@ -1610,6 +1617,41 @@ struct BrowserShell {
     BookmarkManager.addBookmark(url, title)
     this.refreshBookmarkState()
     console.info('BrowserShell ctx addBookmark: ' + url)
+  }
+
+  /** P59-B: 异步探测页面选中文本是否存在（runJavaScript Promise 取选区长度） */
+  private probePageSelection(tabId: string): void {
+    const ctrl = this.getControllerFor(tabId)
+    if (!ctrl) {
+      return
+    }
+    ctrl.runJavaScript("(window.getSelection?String(window.getSelection()):'').length").then((len: string) => {
+      const n = Number(len)
+      this.hasPageSelection = n > 0
+      console.info('P59-B probe selection len=' + len)
+    }).catch((e: Object) => {
+      console.warn('P59-B probe selection fail: ' + e)
+    })
+  }
+
+  /** P59-B: 复制页面选中文本到系统剪贴板 */
+  private copyPageSelection(): void {
+    const ctrl = this.getActiveController()
+    if (!ctrl) {
+      return
+    }
+    ctrl.runJavaScript("window.getSelection?String(window.getSelection()):''").then((sel: string) => {
+      const text = String(sel)
+      if (text.length > 0) {
+        const pasteData = pasteboard.createData(pasteboard.MIMETYPE_TEXT_PLAIN, text)
+        pasteboard.getSystemPasteboard().setData(pasteData)
+        console.info('P59-B copied selection len=' + text.length)
+      } else {
+        console.warn('P59-B copy selection: empty selection')
+      }
+    }).catch((e: Object) => {
+      console.warn('P59-B copy selection exception: ' + e)
+    })
   }
 
   private copyUrl(url: string): void {
@@ -2109,7 +2151,10 @@ struct BrowserShell {
   WebViewContent(): void {
     Stack() {
       ForEach(this.tabs, (tab: TabInfo) => {
-        Web({ src: 'about:blank', controller: this.getOrCreateController(tab.tabId), incognitoMode: this.p47IncognitoTabs.has(tab.tabId) || tab.isIncognito() })
+        // P59-D: 初始 src 直接取标签意图 URL（tabs.new/restore 在组件创建前已写入 TabManager）。
+        // 之前硬编码 about:blank 的初始加载发生在 attach-load 的 loadUrl 之后,把真实导航取消掉
+        // —— MCP tabs.new 建的标签页永远白屏（snapshot len=111）的根因。
+        Web({ src: (TabManager.getTab(tab.tabId) && TabManager.getTab(tab.tabId)!.currentUrl.length > 0 && TabManager.getTab(tab.tabId)!.currentUrl !== 'about:blank') ? TabManager.getTab(tab.tabId)!.currentUrl : 'about:blank', controller: this.getOrCreateController(tab.tabId), incognitoMode: this.p47IncognitoTabs.has(tab.tabId) || tab.isIncognito() })
           .width('100%')
           .height('100%')
           .visibility(tab.tabId === this.activeTabId && !this.showDashboard ? Visibility.Visible : Visibility.Hidden)
@@ -2135,6 +2180,13 @@ struct BrowserShell {
               }
             }
           })
+          // P59-A: DOM Storage 默认关闭导致 wps.cn 等 JS 站点启动即崩(localStorage 为 null)
+          // —— 悬浮菜单/快照桥全部失效。Chrome 默认开启,这里对齐。
+          .domStorageAccess(true)
+          // P59-D: 桌面 UA —— 设备是 1280x800 横屏,Phone UA 让 wps.cn/jd 等真站吐移动版布局
+          // (导航折叠成汉堡/链接,桌面下拉菜单不复存在),与用户预期(桌面站)不符。
+          .userAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36')
+          .databaseAccess(true)
           .onControllerAttached(() => {
             // 闭包捕获事件源 tabId（多 Web 下 activeTabId 不可靠）
             const tabId = tab.tabId
@@ -2357,6 +2409,9 @@ struct BrowserShell {
             }
             const linkUrl = event.param.getLinkUrl()
             this.ctxLinkUrl = linkUrl ? linkUrl : ''
+            // P59-B: 先置 false,再异步探测选区（探测完成翻转 hasPageSelection 刷新菜单可用态）
+            this.hasPageSelection = false
+            this.probePageSelection(tab.tabId)
             this.ctxEntries = this.buildPageCtxEntries(tab.tabId, linkUrl)
             this.ctxMenuX = event.param.x()
             this.ctxMenuY = event.param.y() + 150
@@ -2584,6 +2639,11 @@ struct BrowserShell {
       case KeyCode.KEYCODE_W:
         console.info('BrowserShell KB Ctrl+W -> close tab')
         this.closeTabById(this.activeTabId)
+        return true
+      case KeyCode.KEYCODE_C:
+        // P59-B: Ctrl+C 复制页面选中文本（页面内输入框的复制由 ArkWeb 自身处理,这里兜底选区）
+        console.info('BrowserShell KB Ctrl+C -> copy page selection')
+        this.copyPageSelection()
         return true
       default:
         return false

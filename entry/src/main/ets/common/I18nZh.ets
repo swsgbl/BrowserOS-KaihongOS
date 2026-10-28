@@ -121,6 +121,7 @@ const PAIRS: string[][] = [
   ['cmReload', '重新加载'],
   ['cmAddBookmark', '将页面添加到书签'],
   ['cmCopyUrl', '复制网址'],
+  ['cmCopySel', '复制选中文字'],
   ['cmViewSource', '查看网页源码'],
   ['cmNewTabRight', '向右新建标签页'],
   ['cmReopenClosed', '重新打开已关闭的标签页'],

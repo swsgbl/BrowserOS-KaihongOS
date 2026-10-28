@@ -249,6 +249,21 @@ struct SkillsPage {
         }
 
       Column() {
+        Row() {
+          Image($rawfile('ic_back.svg'))
+            .width(20).height(20)
+            .fillColor(this.pal().text2)
+            .draggable(false)
+            .width(36)
+            .height(40)
+            .margin({ top: 8 })
+            .onClick(() => {
+              router.back()
+            })
+        }
+        .width('100%')
+        .justifyContent(FlexAlign.Start)
+
         this.Header()
         if (!this.loaded) {
           Column() {
@@ -320,7 +335,7 @@ struct SkillsPage {
     Row() {
       Column() {
         Text(I18n.t('skillsTitle'))
-          .fontSize(28)
+          .fontSize(24)
           .fontWeight(FontWeight.Bold)
           .fontColor(this.pal().text)
         Text(I18n.t('skillsSubtitle'))

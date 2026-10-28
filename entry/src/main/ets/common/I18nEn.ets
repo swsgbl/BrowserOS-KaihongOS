@@ -121,6 +121,7 @@ const PAIRS: string[][] = [
   ['cmReload', 'Reload'],
   ['cmAddBookmark', 'Bookmark this page'],
   ['cmCopyUrl', 'Copy URL'],
+  ['cmCopySel', 'Copy selected text'],
   ['cmViewSource', 'View page source'],
   ['cmNewTabRight', 'New tab to the right'],
   ['cmReopenClosed', 'Reopen closed tab'],

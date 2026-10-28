@@ -1,0 +1,8 @@
+PASS mcp initialize | 
+PASS tabs.new example.com | {"tabId":"tab_1_1793192328931","url":"https://example.com"}
+FAIL snapshot example.com | len=995
+PASS evaluate_in_page | {"expression":"document.title","result":"{\"ok\":true,\"result\":\"Example Domai
+PASS navigate baidu | {"url":"https://www.baidu.com","result":"https://www.baidu.com"}
+PASS snapshot baidu | len=810
+PASS tabs.list | {"tabs":[{"tabId":"tab_3_1793183304984","url":"https://www.browseros.c
+PASS history | {"entries":[{"url":"https://www.baidu.com/","title":"百度一下，你就知道","times
