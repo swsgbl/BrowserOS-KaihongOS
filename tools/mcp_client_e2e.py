@@ -26,7 +26,7 @@ HOST_PORT = 19222
 WS_PORT = 18765  # host side of fport tunnel to device 8765
 UPSTREAM_TOOLS = ['tabs', 'tab_groups', 'history', 'navigate', 'snapshot', 'diff', 'act',
                   'download', 'upload', 'read', 'grep', 'screenshot', 'pdf', 'wait',
-                  'windows', 'evaluate', 'run']
+                  'windows', 'evaluate_in_page', 'run']
 results = []
 
 

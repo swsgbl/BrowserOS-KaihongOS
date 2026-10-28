@@ -34,7 +34,7 @@ T = "192.168.161.137:10178"
 HOST_PORT = 19222
 UPSTREAM_TOOLS = ['tabs', 'tab_groups', 'history', 'navigate', 'snapshot', 'diff', 'act',
                   'download', 'upload', 'read', 'grep', 'screenshot', 'pdf', 'wait',
-                  'windows', 'evaluate', 'run']
+                  'windows', 'evaluate_in_page', 'run']
 HARNESSES = ['claude-code', 'codex', 'cursor-ide', 'deepseek-generic', 'windsurf', 'vscode-generic']
 results = []
 

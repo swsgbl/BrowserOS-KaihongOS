@@ -30,7 +30,7 @@ import { util } from '@kit.ArkTS'
 
 /** P51: tools that require a routed page (session must own a tab) */
 const PAGE_TOOLS: string[] = ['navigate', 'snapshot', 'diff', 'act', 'click', 'type', 'scroll', 'read', 'getText',
-  'grep', 'screenshot', 'pdf', 'wait', 'evaluate', 'run', 'download', 'upload']
+  'grep', 'screenshot', 'pdf', 'wait', 'evaluate_in_page', 'run', 'download', 'upload']
 
 
 type ToolHandler = (params: Record<string, Object>, agentId: string, sessionId?: string) => Promise<MCPToolResponse>
@@ -139,6 +139,10 @@ class MCPServerImpl implements McpHttpDelegate {
     }
     if (name === 'back' || name === 'forward') {
       return 'history'
+    }
+    // P57: evaluate -> evaluate_in_page rename (upstream #3065); old name kept as alias
+    if (name === 'evaluate') {
+      return 'evaluate_in_page'
     }
     return name
   }
@@ -338,7 +342,7 @@ class MCPServerImpl implements McpHttpDelegate {
     this.toolHandlers.set('pdf', this.handlePdf)
     this.toolHandlers.set('wait', this.handleWait)
     this.toolHandlers.set('windows', this.handleWindows)
-    this.toolHandlers.set('evaluate', this.handleEvaluate)
+    this.toolHandlers.set('evaluate_in_page', this.handleEvaluate)
     this.toolHandlers.set('run', this.handleRun)
   }
 
@@ -698,7 +702,7 @@ class MCPServerImpl implements McpHttpDelegate {
 
   // ---------- [P43] act：15 kinds 分发（对齐上游 act.ts 枚举） ----------
   // click/click_at、type/type_at、scroll 走 BCPEngine 现有管线（含敏感 gate）；
-  // 其余 DOM kinds（fill/press/hover/hover_at/focus/check/uncheck/select/drag/drag_at）经 evaluate 注入同步 helper 内联实现。
+  // 其余 DOM kinds（fill/press/hover/hover_at/focus/check/uncheck/select/drag/drag_at）经 evaluate_in_page 注入同步 helper 内联实现。
 
   private handleAct: ToolHandler = async (params, agentId) => {
     const kind = params['kind'] as string
@@ -851,7 +855,7 @@ class MCPServerImpl implements McpHttpDelegate {
     return this.errorResponse(ErrorCodes.MCP_003, `act: unknown kind "${kind}"`)
   }
 
-  /** [P43] 同步 DOM helper：随 evaluate 内联注入（不依赖 bridge 常驻），返回 {ok,...} 结构 */
+  /** [P43] 同步 DOM helper：随 evaluate_in_page 内联注入（不依赖 bridge 常驻），返回 {ok,...} 结构 */
   private static readonly DOM_HELPERS: string =
     'var H={' +
     'q:function(s,op,arg,arg2){var el=document.querySelector(s);if(!el){throw new Error("no match: "+s)}' +
@@ -972,11 +976,38 @@ class MCPServerImpl implements McpHttpDelegate {
   // ---------- [P43] read：页面正文读取（selector 可选→该元素 textContent；否则整页文本）；旧 getText 收编为别名 ----------
 
   private handleRead: ToolHandler = async (params, agentId) => {
+    // P57: no-scripting read (upstream #3065) — snapshot Markdown pipeline first
+    // (structured bridge extraction, no per-call JS expression built); legacy JS path only as fallback.
     const selector = params['selector'] as string
+    const snapResult = await SnapshotGenerator.generate()
+    if (snapResult.success) {
+      let content = `${snapResult.data}`
+      let refs: Object[] = []
+      try {
+        const parsed = JSON.parse(content) as Record<string, Object>
+        content = `${parsed['content'] || ''}`
+        const refsRaw = `${parsed['refs'] || ''}`
+        if (refsRaw.length > 0) {
+          const arr = JSON.parse(refsRaw) as Record<string, Object>[]
+          if (Array.isArray(arr)) { refs = arr }
+        }
+      } catch (e) {
+        // combined JSON unwrap failed — treat whole payload as markdown text
+      }
+      // selector given: narrow to matching ref lines ([data-bcp-ref=eN] text lines carry ref tags)
+      if (selector) {
+        const wanted = selector.replace(/\[data-bcp-ref="?/, '').replace(/"?\]$/, '').trim()
+        const lines = content.split('\n').filter((ln) => !wanted || ln.includes(wanted))
+        content = lines.join('\n')
+      }
+      const recRd: Record<string, Object> = { 'source': 'snapshot', 'text': content, 'refCount': refs.length }
+      return this.okResponse(recRd)
+    }
+    console.warn('[P57] read: snapshot pipeline failed, fallback to legacy extraction — ' + `${snapResult.error}`)
     if (selector) {
       const js = `(function(){var el=document.querySelector(${JSON.stringify(selector)});return el?el.textContent:"__NO_MATCH__"})()`
       const result = await BCPEngine.evaluate(js)
-      const rec7: Record<string, Object> = { 'selector': selector }
+      const rec7: Record<string, Object> = { 'selector': selector, 'source': 'fallback' }
     return this.bcpToMcpResponse(result, rec7)
     }
     const result = await BCPEngine.getText()

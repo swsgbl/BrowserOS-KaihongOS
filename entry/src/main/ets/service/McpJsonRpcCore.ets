@@ -361,10 +361,10 @@ class McpJsonRpcCoreImpl {
       this.propMap([
         ['action', new McpParamProp('string', 'list | focus | new | close (only list supported)')]
       ]), [], []))
-    tools.push(this.toolDef('evaluate', 'Evaluate a JavaScript expression in the page and return JSON-serialized result',
+    tools.push(this.toolDef('evaluate_in_page', 'Evaluate a JavaScript expression in the page and return JSON-serialized result (the only script-execution tool; P57 upstream rename of evaluate)',
       this.propMap([
         ['expression', new McpParamProp('string', 'JS expression (evaluated via runJavaScript)')]
-      ]), ['expression'], []))
+      ]), ['expression'], ['evaluate']))
     tools.push(this.toolDef('run', 'Run a macro: sequentially execute an array of act/navigate steps',
       this.propMap([
         ['steps', new McpParamProp('array', 'Array of {tool: act|navigate, params: {...}} steps')]
