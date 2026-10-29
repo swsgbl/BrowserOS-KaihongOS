@@ -118,6 +118,7 @@ function anthropicSSE(res, finalMsg) {
   });
   send('message_delta', { type: 'message_delta', delta: { stop_reason: finalMsg.stop_reason, stop_sequence: null }, usage: { output_tokens: finalMsg.usage.output_tokens } });
   send('message_stop', { type: 'message_stop' });
+  send('ping', { type: 'ping' });
 }
 
 // ---------- backend call ----------
@@ -144,6 +145,15 @@ function callBackend(openaiBody, cb) {
 }
 
 const server = http.createServer((req, res) => {
+  // optional shared-secret gate: active only when RELAY_TOKEN is set (LAN exposure guard)
+  if (process.env.RELAY_TOKEN) {
+    const auth = (req.headers['authorization'] || '') + ' ' + (req.headers['x-api-key'] || '') + ' ' + req.url;
+    if (!auth.includes(process.env.RELAY_TOKEN)) {
+      res.writeHead(401, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ type: 'error', error: { type: 'authentication_error', message: 'relay token required' } }));
+      return;
+    }
+  }
   if (req.method === 'GET' && req.url.startsWith('/health')) {
     const be = backendConfig();
     res.writeHead(200, { 'Content-Type': 'application/json' });

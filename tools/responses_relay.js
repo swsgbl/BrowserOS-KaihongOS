@@ -127,7 +127,10 @@ function sendSSE(res, resp) {
   resp.output.forEach((item, idx) => {
     send('response.output_item.added', { type: 'response.output_item.added', output_index: idx, item: { id: item.id, type: item.type, status: 'in_progress' } });
     if (item.type === 'message') {
-      send('response.output_text.delta', { type: 'response.output_text.delta', output_index: idx, delta: item.content[0].text });
+      // P68: content_part lifecycle silences Codex "OutputTextDelta without active item"
+      send('response.content_part.added', { type: 'response.content_part.added', item_id: item.id, output_index: idx, content_index: 0, part: { type: 'output_text', text: '', annotations: [] } });
+      send('response.output_text.delta', { type: 'response.output_text.delta', output_index: idx, content_index: 0, delta: item.content[0].text });
+      send('response.content_part.done', { type: 'response.content_part.done', item_id: item.id, output_index: idx, content_index: 0, part: { type: 'output_text', text: item.content[0].text, annotations: [] } });
     } else if (item.type === 'function_call') {
       send('response.function_call_arguments.delta', { type: 'response.function_call_arguments.delta', output_index: idx, delta: item.arguments });
     }
@@ -137,6 +140,15 @@ function sendSSE(res, resp) {
 }
 
 const server = http.createServer((req, res) => {
+  // optional shared-secret gate (same convention as anthropic_relay)
+  if (process.env.RELAY_TOKEN) {
+    const auth = (req.headers['authorization'] || '') + ' ' + req.url;
+    if (!auth.includes(process.env.RELAY_TOKEN)) {
+      res.writeHead(401, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: { message: 'relay token required' } }));
+      return;
+    }
+  }
   if (req.method === 'GET' && req.url.startsWith('/health')) {
     const be = backendConfig();
     res.writeHead(200, { 'Content-Type': 'application/json' });

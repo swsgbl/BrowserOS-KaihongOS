@@ -56,6 +56,15 @@ function forward(req, res) {
 }
 
 const server = http.createServer((req, res) => {
+  // optional shared-secret gate (set RELAY_TOKEN to enable; VM clients append it to the key or query)
+  if (process.env.RELAY_TOKEN) {
+    const auth = (req.headers['authorization'] || '') + ' ' + req.url;
+    if (!auth.includes(process.env.RELAY_TOKEN)) {
+      res.writeHead(401, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: { message: 'relay token required' } }));
+      return;
+    }
+  }
   if (req.method === 'GET' && (req.url === '/' || req.url === '/health')) {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ status: 'ok', upstream: UPSTREAM, pid: process.pid }));

@@ -130,7 +130,11 @@ function parseToolCallFromText(content) {
       const pre = /<parameter=([^>]+)>([\s\S]*?)(?=<parameter=|<\/tool_call>|$)/g;
       let pm;
       while ((pm = pre.exec(tcBlock[1])) !== null) {
-        args[pm[1].trim()] = pm[2].trim();
+        const raw = pm[2].trim();
+        // XML 参数全是字符串——对纯数字/布尔做轻量还原（wait 的 ms 等 schema 数值字段）
+        if (/^-?\d+(\.\d+)?$/.test(raw)) args[pm[1].trim()] = Number(raw);
+        else if (raw === 'true' || raw === 'false') args[pm[1].trim()] = raw === 'true';
+        else args[pm[1].trim()] = raw;
       }
       return { name: fn[1].trim(), arguments: args };
     }

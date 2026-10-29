@@ -40,18 +40,28 @@ def record(name, ok, detail=''):
     print(('[PASS] ' if ok else '[FAIL] ') + name + ((' — ' + detail) if detail else ''))
 
 
-def http_post(path_qs, body, timeout=10):
+def http_post(path_qs, body, timeout=10, session=None):
+    """P51 adaptation: pass back the Mcp-Session-Id captured at initialize."""
+    headers = {'Content-Type': 'application/json'}
+    if session:
+        headers['Mcp-Session-Id'] = session
     req = urllib.request.Request('http://127.0.0.1:%d%s' % (HOST_PORT, path_qs),
                                  data=json.dumps(body).encode(),
-                                 headers={'Content-Type': 'application/json'})
+                                 headers=headers)
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
+            sid = resp.headers.get('Mcp-Session-Id')
+            if sid:
+                SESSION[0] = sid
             return resp.status, json.loads(resp.read().decode())
     except urllib.error.HTTPError as e:
         try:
             return e.code, json.loads(e.read().decode())
         except Exception:
             return e.code, {}
+
+
+SESSION = [None]  # P51: Mcp-Session-Id from initialize, echoed on every later call
 
 
 def rpc(method, params, _id=[0]):
@@ -69,25 +79,28 @@ def main():
     token = sh('cat /data/app/el2/100/base/com.browseros.kaihong/haps/entry/files/mcp_token.txt').strip().splitlines()[-1]
     qs = '/mcp?token=' + token
 
-    # --- 1. initialize ---
+    # --- 1. initialize (P51: captures Mcp-Session-Id, echoed on all later calls) ---
     code, init = http_post(qs, rpc('initialize', {'protocolVersion': '2024-11-05',
                                                   'capabilities': {},
                                                   'clientInfo': {'name': 'e2e', 'version': '1'}}))
     record('http initialize', code == 200 and 'result' in init, str(init)[:60])
+    code, _ = http_post(qs, {'jsonrpc': '2.0', 'method': 'notifications/initialized'})
+    record('notifications/initialized accepted', code in (200, 202), str(code))
+    record('session id captured', bool(SESSION[0]), str(SESSION[0])[:20])
 
-    # --- 2. tools/list assert 17 ---
+    # --- 2. tools/list: >= 17 upstream + platform extensions (P65/P67) ---
     code, tl = http_post(qs, rpc('tools/list', {}))
     names = [t.get('name') for t in tl.get('result', {}).get('tools', [])]
     missing = [n for n in UPSTREAM_TOOLS if n not in names]
-    record('tools/list 17 upstream names', code == 200 and not missing and len(names) == 17,
+    record('tools/list upstream names (>=17, ext allowed)', code == 200 and not missing and len(names) >= 17,
            'missing=%s count=%d' % (missing, len(names)))
 
     def call(name, args):
-        return http_post(qs, rpc('tools/call', {'name': name, 'arguments': args}))
+        return http_post(qs, rpc('tools/call', {'name': name, 'arguments': args}), session=SESSION[0])
 
-    # --- 3. tool call chain ---
-    code, r = call('navigate', {'url': 'https://example.com'})
-    record('call navigate', code == 200 and 'result' in r, str(r.get('result', {}))[:60])
+    # --- 3. tool call chain (P51: session must own a tab BEFORE navigate) ---
+    code, r = call('tabs', {'action': 'new', 'url': 'https://example.com'})
+    record('call tabs new (session-owned)', code == 200 and 'result' in r, str(r.get('result', {}))[:60])
     time.sleep(4)
     code, r = call('snapshot', {})
     snap_text = str(r)
@@ -101,8 +114,19 @@ def main():
     record('call tabs list', code == 200 and 'result' in r, str(r)[:50])
     code, r = call('history', {'action': 'list', 'limit': 5})
     record('call history list', code == 200 and 'result' in r, str(r)[:50])
-    code, r = call('windows', {'action': 'list'})
+    call('windows', {'action': 'list'})
     record('call windows list', code == 200 and 'result' in r, str(r)[:50])
+
+    # --- 3b. tidy: close the session-owned tab (P58 tidy-up semantics) ---
+    tab_id = ''
+    code, r = call('tabs', {'action': 'list'})
+    for t in (r.get('result', {}).get('data', {}) or {}).get('tabs', []) or []:
+        if 'example.com' in str(t.get('url', '')):
+            tab_id = t.get('tabId', '')
+            break
+    if tab_id:
+        code, r = call('tabs', {'action': 'close', 'tabId': tab_id})
+        record('tidy: close session tab', code == 200, str(r)[:40])
 
     # --- 4. negatives ---
     code, r = http_post('/mcp?token=invalid000', rpc('initialize', {'protocolVersion': '2024-11-05',
@@ -112,10 +136,14 @@ def main():
     code, r = http_post(qs, rpc('bogus/method', {}))
     err = r.get('error', {})
     record('negative: unknown method -> JSON-RPC error', code == 200 and err.get('code') == -32601, str(err)[:60])
-    code, r = http_post(qs, rpc('tools/call', {'name': 'navigate', 'arguments': {}}))
+    code, r = http_post(qs, rpc('tools/call', {'name': 'navigate', 'arguments': {}}), session=SESSION[0])
     err = r.get('error', {})
     ok = code == 200 and err.get('code') not in (None, 0) or 'error' in str(r.get('result', ''))[:80]
     record('negative: missing url -> schema/param error', ok, str(r)[:70])
+    # P51 negative: stale session id must be rejected
+    code, r = http_post(qs, rpc('tools/call', {'name': 'tabs', 'arguments': {'action': 'list'}}), session='bogus-session-id')
+    err = r.get('error', {})
+    record('negative: bogus session -> -32001', err.get('code') == -32001 or code != 200, str(err)[:60])
 
     # --- 5. rate limit (50 rapid on ONE keep-alive connection) ---
     # urllib 每请求新建 TCP → 每连接窗口重置；压测须走单连接 keep-alive
