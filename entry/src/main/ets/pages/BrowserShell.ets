@@ -38,6 +38,7 @@ import { RunStrategy } from '../common/Types'
 import { preferences } from '@kit.ArkData'
 import { ScheduleManager, ScheduleTask } from '../service/ScheduleManager'
 import { CredentialStore } from '../service/CredentialStore'
+import { DeviceAgentStore, DeviceAgentEntry } from '../service/DeviceAgentStore'
 import { DevToolsCollector } from '../service/DevToolsCollector'
 import { AuditEventBus, AuditEventType, AUDIT_INTERNAL_SESSION } from '../service/AuditEventBus'
 
@@ -66,6 +67,13 @@ interface DashProvider {
   model: string
 }
 
+/** P67: 设备智能体注册条目（UI 视图模型：name/kind + 在线态计算） */
+interface DashDeviceAgent {
+  name: string
+  kind: string
+  online: boolean
+}
+
 /** P35-C: RecentSites 条目（历史 top 域名 favicon 圆框 + 域名小字） */
 interface RecentSite {
   domain: string
@@ -87,10 +95,88 @@ struct BrowserShell {
   @State dashProviders: DashProvider[] = []
   @State dashProviderOpen: boolean = false
   @State dashCurProviderName: string = ''
+
+  /** P67: 设备智能体列表 + 选中名（空串=内置）+ 任务轮询 */
+  @State dashDeviceAgents: DashDeviceAgent[] = []
+  @State dashDeviceSel: string = ''
+  private dashDaTimer: number = -1
+  private dashDaTasks: Map<string, string> = new Map()
   @State recentSites: RecentSite[] = []
   @State schedResults: ScheduleTask[] = []
 
   /** P35-C: 载入 LLM providers + 当前选中名 */
+  /** P67: 载入设备智能体注册表（在线=lastSeen<2min） */
+  private loadDashDeviceAgents(): void {
+    DeviceAgentStore.listAgents().then((list: DeviceAgentEntry[]) => {
+      const out: DashDeviceAgent[] = []
+      for (const e of list) {
+        out.push({ name: e.name, kind: e.kind, online: DeviceAgentStore.isOnline(e) })
+      }
+      this.dashDeviceAgents = out
+      // 选中项下线不自动清除（用户可看见离线态）；已消失的注册项清除选中
+      if (this.dashDeviceSel.length > 0) {
+        let found = false
+        for (const a of out) {
+          if (a.name === this.dashDeviceSel) {
+            found = true
+            break
+          }
+        }
+        if (!found) {
+          this.dashDeviceSel = ''
+        }
+      }
+    }).catch((e: Object) => {
+      console.warn('[P67] device agents load fail: ' + e)
+    })
+  }
+
+  /** P67: 设备智能体注册表 5s 轮询（在线态点刷新） */
+  private startDashDaPolling(): void {
+    if (this.dashDaTimer >= 0) {
+      return
+    }
+    this.dashDaTimer = setInterval(() => {
+      this.loadDashDeviceAgents()
+    }, 5000)
+  }
+
+  /** P67: 选设备智能体（再次点击同项=切回内置） */
+  private selectDashDeviceAgent(a: DashDeviceAgent): void {
+    this.dashProviderOpen = false
+    this.dashDeviceSel = this.dashDeviceSel === a.name ? '' : a.name
+    console.info('[P67] device agent selected: "' + this.dashDeviceSel + '"')
+  }
+
+  /** P67: 提交任务给设备智能体（写收件箱任务文件 + 完成轮询） */
+  private dispatchDeviceAgentTask(text: string): void {
+    const tabId = TabManager.getActiveTabId()
+    const tab = tabId.length > 0 ? TabManager.getTab(tabId) : null
+    const url = tab !== null && !tab.isDashboard ? tab.currentUrl : ''
+    const title = tab !== null ? tab.title : ''
+    const agent = this.dashDeviceSel
+    DeviceAgentStore.createTask(agent, text, url, title, '').then((t) => {
+      console.info('[P67] device task dispatched: ' + t.taskId + ' agent=' + agent)
+      // 单任务完成轮询（10s 间隔，最长 15min）
+      const started = Date.now()
+      const timer = setInterval(() => {
+        DeviceAgentStore.getTask(t.taskId).then((cur) => {
+          if (cur === null) {
+            clearInterval(timer)
+            return
+          }
+          if (cur.status === 'completed' || cur.status === 'failed') {
+            clearInterval(timer)
+            console.info('[P67] device task done: ' + t.taskId + ' status=' + cur.status + ' len=' + cur.result.length)
+          }
+          if (Date.now() - started > 15 * 60 * 1000) {
+            clearInterval(timer)
+          }
+        })
+      }, 10000)
+    })
+  }
+
   private loadDashProviders(): void {
     const raw = ConfigManager.get().llmProviders
     const list: DashProvider[] = []
@@ -338,7 +424,9 @@ struct BrowserShell {
       CredentialStore.init(p47ctx)
     }
     // P35-C: 新标签页 agent-command 数据装载
-    this.loadDashProviders()
+    this.loadDashProviders()
+     this.loadDashDeviceAgents()
+     this.startDashDaPolling()
     this.loadRecentSites()
     this.loadSchedResults()
     // P14b: 书签变更订阅驱动刷新
@@ -1674,6 +1762,10 @@ struct BrowserShell {
     console.info('BrowserShell newtab chat input send: ' + text.substring(0, 60))
     this.chatInput = ''
     this.showNeo = true
+    if (this.dashDeviceSel.length > 0) {
+      this.dispatchDeviceAgentTask(text)
+      return
+    }
     AgentEngine.createAgent('newtab-chat', 'https://example.com', text, RunStrategy.ONCE)
   }
 
@@ -1869,9 +1961,11 @@ struct BrowserShell {
             .width(13).height(13)
             .fillColor('#7CB1FF')
             .draggable(false)
-          Text(this.dashProviders.length > 0 || this.dashCurProviderName.length > 0
-            ? (this.dashCurProviderName.length > 0 ? this.dashCurProviderName : I18n.t('ntPickModel'))
-            : I18n.t('ntNoModel'))
+          // P67 pill: 选中设备智能体时前缀其名（否则维持 provider 展示逻辑）
+Text(this.dashDeviceSel.length > 0 ? ('🤖 ' + this.dashDeviceSel)
+  : (this.dashProviders.length > 0 || this.dashCurProviderName.length > 0
+  ? (this.dashCurProviderName.length > 0 ? this.dashCurProviderName : I18n.t('ntPickModel'))
+  : I18n.t('ntNoModel')))
             .fontSize(11)
             .fontColor(this.dashProviders.length > 0 || this.dashCurProviderName.length > 0 ? (this.darkMode ? '#7CB1FF' : '#1A73E8') : '#F0983F')
             .maxLines(1)
@@ -1932,6 +2026,61 @@ struct BrowserShell {
                   this.selectDashProvider(p)
                 })
               }, (p: DashProvider, index: number) => 'dp_' + index + '_' + p.name)
+
+              // P67: 设备智能体分区（收件箱模式注册表，在线点）
+              if (this.dashDeviceAgents.length > 0) {
+                Row() {
+                  Text(I18n.t('daDeviceAgents'))
+                    .fontSize(9)
+                    .fontColor(this.pal().text2)
+                    .layoutWeight(1)
+                  Text(this.dashDeviceSel.length > 0 ? this.dashDeviceSel : I18n.t('daBuiltIn'))
+                    .fontSize(9)
+                    .fontColor(this.dashDeviceSel.length > 0 ? '#22C55E' : this.pal().text2)
+                    .maxLines(1)
+                    .constraintSize({ maxWidth: 110 })
+                    .textOverflow({ overflow: TextOverflow.Ellipsis })
+                }
+                .width('100%')
+                .margin({ top: 8, bottom: 2 })
+                .alignItems(VerticalAlign.Center)
+                ForEach(this.dashDeviceAgents, (a: DashDeviceAgent, ai: number) => {
+                  Row() {
+                    Circle()
+                    .width(6)
+                    .height(6)
+                    .fill(a.online ? '#22C55E' : '#9AA0A6')
+                    .margin({ right: 7 })
+                    Column() {
+                      Text(a.name)
+                        .fontSize(11)
+                        .fontColor(this.pal().text)
+                        .maxLines(1)
+                      Text(a.kind + ' · ' + (a.online ? I18n.t('daOnline') : I18n.t('daOffline')))
+                        .fontSize(9)
+                        .fontColor(this.pal().text2)
+                        .maxLines(1)
+                    }
+                    .layoutWeight(1)
+                    .alignItems(HorizontalAlign.Start)
+                    if (this.dashDeviceSel === a.name) {
+                      Image($rawfile('ic_check.svg'))
+                        .width(12).height(12)
+                        .fillColor('#22C55E')
+                        .draggable(false)
+                    }
+                  }
+                  .width('100%')
+                  .padding({ left: 12, right: 12, top: 7, bottom: 7 })
+                  .borderRadius(8)
+                  .backgroundColor(this.darkMode ? '#1E2A3E' : '#F5F8FF')
+                  .margin({ top: 4 })
+                  .alignItems(VerticalAlign.Center)
+                  .onClick(() => {
+                    this.selectDashDeviceAgent(a)
+                  })
+                }, (a: DashDeviceAgent, ai: number) => 'da_' + ai + '_' + a.name + '_' + (a.online ? '1' : '0'))
+              }
             }
           }
           .width('100%')
@@ -3171,7 +3320,8 @@ struct BrowserShell {
     this.setOmniboxText('')
     this.currentUrl = ''
     // P35-C: 每次进新标签页刷新 agent-command 数据
-    this.loadDashProviders()
+    this.loadDashProviders()
+     this.loadDashDeviceAgents()
     this.loadRecentSites()
     this.loadSchedResults()
     console.info('BrowserShell new tab created: ' + newTab.tabId)

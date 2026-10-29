@@ -31,6 +31,7 @@ import { ConfigManager } from '../storage/ConfigManager'
 import { SecureStorageAdapter } from '../storage/SecureStorageAdapter'
 import { AppConfigUpdate } from '../model/AppConfig'
 import { LLMClient, LLMChatMessage } from './LLMClient'
+import { DeviceAgentStore } from './DeviceAgentStore'
 
 /** P51: tools that require a routed page (session must own a tab) */
 const PAGE_TOOLS: string[] = ['navigate', 'snapshot', 'diff', 'act', 'click', 'type', 'scroll', 'read', 'getText',
@@ -68,6 +69,9 @@ interface MCPResponseData {
   ms?: number
   timeout?: number
   result?: string | null
+  /** [P68] wait tool explicit flags (never leave a bare misleading null in the body) */
+  found?: boolean
+  waited?: boolean
 }
 
 /** [P43] tabs list 行（对齐上游 page/url/title 三元组） */
@@ -313,10 +317,13 @@ class MCPServerImpl implements McpHttpDelegate {
     // must fail loudly instead of hanging the request/session indefinitely.
     const TOOL_TIMEOUT_MS = 30000
     let toolTimedOut = false
+    // [P68] clear the loser timer once settled — every fast successful call previously left
+    // a 30s orphan timer (100-call loops = 100 pending timers at peak).
+    let toolTimer: number = -1
     const toolRace = Promise.race([
       handler(adapted, agentId, sessionId),
       new Promise<MCPToolResponse>((res) => {
-        setTimeout(() => {
+        toolTimer = setTimeout(() => {
           toolTimedOut = true
           res({ status: 'error', data: null, error: 'P62: tool ' + canonical + ' timed out after 30s', requestId: this.generateRequestId() })
         }, TOOL_TIMEOUT_MS)
@@ -324,6 +331,9 @@ class MCPServerImpl implements McpHttpDelegate {
     ])
     try {
     const response = await toolRace
+    if (toolTimer >= 0) {
+      clearTimeout(toolTimer)
+    }
       auditEntry.setResult(response.status, response.error || '')
       AuditLogger.log(auditEntry)
       const responseData: MCPToolResponseEventData = { requestId: requestId, response: response }
@@ -375,6 +385,9 @@ class MCPServerImpl implements McpHttpDelegate {
     // [P65] 平台扩展：LLM 配置管理通道 + 内部 agent 程序化触发（上游 registry 无，extension）
     this.toolHandlers.set('llm_config', this.handleLlmConfig)
     this.toolHandlers.set('agent_task', this.handleAgentTask)
+    // [P67] 设备智能体收件箱：注册 + 任务领取/回写
+    this.toolHandlers.set('agent_register', this.handleAgentRegister)
+    this.toolHandlers.set('device_agent_tasks', this.handleDeviceAgentTasks)
   }
 
   // ---------- [P65] llm_config：LLM 供应商配置的本地管理通道 ----------
@@ -562,6 +575,54 @@ class MCPServerImpl implements McpHttpDelegate {
 
     return this.errResponse('P65: unknown action \'' + action + '\' (create | status | result)')
   }
+
+  // ---------- [P67] 设备智能体收件箱（收件箱模式，应用零进程依赖） ----------
+
+  private handleAgentRegister: ToolHandler = async (params, agentId, sessionId) => {
+    const name = ((params['name'] as string) || '').trim()
+    if (name.length === 0) {
+      return this.errResponse('P67: agent_register requires name')
+    }
+    const kind = ((params['kind'] as string) || 'custom').trim()
+    const entry = await DeviceAgentStore.register(name, kind)
+    console.info('[P67] agent_register: ' + name + ' kind=' + kind + ' lastSeen refresh')
+    return this.okResponse({
+      'action': 'register', 'name': entry.name, 'kind': entry.kind,
+      'registeredAt': entry.registeredAt, 'lastSeen': entry.lastSeen
+    })
+  }
+
+  private handleDeviceAgentTasks: ToolHandler = async (params, agentId, sessionId) => {
+    const action = ((params['action'] as string) || '').trim()
+    if (action === 'next') {
+      const agent = ((params['agent'] as string) || '').trim()
+      if (agent.length === 0) {
+        return this.errResponse('P67: device_agent_tasks next requires agent')
+      }
+      const t = await DeviceAgentStore.claimNext(agent)
+      if (t === null) {
+        return this.okResponse({ 'action': 'next', 'hasTask': false })
+      }
+      console.info('[P67] task claimed: ' + t.taskId + ' agent=' + t.agent)
+      return this.okResponse({ 'action': 'next', 'hasTask': true, 'task': t })
+    }
+    if (action === 'complete') {
+      const taskId = ((params['taskId'] as string) || '').trim()
+      if (taskId.length === 0) {
+        return this.errResponse('P67: device_agent_tasks complete requires taskId')
+      }
+      const ok = params['ok'] !== false
+      const result = ((params['result'] as string) || '').trim()
+      const t = await DeviceAgentStore.completeTask(taskId, ok, result)
+      if (t === null) {
+        return this.errResponse('P67: task not found: ' + taskId)
+      }
+      console.info('[P67] task completed: ' + taskId + ' ok=' + ok + ' len=' + t.result.length)
+      return this.okResponse({ 'action': 'complete', 'taskId': t.taskId, 'status': t.status })
+    }
+    return this.errResponse('P67: device_agent_tasks requires action: next | complete')
+  }
+
 
   /** [P65] 通用错误响应 */
   private errResponse(error: string): Promise<MCPToolResponse> {
@@ -1240,9 +1301,36 @@ class MCPServerImpl implements McpHttpDelegate {
         content = lines.join('\n')
       }
       // [P62-B] never hand back a literal "null"/empty body as success — explicit error instead
+      // [P68] transitional-state settle: a read fired right after act/navigate can catch a
+      // half-swapped document. If the page navigated recently (<3s), settle 500ms and retry
+      // the snapshot ONCE; normal (non-empty) reads take the unchanged fast path.
       if (!content || content.trim().length === 0 || content.trim() === 'null' || content.trim() === 'undefined') {
-        return this.errorResponse(ErrorCodes.MCP_003,
-          'read: page text unavailable (empty snapshot for routed tab — page may be mid-navigation or unrendered)')
+        if (BCPEngine.msSinceLastNav() < 3000) {
+          await new Promise<void>((res) => setTimeout(res, 500))
+          const retry = await SnapshotGenerator.generate()
+          if (retry.success) {
+            try {
+              const rp = JSON.parse(`${retry.data}`) as Record<string, Object>
+              content = `${rp['content'] || ''}`
+              const rrefsRaw = `${rp['refs'] || ''}`
+              if (rrefsRaw.length > 0) {
+                const rarr = JSON.parse(rrefsRaw) as Record<string, Object>[]
+                if (Array.isArray(rarr)) { refs = rarr }
+              }
+            } catch (e) {
+              content = `${retry.data}`
+            }
+            if (selector) {
+              const wanted = selector.replace(/\[data-bcp-ref="?/, '').replace(/"?\]$/, '').trim()
+              const lines = content.split('\n').filter((ln) => !wanted || ln.includes(wanted))
+              content = lines.join('\n')
+            }
+          }
+        }
+        if (!content || content.trim().length === 0 || content.trim() === 'null' || content.trim() === 'undefined') {
+          return this.errorResponse(ErrorCodes.MCP_003,
+            'read: page text unavailable (empty snapshot for routed tab — page may be mid-navigation or unrendered)')
+        }
       }
       const recRd: Record<string, Object> = { 'source': 'snapshot', 'text': content, 'refCount': refs.length }
       return this.okResponse(recRd)
@@ -1368,11 +1456,16 @@ class MCPServerImpl implements McpHttpDelegate {
     if (selector) {
       const timeout = (params['timeout'] as number) || 5000
       const result = await BCPEngine.waitForElement(selector, timeout)
-      const data: MCPResponseData = { selector: selector, timeout: timeout, result: result.data === null ? null : `${result.data}` }
-      return this.bcpToMcpResponse(result, data)
+      // [P68] found = element ACTUALLY appeared: the in-page helper resolves null on timeout,
+      // which serialises to the STRING 'null' — truthy-success would misreport misses as found.
+      const found = result.success && result.data !== null && `${result.data}` !== 'null' && `${result.data}` !== 'undefined'
+      const data: MCPResponseData = { selector: selector, timeout: timeout, found: found, result: found ? `${result.data}` : null }
+      const patched: BCPResult = { success: found, data: result.data, error: found ? null : `wait: selector not found within ${timeout}ms` }
+      return this.bcpToMcpResponse(patched, data)
     } else if (ms) {
       const result = await BCPEngine.wait(ms)
-      const data: MCPResponseData = { ms: ms, result: null }
+      // [P68] waited:true — the old {ms, result:null} body made LLMs read the wait as failed (P61 evidence)
+      const data: MCPResponseData = { ms: ms, waited: true }
       return this.bcpToMcpResponse(result, data)
     } else {
       return this.errorResponse(ErrorCodes.MCP_003, 'Missing ms or selector parameter')
@@ -1430,13 +1523,18 @@ class MCPServerImpl implements McpHttpDelegate {
     // P55: 10s timeout via Promise.race
     let evalPromise = BCPEngine.evaluate(expression)
     let timeoutHit = false
+    // [P68] clear the loser timer on settle (same orphan-timer class as BCPEngine race)
+    let evalTimer: number = -1
     const timeoutPromise = new Promise<BCPResult>((resolve) => {
-      setTimeout(() => {
+      evalTimer = setTimeout(() => {
         timeoutHit = true
         resolve({ success: false, data: null, error: 'evaluate timeout after 10s' })
       }, MCPServerImpl.EVAL_TIMEOUT_MS)
     })
     const result = await Promise.race([evalPromise, timeoutPromise])
+    if (evalTimer >= 0) {
+      clearTimeout(evalTimer)
+    }
     if (timeoutHit) {
       return this.errorResponse(ErrorCodes.MCP_003, 'evaluate: timed out after 10s')
     }

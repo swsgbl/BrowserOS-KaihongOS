@@ -53,7 +53,12 @@ def http_post(path_qs, body, timeout=10, session=None):
             sid = resp.headers.get('Mcp-Session-Id')
             if sid:
                 SESSION[0] = sid
-            return resp.status, json.loads(resp.read().decode())
+            raw = resp.read().decode()
+            # P68: notifications return 202 with EMPTY body - never json-crash on it
+            try:
+                return resp.status, json.loads(raw) if raw.strip() else {}
+            except Exception:
+                return resp.status, {}
     except urllib.error.HTTPError as e:
         try:
             return e.code, json.loads(e.read().decode())
@@ -84,12 +89,12 @@ def main():
                                                   'capabilities': {},
                                                   'clientInfo': {'name': 'e2e', 'version': '1'}}))
     record('http initialize', code == 200 and 'result' in init, str(init)[:60])
-    code, _ = http_post(qs, {'jsonrpc': '2.0', 'method': 'notifications/initialized'})
+    code, _ = http_post(qs, {'jsonrpc': '2.0', 'method': 'notifications/initialized'}, session=SESSION[0])
     record('notifications/initialized accepted', code in (200, 202), str(code))
     record('session id captured', bool(SESSION[0]), str(SESSION[0])[:20])
 
     # --- 2. tools/list: >= 17 upstream + platform extensions (P65/P67) ---
-    code, tl = http_post(qs, rpc('tools/list', {}))
+    code, tl = http_post(qs, rpc('tools/list', {}), session=SESSION[0])
     names = [t.get('name') for t in tl.get('result', {}).get('tools', [])]
     missing = [n for n in UPSTREAM_TOOLS if n not in names]
     record('tools/list upstream names (>=17, ext allowed)', code == 200 and not missing and len(names) >= 17,
@@ -133,7 +138,9 @@ def main():
                                                                     'capabilities': {},
                                                                     'clientInfo': {'name': 'x', 'version': '1'}}))
     record('negative: invalid token -> 401', code == 401, str(code))
-    code, r = http_post(qs, rpc('bogus/method', {}))
+    # P68: session enforcement precedes dispatch - bogus method WITH a valid session
+    # yields -32601 (method unknown); without session it yields -32001 (session first).
+    code, r = http_post(qs, rpc('bogus/method', {}), session=SESSION[0])
     err = r.get('error', {})
     record('negative: unknown method -> JSON-RPC error', code == 200 and err.get('code') == -32601, str(err)[:60])
     code, r = http_post(qs, rpc('tools/call', {'name': 'navigate', 'arguments': {}}), session=SESSION[0])
@@ -169,8 +176,16 @@ def main():
     record('rate limit engaged (>=1 of 50 limited, keep-alive)', limited >= 1, 'limited=%d last=%s' % (limited, last_code))
     # wait window to recover (window 10s) then one allowed
     time.sleep(11)
-    code, r = http_post(qs, rpc('tools/list', {}))
-    record('rate limit window recovery', code == 200 and 'result' in r, str(code))
+    # P68: fresh session (burst exhausted the old one's window); initialize itself
+    # must also pass the recovered window
+    code, r = http_post(qs, rpc('initialize', {'protocolVersion': '2024-11-05', 'capabilities': {},
+                                               'clientInfo': {'name': 'e2e-r', 'version': '1'}}))
+    ok_init = code == 200 and 'result' in r
+    code2 = 0
+    r2 = {}
+    if ok_init:
+        code2, r2 = http_post(qs, rpc('tools/list', {}), session=SESSION[0])
+    record('rate limit window recovery', ok_init and code2 == 200 and 'result' in r2, str(code) + '/' + str(code2))
 
     # --- 6. WS transport ---
     ws_ok = False
@@ -178,7 +193,7 @@ def main():
     try:
         s = socket.create_connection(('127.0.0.1', WS_PORT), timeout=8)
         key = base64.b64encode(b'e2e-ws-key-p43b-16').decode()  # 客户端 key 就是随机 base64（服务器才算 SHA1）
-        req = ('GET /?token=' + token + ' HTTP/1.1\r\nHost: 127.0.0.1:%d\r\nUpgrade: websocket\r\n'
+        req = ('GET /mcp?token=' + token + ' HTTP/1.1\r\nHost: 127.0.0.1:%d\r\nUpgrade: websocket\r\n'
                'Connection: Upgrade\r\nSec-WebSocket-Key: %s\r\nSec-WebSocket-Version: 13\r\n\r\n' % (WS_PORT, key))
         s.sendall(req.encode())
         time.sleep(1)
@@ -187,7 +202,12 @@ def main():
             body = json.dumps(rpc('initialize', {'protocolVersion': '2024-11-05', 'capabilities': {},
                                                  'clientInfo': {'name': 'e2e-ws', 'version': '1'}})).encode()
             mask = b'\x00\x00\x00\x00'  # zero mask (allowed for test)
-            frame = b'\x81' + bytes([0x80 | len(body)]) + mask + body
+            # P68: RFC6455 length encoding — payload >125B needs the 16-bit extended form
+            # (the old single-byte form silently corrupted ~160B initialize frames -> -32700)
+            if len(body) <= 125:
+                frame = b'\x81' + bytes([0x80 | len(body)]) + mask + body
+            else:
+                frame = b'\x81' + bytes([0x80 | 126, (len(body) >> 8) & 0xFF, len(body) & 0xFF]) + mask + body
             s.sendall(frame)
             time.sleep(1.5)
             data = s.recv(65536)

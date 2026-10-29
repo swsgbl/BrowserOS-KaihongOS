@@ -1352,3 +1352,12 @@ python tools/smoke_reg.py         # 30 秒健康检查
 - **装机实证（设备 192.168.161.137:10178）**：initialize 200 + tools/list 19/19 断言过；set→assetStored=true；get→sk-****THdt；test→**12790-15592ms 真往返 "pong"**（agnes-3.0-flash）；agent_task create→status 轮询（navigate example.com→getText→LLM 多轮 tool_calls）→**completed progress=100 finalAnswer="https://example.com 是 IANA 保留的示例域名..."**（03:41 轮全程闭环；后续轮 agnes 间歇超时走 error 路径亦验证）；force-stop 重启后 get 仍 keyStoredInAsset=true（Asset Store 持久化）；config.json llmApiKey=[] 恒空；hilog 全程 [P65]/[LLMClient] 留痕、零 key 明文泄漏。
 - **门禁**：static 99 项全过（含 install_p65.py py_compile）；smoke 9/9 PASS。mcp_client_e2e.py 4/15 为 P51 session 隔离上线后的既有缺口（无 Mcp-Session-Id 支持，git 实证 P64 基线同样 FAIL），非 P65 回归；session 版门禁=session_isolation_test.py（目标 5555 待迁移）。
 - **部署链**：hvigor(API26)→tools/build_api23_hap.py（降 API23+ZIP_STORED）→tools/install_p65.py（VM hap-sign-tool 签名+bm install+relaunch）。证据=evidence/p65/（e2e_final.txt 等）。
+
+## P67：AI 切换菜单集成设备智能体（2026-10-29）
+
+- **根因**：切换菜单（新标签页 provider pill + AgentSidePanel 模型下拉）只读 AppConfig.llmProviders，无"设备智能体"概念；P66 装好的 Claude Code/Codex/hmharness 与 UI 零集成。
+- **架构**：收件箱模式（API23 无 child_process）——UI 写任务文件 files/device_agent_tasks/，VM 终端 runner（tools/device_agent_runner.js）经 MCP loopback agent_register 注册（30s 心跳，在线=lastSeen<2min）+ device_agent_tasks next/complete 领取回写；注册表 files/device_agents.json 断电恢复。
+- **A**：MCPServer/McpJsonRpcCore 19→21 工具；DeviceAgentStore.ets（注册表+任务收件箱，StorageManager 文件持久化）。
+- **B**：BrowserShell provider pill 两段式下拉（LLM providers + 设备智能体分区，在线点）；AgentSidePanel 真下拉（替换点击循环）+ 设备智能体分流（chat/agent 模式前拦截）+ 完成态轮询回流气泡（5s 轮询，>500 字截断）；i18n da* 词条 zh/en。
+- **C**：runner（node 原生 http MCP 客户端，SSE 容忍，会话自愈重初始化）+ docs/DEVICE_AGENTS.md（三智能体命令模板）。
+- **D**：装机验收 192.168.161.137:10178。

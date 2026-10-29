@@ -37,3 +37,12 @@
 
 - CI（GitHub Actions）仅执行仓库内 `tools/static_checks.py`，不引入第三方构建依赖；
 - 本仓库不打包任何 SDK 二进制（构建工具链来自本机 DevEco/OpenHarmony SDK）。
+
+## P67：设备智能体注册信任级（agent_register / device_agent_tasks）
+
+与 llm_config 同级：**loopback + Bearer token 管理面**。
+
+- `agent_register` / `device_agent_tasks` 走统一 `/mcp` 端点，须持有效 session（initialize→Mcp-Session-Id）与 Bearer token（files/mcp_token.txt 同源），未授权请求 401。
+- 注册表 `device_agents.json` 只存 name/kind/registeredAt/lastSeen，**不含任何密钥或命令内容**；命令模板只存在于 runner 侧（VM 文件系统），应用侧不可见、不可注入。
+- 任务收件箱 `files/device_agent_tasks/` 是应用沙盒私有目录，设备侧 runner 只能经 MCP 工具读写（next/complete），无直接文件系统通道。
+- 结果回写截断 32KB，防止内存放大；runner 执行的命令在 VM 侧独立进程，不受应用沙盒权限放大影响。

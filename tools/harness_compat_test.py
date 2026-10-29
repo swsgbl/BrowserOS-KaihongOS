@@ -106,7 +106,7 @@ def harness_flow(qs, name, caps, do_call_chain=True):
     missing = [n for n in UPSTREAM_TOOLS if n not in names]
     schemas_ok = all(isinstance(t.get('inputSchema'), (dict, type(None))) for t in tools)
     record('%s tools/list (%d tools, schemas=%s)' % (name, len(tools), schemas_ok),
-           code == 200 and not missing and len(tools) == 17 and schemas_ok,
+           code == 200 and not missing and len(tools) >= 17 and schemas_ok,
            'missing=%s' % missing)
     if not do_call_chain:
         return
@@ -148,6 +148,15 @@ def b1_concurrency(qs):
     """Two harness sessions interleaved on separate TCP connections — no cross-talk."""
     ok_a, sid_a, _ = open_session(qs, 'claude-code', {'roots': {'listChanged': True}})
     ok_b, sid_b, _ = open_session(qs, 'codex', {'sampling': {}})
+    # P51: each session must own a tab before page tools (read) are allowed
+    hb = {'Content-Type': 'application/json', 'Mcp-Session-Id': sid_b} if sid_b else {'Content-Type': 'application/json'}
+    cb0 = http.client.HTTPConnection('127.0.0.1', HOST_PORT, timeout=8)
+    try:
+        body0 = json.dumps(rpc('tools/call', {'name': 'tabs', 'arguments': {'action': 'new', 'url': 'about:blank'}})).encode()
+        cb0.request('POST', qs, body=body0, headers=hb)
+        cb0.getresponse().read()
+    finally:
+        cb0.close()
     interleave_ok = True
     for i in range(3):
         ca = http.client.HTTPConnection('127.0.0.1', HOST_PORT, timeout=8)

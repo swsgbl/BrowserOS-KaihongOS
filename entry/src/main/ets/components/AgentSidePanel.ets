@@ -18,6 +18,7 @@ import { TabManager } from '../service/TabManager'
 import { LLMClient, LLMChatMessage, LLMRequestOptions } from '../service/LLMClient'
 import { JSBridgeInjector } from '../protocol/JSBridgeInjector'
 import { JtbdStore } from '../pages/JtbdSurveyPage'
+import { DeviceAgentStore, DeviceAgentEntry, DeviceAgentTask } from '../service/DeviceAgentStore'
 
 interface ChatMessage {
   role: string // 'user' | 'agent' | 'hint'
@@ -78,6 +79,12 @@ export struct AgentSidePanel {
   @State messages: ChatMessage[] = []
   @State inputText: string = ''
   @State modelSelection: number = 0
+  /** P67: 设备智能体注册表 + 选中名（空串=内置）+ 任务态轮询 */
+  @State daAgents: DeviceAgentEntry[] = []
+  @State daSel: string = ''
+  @State daModelOpen: boolean = false
+  private daTimer: number = -1
+  private daTaskIds: Set<string> = new Set<string>()
   @State agents: AgentStatusInfo[] = []
   @State showModelDropdown: boolean = false
   /** P24b: 起手提示词(Preferences 持久化, 容错回默认) */
@@ -132,6 +139,92 @@ export struct AgentSidePanel {
   /** P19a: 消息列表滚动控制器（答案回流后滚底） */
   private scroller: Scroller = new Scroller()
 
+  /** P67: 载入设备智能体注册表（UI 气泡态展示用） */
+  private loadDaAgents(): void {
+    DeviceAgentStore.listAgents().then((list: DeviceAgentEntry[]) => {
+      this.daAgents = list
+      if (this.daSel.length > 0) {
+        let found = false
+        for (const a of list) {
+          if (a.name === this.daSel) {
+            found = true
+            break
+          }
+        }
+        if (!found) {
+          this.daSel = ''
+        }
+      }
+    }).catch(() => {
+    })
+  }
+
+  /** P67: 设备智能体注册表 5s 轮询（在线态 + 任务完成态） */
+  private startDaPolling(): void {
+    if (this.daTimer >= 0) {
+      return
+    }
+    this.daTimer = setInterval(() => {
+      this.loadDaAgents()
+      this.pollDaTasks()
+    }, 5000)
+  }
+
+  private stopDaPolling(): void {
+    if (this.daTimer >= 0) {
+      clearInterval(this.daTimer)
+      this.daTimer = -1
+    }
+  }
+
+  /** P67: 已派发设备任务完成态轮询 → 回流气泡 */
+  private pollDaTasks(): void {
+    if (this.daTaskIds.size === 0) {
+      return
+    }
+    const ids = Array.from(this.daTaskIds)
+    for (const id of ids) {
+      DeviceAgentStore.getTask(id).then((t: DeviceAgentTask | null) => {
+        if (t === null) {
+          this.daTaskIds.delete(id)
+          return
+        }
+        if (t.status === 'completed') {
+          this.daTaskIds.delete(id)
+          const text = t.result.length > 500 ? t.result.substring(0, 500) + '…' : t.result
+          this.messages.push({ role: 'agent', text: text.length > 0 ? text : I18n.t('daDone'), agentId: 'da_' + id })
+          console.info('[P67] da task answer reflux: ' + id + ' len=' + t.result.length)
+          setTimeout(() => {
+            this.scroller.scrollEdge(Edge.Bottom)
+          }, 50)
+        } else if (t.status === 'failed') {
+          this.daTaskIds.delete(id)
+          this.messages.push({ role: 'hint', text: I18n.t('daFailed') + (t.result.length > 0 ? t.result : 'unknown'), agentId: 'da_' + id })
+          console.info('[P67] da task fail reflux: ' + id)
+          setTimeout(() => {
+            this.scroller.scrollEdge(Edge.Bottom)
+          }, 50)
+        }
+      })
+    }
+  }
+
+  /** P67: 提交任务给设备智能体（收件箱） */
+  private dispatchDaTask(task: string, ctxBlock: string): void {
+    const tabId = TabManager.getActiveTabId()
+    const tab = tabId.length > 0 ? TabManager.getTab(tabId) : null
+    const url = tab !== null && !tab.isDashboard ? tab.currentUrl : ''
+    const title = tab !== null ? tab.title : ''
+    const sel = this.pageSelection !== null ? this.pageSelection.text : ''
+    this.messages.push({ role: 'hint', text: I18n.t('daTaskSent') + this.daSel + ' · ' + I18n.t('daWaiting'), agentId: '' })
+    const fullTask = ctxBlock.length > 0 ? task + '\n\n[附加上下文]\n' + ctxBlock : task
+    DeviceAgentStore.createTask(this.daSel, fullTask, url, title, sel).then((t) => {
+      console.info('[P67] sidepanel da task dispatched: ' + t.taskId + ' agent=' + this.daSel)
+      this.daTaskIds.add(t.taskId)
+      this.pollDaTasks()
+    })
+  }
+
   private modelOptions(): string[] {
     return ['agnes-3.0-flash', 'agnes-3.0-pro', 'glm-4.7', I18n.t('asCustomCfg'), I18n.t('asManageProviders')]
   }
@@ -148,6 +241,8 @@ export struct AgentSidePanel {
     this.startSettlePolling()
     this.loadChatMode()
     this.startCtxPolling()
+    this.loadDaAgents()
+    this.startDaPolling()
     this.loadJtbdState()
   }
 
@@ -228,6 +323,11 @@ export struct AgentSidePanel {
       clearInterval(this.ctxPollTimer)
       this.ctxPollTimer = -1
       console.info('[P33] AgentSidePanel ctx polling stopped')
+    }
+    if (this.daTimer >= 0) {
+      clearInterval(this.daTimer)
+      this.daTimer = -1
+      console.info('[P67] AgentSidePanel da polling stopped')
     }
   }
 
@@ -581,6 +681,13 @@ export struct AgentSidePanel {
     if (task.length === 0) {
       return
     }
+    // P67: 选中设备智能体 → 收件箱模式（优先于 chat/agent 模式）
+    if (this.daSel.length > 0) {
+      this.messages.push({ role: 'user', text: task, agentId: '' })
+      this.dispatchDaTask(task, this.buildContextBlock())
+      this.inputText = ''
+      return
+    }
     // P33-B: chat 模式 = 单轮 LLM 直答,不走 createAgent 工具循环
     if (this.chatMode === 'chat') {
       this.messages.push({ role: 'user', text: task, agentId: '' })
@@ -727,26 +834,109 @@ export struct AgentSidePanel {
 
         Blank()
 
-        // 模型下拉（简化：点击循环切换）
-        Text(this.modelOptions()[this.modelSelection])
-          .fontSize(11)
-          .fontColor('#1A73E8')
-          .maxLines(1)
-          .textOverflow({ overflow: TextOverflow.Ellipsis })
-          .constraintSize({ maxWidth: 110 })
+        // P67: 模型/智能体真下拉（LLM providers + 设备智能体两段式）
+        Column() {
+          Row() {
+            Text(this.daSel.length > 0 ? ('🤖 ' + this.daSel)
+              : (this.modelOptions()[this.modelSelection] || this.modelOptions()[0]))
+              .fontSize(11)
+              .fontColor('#1A73E8')
+              .maxLines(1)
+              .textOverflow({ overflow: TextOverflow.Ellipsis })
+              .constraintSize({ maxWidth: 100 })
+            Image($rawfile('ic_arrow_down.svg'))
+              .width(10).height(10)
+              .fillColor(this.pal().text2)
+              .draggable(false)
+              .margin({ left: 4 })
+          }
           .padding({ left: 8, right: 8, top: 4, bottom: 4 })
           .borderRadius(12)
           .backgroundColor(this.pal().selected)
+          .alignItems(VerticalAlign.Center)
           .onClick(() => {
-            this.modelSelection = (this.modelSelection + 1) % this.modelOptions().length
-            if (this.modelOptions()[this.modelSelection] === I18n.t('asManageProviders')) {
-              // p23b: 循环到管理项 = 跳 LLM Hub，选择回退保持原模型显示
-              router.pushUrl({ url: 'pages/LlmHubPage' })
-              this.modelSelection = 0
-              return
-            }
-            console.info('AgentSidePanel model switch: ' + this.modelOptions()[this.modelSelection])
+            this.daModelOpen = !this.daModelOpen
+            console.info('[P67] sidepanel model dropdown: ' + this.daModelOpen)
           })
+
+          if (this.daModelOpen) {
+            Column() {
+              // 段1：LLM 提供商/模型（内置循环切换语义保留：点击循环 +1）
+              Text(this.modelOptions()[this.modelSelection])
+                .fontSize(11)
+                .fontColor(this.pal().text)
+                .maxLines(1)
+                .width('100%')
+                .textAlign(TextAlign.Start)
+                .padding({ left: 10, right: 10, top: 8, bottom: 8 })
+                .borderRadius(8)
+                .backgroundColor(this.pal().surface)
+                .onClick(() => {
+                  this.modelSelection = (this.modelSelection + 1) % this.modelOptions().length
+                  if (this.modelOptions()[this.modelSelection] === I18n.t('asManageProviders')) {
+                    // p23b: 循环到管理项 = 跳 LLM Hub，选择回退保持原模型显示
+                    router.pushUrl({ url: 'pages/LlmHubPage' })
+                    this.modelSelection = 0
+                    return
+                  }
+                  this.daSel = ''
+                  console.info('AgentSidePanel model switch: ' + this.modelOptions()[this.modelSelection])
+                })
+              // 段2：设备智能体（注册表，在线点）
+              Text(I18n.t('daDeviceAgents'))
+                .fontSize(9)
+                .fontColor(this.pal().text2)
+                .width('100%')
+                .textAlign(TextAlign.Start)
+                .margin({ top: 6, bottom: 2 })
+              if (this.daAgents.length === 0) {
+                Text(I18n.t('daNoAgents'))
+                  .fontSize(9)
+                  .fontColor(this.pal().text2)
+                  .maxLines(2)
+                  .width('100%')
+                  .textAlign(TextAlign.Start)
+              } else {
+                ForEach(this.daAgents, (a: DeviceAgentEntry) => {
+                  Row() {
+                    Circle()
+                    .width(6)
+                    .height(6)
+                    .fill(DeviceAgentStore.isOnline(a) ? '#22C55E' : '#9AA0A6')
+                    .margin({ right: 6 })
+                    Text(a.name)
+                      .fontSize(11)
+                      .fontColor(this.pal().text)
+                      .maxLines(1)
+                      .layoutWeight(1)
+                    if (this.daSel === a.name) {
+                      Image($rawfile('ic_check.svg'))
+                        .width(12).height(12)
+                        .fillColor('#22C55E')
+                        .draggable(false)
+                    }
+                  }
+                  .width('100%')
+                  .padding({ left: 10, right: 10, top: 7, bottom: 7 })
+                  .borderRadius(8)
+                  .backgroundColor(this.pal().surface)
+                  .alignItems(VerticalAlign.Center)
+                  .onClick(() => {
+                    this.daSel = this.daSel === a.name ? '' : a.name
+                    this.daModelOpen = false
+                    console.info('[P67] sidepanel da selected: ' + this.daSel)
+                  })
+                }, (a: DeviceAgentEntry) => 'sda_' + a.name + '_' + a.lastSeen)
+              }
+            }
+            .width('100%')
+            .padding(6)
+            .borderRadius(10)
+            .backgroundColor(this.pal().surface)
+            .border({ width: 1, color: this.pal().border })
+            .margin({ top: 6 })
+          }
+        }
 
         Image($rawfile('ic_settings.svg'))
           .width(16).height(16)

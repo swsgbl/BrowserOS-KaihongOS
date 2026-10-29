@@ -54,3 +54,8 @@ entry-p8-v1-unsigned.hap
 # P8: app icons and evidence must be tracked
 !entry/src/main/resources/base/media/*.png
 !evidence/**
+
+# big binaries never (P67 lesson: 110MB tarball swept into a commit)
+.hm-tmp/*.tar.gz
+.hm-tmp/*.hap
+.hm-tmp/hapx*/

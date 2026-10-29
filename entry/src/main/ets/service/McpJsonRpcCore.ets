@@ -397,6 +397,19 @@ class McpJsonRpcCoreImpl {
         ['name', new McpParamProp('string', 'Optional agent display name (default mcp_task)')],
         ['agentId', new McpParamProp('string', 'Agent id for status/result')]
       ]), ['action'], []))
+    tools.push(this.toolDef('agent_register', '[P67 extension] Device agent registration (inbox mode): register{name,kind} records/refreshes a device-side agent (claude-code/codex/hmharness/custom) in the persistent registry; UI shows it in the AI switcher with an online dot (lastSeen < 2min). Runner calls this on start and every 30s as heartbeat',
+      this.propMap([
+        ['name', new McpParamProp('string', 'Agent name (unique key, e.g. claude-code)')],
+        ['kind', new McpParamProp('string', 'claude-code | codex | hmharness | custom')]
+      ]), ['name'], []))
+    tools.push(this.toolDef('device_agent_tasks', '[P67 extension] Device agent task inbox: next{agent} claims the oldest pending task file (pending->running); complete{taskId,ok,result} writes back the outcome (result truncated to 32KB)',
+      this.propMap([
+        ['action', new McpParamProp('string', 'next | complete')],
+        ['agent', new McpParamProp('string', 'Agent name for next (claim tasks assigned to it)')],
+        ['taskId', new McpParamProp('string', 'Task id for complete')],
+        ['ok', new McpParamProp('boolean', 'true=completed, false=failed (default true)')],
+        ['result', new McpParamProp('string', 'Final answer text for complete (truncated to 32KB)')]
+      ]), ['action'], []))
     return tools
   }
 

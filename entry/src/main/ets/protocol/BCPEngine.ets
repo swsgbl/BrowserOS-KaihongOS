@@ -14,11 +14,16 @@ class BCPEngineImpl {
 
   private reboundAt: number = 0
 
+  /** [P68] last navigation/rebind timestamp — read/snapshot transitional-state heuristic */
+  private lastNavAt: number = 0
+
   bindWebView(webviewController: IWebviewController, webviewId: string): void {
     this.webviewController = webviewController
     this.webviewId = webviewId
     this.bridgeInjected = false
     this.reboundAt = Date.now()
+    // [P68] rebinding switches page context — treat as a navigation boundary
+    this.lastNavAt = Date.now()
   }
 
   /** P51: rebind 后 bridge 注入异步落地；首个 executeJS 前留出注入窗口 */
@@ -66,12 +71,18 @@ class BCPEngineImpl {
       }
       // [P62-A/G] a runJavaScript promise NEVER settles if the page navigates mid-eval —
       // race it; on timeout return a loud failure instead of hanging the tool forever.
+      // [P68] clear the loser timer once the race settles — otherwise every successful call
+      // leaves an orphan timeout that fires up to timeoutMs later (leak under 1s poll loops).
+      let raceTimer: number = -1
       const raced = await Promise.race([
         this.webviewController.runJavaScript(jsCode),
         new Promise<string>((res) => {
-          setTimeout(() => res('__BCP_TIMEOUT__'), timeoutMs)
+          raceTimer = setTimeout(() => res('__BCP_TIMEOUT__'), timeoutMs)
         })
       ])
+      if (raceTimer >= 0) {
+        clearTimeout(raceTimer)
+      }
       if (raced === '__BCP_TIMEOUT__') {
         timer()
         return { success: false, data: null, error: 'script timeout after ' + timeoutMs + 'ms (page navigating?)' }
@@ -115,6 +126,7 @@ class BCPEngineImpl {
     }
     try {
       this.webviewController!.loadUrl(url)
+      this.lastNavAt = Date.now()
       timer()
       return { success: true, data: url, error: null }
     } catch (e) {
@@ -408,6 +420,14 @@ class BCPEngineImpl {
   getWebviewId(): string {
     return this.webviewId
   }
+
+  /** [P68] ms since last navigate/rebind; large value when no recent navigation */
+  msSinceLastNav(): number {
+    if (this.lastNavAt === 0) {
+      return Number.MAX_SAFE_INTEGER
+    }
+    return Date.now() - this.lastNavAt
+  }
   /** [P43] evaluate: 在当前页面求值任意 JS 表达式，结果 JSON 序列化返回（MCP evaluate/run 宏/act 扩展 kinds 复用） */
   async evaluate(expression: string): Promise<BCPResult> {
     await this.settleIfJustRebound()
@@ -421,12 +441,17 @@ class BCPEngineImpl {
       // IIFE 包裹：表达式求值；页面侧异常以 {ok:false,error} 带回而非 reject
       const wrapped = `(function(){try{const r=(${expression});return JSON.stringify({ok:true,result:(r===undefined?null:r)})}catch(e){return JSON.stringify({ok:false,error:String(e)})}})()`
       // [P62-A] same never-settling hazard as executeJS — race with the standard inject timeout
+      // [P68] clear the loser timer (same orphan-timer leak as executeJS)
+      let raceTimer: number = -1
       const raw = await Promise.race([
         this.webviewController!.runJavaScript(wrapped),
         new Promise<string>((res) => {
-          setTimeout(() => res('__BCP_TIMEOUT__'), Constants.BCP_SCRIPT_INJECT_TIMEOUT_MS)
+          raceTimer = setTimeout(() => res('__BCP_TIMEOUT__'), Constants.BCP_SCRIPT_INJECT_TIMEOUT_MS)
         })
       ])
+      if (raceTimer >= 0) {
+        clearTimeout(raceTimer)
+      }
       if (raw === '__BCP_TIMEOUT__') {
         timer()
         return { success: false, data: null, error: 'evaluate timeout (page navigating?)' }
