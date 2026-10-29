@@ -66,7 +66,9 @@ export class UpdateState {
 /** 更新源偏好（config.json updateSourcePref） */
 export type UpdateSourcePref = 'auto' | 'cn' | 'global'
 
-const MANIFEST_CN_URL = 'https://atomgit.com/hongfu/BrowserOS-KaihongOS/raw/main/update-manifest.json'
+// P69-fix(Zodex 实测): AtomGit /raw 是 SPA 壳不可直读(5792B HTML)；ghfast.top 前置 GitHub raw 在 VM 实测 200/真 JSON。
+// CN 链 = ghfast->github raw（国内可达）；AtomGit raw 留作后续其开放 raw 时的第二候选（当前必败，竞速自然跳过）。
+const MANIFEST_CN_URL = 'https://ghfast.top/https://raw.githubusercontent.com/swsgbl/BrowserOS-KaihongOS/main/update-manifest.json'
 const MANIFEST_GLOBAL_URL = 'https://github.com/swsgbl/BrowserOS-KaihongOS/releases/latest/download/update-manifest.json'
 const STATE_PATH = 'update_state.json'
 const UPDATES_DIR = 'updates'
