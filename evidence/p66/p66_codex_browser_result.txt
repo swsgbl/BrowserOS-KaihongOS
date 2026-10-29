@@ -1,0 +1,30 @@
+async function main(){for(const path of ['/json/version','/json','/json/list']){await new Promise(resolve=>{http.get({hostname:'127.0.0.1',port:9222,path,headers:{Accept:'application/json'}},res=>{let x='';res.setEncoding('utf8');res.on('data',c=>x+=c);res.on('end',()=>{console.log('\\n###',path,res.statusCode);console.log(x.slice(0,5000));resolve()})}).on('error',e=>{console.error(path,e.message);resolve()})})}}
+main().catch(e=>{console.error(e);process.exit(1)});
+NODE" in /data/local/tmp
+ succeeded in 0ms:
+
+### /json/version 404
+{"error":"not found"}
+
+### /json 404
+{"error":"not found"}
+
+### /json/list 404
+{"error":"not found"}
+
+2026-10-29T05:42:11.511393Z ERROR codex_core::util: OutputTextDelta without active item
+codex
+已完成：页面已加载并读取，我打开的第二个标签页已用 `tabs close` 成功关闭。
+
+- 页面标题：`Example Domain`
+- 第一段正文：`This domain is for use in documentation examples without needing permission. This is not a service; avoid relying on it for testing and monitoring purposes.`
+
+备注：第一次流程中有一个测试遗留的 `https://example.com/` 标签页，BrowserOS 返回 `P51: tab not owned by this session`，因此无法由后续 MCP 会话关闭；后续正式流程的标签页已确认返回 `closed: true`。
+tokens used
+354,786
+已完成：页面已加载并读取，我打开的第二个标签页已用 `tabs close` 成功关闭。
+
+- 页面标题：`Example Domain`
+- 第一段正文：`This domain is for use in documentation examples without needing permission. This is not a service; avoid relying on it for testing and monitoring purposes.`
+
+备注：第一次流程中有一个测试遗留的 `https://example.com/` 标签页，BrowserOS 返回 `P51: tab not owned by this session`，因此无法由后续 MCP 会话关闭；后续正式流程的标签页已确认返回 `closed: true`。

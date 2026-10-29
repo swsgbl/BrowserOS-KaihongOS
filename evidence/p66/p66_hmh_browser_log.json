@@ -1,0 +1,588 @@
+{
+  "step": "initialize",
+  "request": {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "initialize",
+    "params": {
+      "protocolVersion": "2024-11-05",
+      "capabilities": {},
+      "clientInfo": {
+        "name": "hmh-mcp-client",
+        "version": "1.0.0"
+      }
+    }
+  },
+  "httpStatus": 200,
+  "response": {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "result": {
+      "protocolVersion": "2024-11-05",
+      "capabilities": {
+        "tools": {
+          "listChanged": false
+        }
+      },
+      "serverInfo": {
+        "name": "browseros_mcp",
+        "title": "BrowserOS MCP Server",
+        "version": "1.1.0"
+      },
+      "instructions": "You are driving the BrowserOS webview via MCP tools.\n- Prefer finishing in the current page: navigate, click, type, scroll, read text, take snapshots.\n- Give each step a concrete check: snapshot or getText to verify the effect before moving on.\n- Tidy up when a task finishes: close tabs you opened for this task unless the user\n  asked to keep them or a page is still useful for inspection.\n- The back/forward tools share the page history; use them instead of re-navigating when possible."
+    }
+  }
+}
+{
+  "step": "notifications/initialized",
+  "httpStatus": 202,
+  "response": null
+}
+{
+  "step": "tools/call",
+  "request": {
+    "jsonrpc": "2.0",
+    "id": 2,
+    "method": "tools/call",
+    "params": {
+      "name": "tabs",
+      "arguments": {
+        "action": "new",
+        "url": "https://example.com"
+      }
+    }
+  },
+  "httpStatus": 200,
+  "response": {
+    "jsonrpc": "2.0",
+    "id": 2,
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"tabId\":\"tab_3_1793251062736\",\"url\":\"https://example.com\"}"
+        }
+      ],
+      "isError": false
+    }
+  }
+}
+{
+  "step": "tools/call",
+  "request": {
+    "jsonrpc": "2.0",
+    "id": 3,
+    "method": "tools/call",
+    "params": {
+      "name": "read",
+      "arguments": {}
+    }
+  },
+  "httpStatus": 200,
+  "response": {
+    "jsonrpc": "2.0",
+    "id": 3,
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"source\":\"snapshot\",\"text\":\"该域名仅用于文档示例，无需获得许可。这并非一项服务，请勿将其用于测试和监控目的。\\n\\nThis domain is for use in documentation examples without needing permission. This is not a service; avoid relying on it for testing and monitoring purposes.\\n\\nهذا النطاق مُخصص للاستخدام في أمثلة التوثيق دون الحاجة إلى إذن. هذه ليست خدمة، يُرجى تجنب الاعتماد عليها لأغراض الاختبار والمراقبة.\\n\\nL’usage de ce domaine est réservé à des exemples de documentation, sans autorisation préalable. Il ne s’agit pas d’un service ; son utilisation à des fins de test ou de surveillance est à éviter.\\n\\nДанный домен предназначен для использования в примерах документации без необходимости получения предварительного разрешения. Это не сервис; не рекомендуется его использование для тестирования и мониторинга.\\n\\nEste dominio está destinado al uso en ejemplos de documentación sin necesidad de permiso. Esto no es un servicio; evitar utilizarlo para realizar pruebas o monitoreos.\\n\\nLearn more\\n- [Learn more](https://iana.org/help/example-domains)\",\"refCount\":0}"
+        }
+      ],
+      "isError": false
+    }
+  }
+}
+{
+  "step": "tools/list",
+  "request": {
+    "jsonrpc": "2.0",
+    "id": 4,
+    "method": "tools/list",
+    "params": {}
+  },
+  "httpStatus": 200,
+  "response": {
+    "jsonrpc": "2.0",
+    "id": 4,
+    "result": {
+      "tools": [
+        {
+          "name": "tabs",
+          "description": "Manage browser tabs: list/active/new/close/activate (TabManager passthrough)",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "type": "string",
+                "description": "list | active | new | close | activate (default list)"
+              },
+              "url": {
+                "type": "string",
+                "description": "URL for action=new (default about:blank)"
+              },
+              "tabId": {
+                "type": "string",
+                "description": "Tab id for close/activate"
+              },
+              "page": {
+                "type": "string",
+                "description": "Alias of tabId for close/activate"
+              }
+            },
+            "required": []
+          },
+          "aliases": []
+        },
+        {
+          "name": "tab_groups",
+          "description": "Minimal tab-group semantics: group tabs by agentId; action list/ungroup",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "type": "string",
+                "description": "list | ungroup (default list)"
+              },
+              "group": {
+                "type": "string",
+                "description": "Group name (agentId) for ungroup"
+              }
+            },
+            "required": []
+          },
+          "aliases": []
+        },
+        {
+          "name": "history",
+          "description": "Browser history: back/forward/list with limit (HistoryManager passthrough)",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "type": "string",
+                "description": "back | forward | list (default list)"
+              },
+              "limit": {
+                "type": "number",
+                "description": "Max entries for list (default 50)"
+              }
+            },
+            "required": []
+          },
+          "aliases": [
+            "back",
+            "forward"
+          ]
+        },
+        {
+          "name": "navigate",
+          "description": "Navigate the webview to a URL",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": "string",
+                "description": "The URL to navigate to"
+              },
+              "waitUntil": {
+                "type": "string",
+                "description": "Optional wait condition (load | domcontentloaded), best-effort"
+              }
+            },
+            "required": [
+              "url"
+            ]
+          },
+          "aliases": []
+        },
+        {
+          "name": "snapshot",
+          "description": "Get DOM snapshot info of the current page",
+          "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          },
+          "aliases": []
+        },
+        {
+          "name": "diff",
+          "description": "Line-level LCS diff between two text snapshots (baseline/current)",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "baseline": {
+                "type": "string",
+                "description": "Baseline text (e.g. prior snapshot)"
+              },
+              "current": {
+                "type": "string",
+                "description": "Current text"
+              }
+            },
+            "required": [
+              "baseline",
+              "current"
+            ]
+          },
+          "aliases": []
+        },
+        {
+          "name": "act",
+          "description": "Act on the page. kinds: click, click_at, type, type_at, fill, press, hover, hover_at, focus, check, uncheck, select, scroll, drag, drag_at (aligned with upstream act.ts)",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "description": "click|click_at|type|type_at|fill|press|hover|hover_at|focus|check|uncheck|select|scroll|drag|drag_at"
+              },
+              "ref": {
+                "type": "string",
+                "description": "CSS selector of target element"
+              },
+              "text": {
+                "type": "string",
+                "description": "Text for kind=type/type_at"
+              },
+              "value": {
+                "type": "string",
+                "description": "Value for kind=fill/select"
+              },
+              "key": {
+                "type": "string",
+                "description": "Key/combo for kind=press, e.g. Enter, Control+a"
+              },
+              "direction": {
+                "type": "string",
+                "description": "up | down | left | right for kind=scroll"
+              },
+              "amount": {
+                "type": "number",
+                "description": "Scroll amount in wheel notches (default 3)"
+              },
+              "x": {
+                "type": "number",
+                "description": "Viewport x for *_at kinds"
+              },
+              "y": {
+                "type": "number",
+                "description": "Viewport y for *_at kinds"
+              },
+              "targetRef": {
+                "type": "string",
+                "description": "Target selector for kind=drag"
+              },
+              "startX": {
+                "type": "number",
+                "description": "Drag start x for kind=drag_at"
+              },
+              "startY": {
+                "type": "number",
+                "description": "Drag start y for kind=drag_at"
+              },
+              "endX": {
+                "type": "number",
+                "description": "Drag end x for kind=drag_at"
+              },
+              "endY": {
+                "type": "number",
+                "description": "Drag end y for kind=drag_at"
+              },
+              "clear": {
+                "type": "boolean",
+                "description": "Clear field before type_at/fill"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "aliases": [
+            "click",
+            "type",
+            "scroll"
+          ]
+        },
+        {
+          "name": "download",
+          "description": "Manage downloads: start(url)/cancel(id)/status(id)/list (DownloadManager passthrough)",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "type": "string",
+                "description": "start | cancel | status | list (default list)"
+              },
+              "url": {
+                "type": "string",
+                "description": "URL for action=start"
+              },
+              "id": {
+                "type": "string",
+                "description": "Download id for status/cancel"
+              },
+              "fileName": {
+                "type": "string",
+                "description": "Optional file name for start"
+              },
+              "mimeType": {
+                "type": "string",
+                "description": "Optional mime type for start"
+              }
+            },
+            "required": []
+          },
+          "aliases": []
+        },
+        {
+          "name": "upload",
+          "description": "File upload — page <input type=file> triggers system file picker (onShowFileSelector wired P53)",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "filePath": {
+                "type": "string",
+                "description": "Reserved: preset file path to inject"
+              }
+            },
+            "required": []
+          },
+          "aliases": []
+        },
+        {
+          "name": "read",
+          "description": "Read page text; optional selector narrows to that element textContent",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "selector": {
+                "type": "string",
+                "description": "Optional CSS selector to read a single element"
+              }
+            },
+            "required": []
+          },
+          "aliases": [
+            "getText"
+          ]
+        },
+        {
+          "name": "grep",
+          "description": "Regex search over page text; returns matches[{line,text}] + count",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "pattern": {
+                "type": "string",
+                "description": "JavaScript regular expression source"
+              }
+            },
+            "required": [
+              "pattern"
+            ]
+          },
+          "aliases": []
+        },
+        {
+          "name": "screenshot",
+          "description": "Capture a screenshot of the current page",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "quality": {
+                "type": "string",
+                "description": "low | medium | high"
+              }
+            },
+            "required": []
+          },
+          "aliases": []
+        },
+        {
+          "name": "pdf",
+          "description": "Print page to PDF (A4 portrait, background on) — returns base64 PDF; implemented via WebviewController.createPdf since API 14",
+          "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": []
+          },
+          "aliases": []
+        },
+        {
+          "name": "wait",
+          "description": "Wait for milliseconds or for a selector to appear",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "ms": {
+                "type": "number",
+                "description": "Milliseconds to wait"
+              },
+              "selector": {
+                "type": "string",
+                "description": "CSS selector to wait for"
+              },
+              "timeout": {
+                "type": "number",
+                "description": "Selector wait timeout ms"
+              }
+            },
+            "required": []
+          },
+          "aliases": []
+        },
+        {
+          "name": "windows",
+          "description": "Single-window build: list returns [{windowId:main,tabs:N}]; other actions unsupported",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "type": "string",
+                "description": "list | focus | new | close (only list supported)"
+              }
+            },
+            "required": []
+          },
+          "aliases": []
+        },
+        {
+          "name": "evaluate_in_page",
+          "description": "Evaluate a JavaScript expression in the page and return JSON-serialized result (the only script-execution tool; P57 upstream rename of evaluate)",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "expression": {
+                "type": "string",
+                "description": "JS expression (evaluated via runJavaScript)"
+              }
+            },
+            "required": [
+              "expression"
+            ]
+          },
+          "aliases": [
+            "evaluate"
+          ]
+        },
+        {
+          "name": "run",
+          "description": "Run a macro: sequentially execute an array of act/navigate steps",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "steps": {
+                "type": "array",
+                "description": "Array of {tool: act|navigate, params: {...}} steps"
+              }
+            },
+            "required": [
+              "steps"
+            ]
+          },
+          "aliases": []
+        },
+        {
+          "name": "llm_config",
+          "description": "[P65 extension] Manage LLM provider config (baseUrl/apiKey/model) locally: set writes the key through the same Asset Store path as the LLM Hub UI (config.json stays masked); get returns masked key + asset presence; test performs a real LLM roundtrip",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "type": "string",
+                "description": "set | get | test"
+              },
+              "baseUrl": {
+                "type": "string",
+                "description": "LLM API base URL for set (e.g. https://apihub.agnes-ai.com/v1)"
+              },
+              "apiKey": {
+                "type": "string",
+                "description": "API key for set (stored encrypted in Asset Store, never echoed in full)"
+              },
+              "model": {
+                "type": "string",
+                "description": "Model name for set"
+              }
+            },
+            "required": [
+              "action"
+            ]
+          },
+          "aliases": []
+        },
+        {
+          "name": "agent_task",
+          "description": "[P65 extension] Drive the internal AgentEngine programmatically: create{prompt,targetUrl?} starts an agent task and returns agentId; status{agentId} polls progress; result{agentId} returns the final answer",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "type": "string",
+                "description": "create | status | result"
+              },
+              "prompt": {
+                "type": "string",
+                "description": "Task description for create (the agent uses LLM+BCP tools autonomously)"
+              },
+              "targetUrl": {
+                "type": "string",
+                "description": "Optional target page URL for create"
+              },
+              "name": {
+                "type": "string",
+                "description": "Optional agent display name (default mcp_task)"
+              },
+              "agentId": {
+                "type": "string",
+                "description": "Agent id for status/result"
+              }
+            },
+            "required": [
+              "action"
+            ]
+          },
+          "aliases": []
+        }
+      ]
+    }
+  }
+}
+{
+  "step": "tools/call",
+  "request": {
+    "jsonrpc": "2.0",
+    "id": 5,
+    "method": "tools/call",
+    "params": {
+      "name": "tabs",
+      "arguments": {
+        "action": "list"
+      }
+    }
+  },
+  "httpStatus": 200,
+  "response": {
+    "jsonrpc": "2.0",
+    "id": 5,
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"tabs\":[{\"tabId\":\"tab_5_1793231005669\",\"url\":\"about:blank\",\"title\":\"about:blank\",\"active\":false},{\"tabId\":\"tab_6_1793238700362\",\"url\":\"about:blank\",\"title\":\"about:blank\",\"active\":false},{\"tabId\":\"tab_1_1793243368160\",\"url\":\"about:blank\",\"title\":\"about:blank\",\"active\":false},{\"tabId\":\"tab_1_1793244703673\",\"url\":\"about:blank\",\"title\":\"about:blank\",\"active\":false},{\"tabId\":\"tab_1_1793245094183\",\"url\":\"about:blank\",\"title\":\"about:blank\",\"active\":false},{\"tabId\":\"tab_1_1793246490372\",\"url\":\"https://example.com/\",\"title\":\"Example Domain\",\"active\":false},{\"tabId\":\"tab_2_1793248050955\",\"url\":\"about:blank\",\"title\":\"about:blank\",\"active\":false},{\"tabId\":\"tab_1_1793248209146\",\"url\":\"https://example.com/\",\"title\":\"Example Domain\",\"active\":false},{\"tabId\":\"tab_2_1793251026942\",\"url\":\"https://example.com/\",\"title\":\"Example Domain\",\"active\":false},{\"tabId\":\"tab_3_1793251062736\",\"url\":\"https://example.com/\",\"title\":\"Example Domain\",\"active\":true}],\"count\":10}"
+        }
+      ],
+      "isError": false
+    }
+  }
+}
+{
+  "step": "cleanup",
+  "note": "closed tabs opened by this task (P51: must close via owning session)",
+  "closed": [
+    "tab_2_1793251026942",
+    "tab_3_1793251062736"
+  ]
+}

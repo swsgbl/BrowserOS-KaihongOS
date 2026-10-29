@@ -4,6 +4,20 @@
 
 格式参考 Keep a Changelog；版本以仓库主分支阶段号标记。
 
+## [P66] - 2026-10-29
+### 里程碑：真实 AI Agent 矩阵——Claude Code / Codex / hmharness 全部装进 VM 并驱动本机浏览器
+- **Claude Code 2.1.98@VM**：npm 崩溃（V8 Check failed）→ npmmirror tarball 直装**最后纯 JS 版**（2.1.312+ 已改原生二进制 musl 不可用）+ 自写 vm-fetch-full polyfill（jitless 无 WASM）；auth 经宿主 **anthropic_relay.js**（Anthropic→OpenAI 翻译，GLM coding 后端）；原生 MCP 驱动浏览器全链 ✅（建 tab→读页→主动关 tab）
+- **Codex 0.165.0@VM**：**官方 GitHub musl 静态构建**（npm 只有 glibc）；Codex 强制 Responses API→宿主 **responses_relay.js** 翻译桥；config.toml url 型 MCP ✅（建 tab→读页→closed:true；正确诊断 P51 拒关外来 tab=安全机制生效）
+- **hmharness@VM**（并行工程安装）：验证通过——agent 自写 MCP 客户端（含 SSE 解析）完成浏览器任务并自主发现 P51 会话归属机制（12 轮/11 工具）
+- **VM 环境事实修正**：node 必须 --jitless（内核禁 RWX）→ fetch 需 polyfill；GLM coding key 只通 OpenAI 协议端点（/api/anthropic 401）
+- 交付物：tools/anthropic_relay.js + tools/responses_relay.js（宿主协议翻译双中继）；证据 evidence/p66/（三 agent 结果原文+安装配方+polyfill）
+
+## [P65] - 2026-10-29
+### AI 功能复活——MCP 管理通道（17→19 工具）
+- 用户生产反馈"右侧 AI+主界面 AI 都不能用"：根因=llmApiKey 空 × P36 只许 UI 写 key × VM IME 污染=死结；**网络误判修正（VM 直连 agnes 200）**
+- **llm_config**（set 走 Asset Store 同 UI 链路/get 掩码/test 真往返）+ **agent_task**（create/status/result 程序化触发内部 agent）
+- Zodex 终验：agent_task 全循环真实 LLM 中文答案+重启持久+static 99/99+smoke 9/9+hilog 零明文（git 609a145+3b0a55c）
+
 ## [P64] - 2026-10-29
 ### 测试基建健壮化（hmh 干净交付 + Zodex 双模式复验）
 - **smoke step7 坐标健壮化**：根因=旧 `y1>=60` 过滤把窗口化模式 y1=43 的整排工具栏按钮排除；修复=结构树定位（地址栏 TextInput 锚→同 y 带→右侧最右小 Button=⋮）+ 焦点污染防御（dump 归属校验+拉回重抓）+ `--maximize` opt-in。**双模式各 9/9**（hmh 6 轮+Zodex 复跑）

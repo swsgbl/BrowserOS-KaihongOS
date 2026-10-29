@@ -1320,6 +1320,23 @@ python tools/smoke_reg.py         # 30 秒健康检查
 
 ## P64：测试基建健壮化——smoke 双模式 9/9 + P59-F 20 项回归矩阵收官（2026-10-29；hmh wg6cbb 干净交付，Zodex 双模式复验 PASS）
 
+- smoke step7 根因=窗口化模式工具栏 y1=43 被 y1>=60 过滤整排排除；修法=结构树定位（地址栏锚→同带→右最右小按钮=⋮）+焦点污染防御+--maximize opt-in；hmh 6 轮+Zodex 双模式复跑均 9/9。
+- regression_20.py：19 PASS（16 自动化+3 引用）+1 BLOCKED（下载=P16 ArkWeb 无落盘回调）+0 FAIL 两轮一致。变更仅 tools/。证据 evidence/p64/。
+
+## P65：AI 功能复活——llm_config + agent_task MCP 管理通道（2026-10-29；hmh vttc3a 干净交付，Zodex 终验 PASS；git 609a145+3b0a55c）
+
+- 用户生产反馈：右侧 AI 侧栏+主界面 AI 都不可用。根因=llmApiKey 空 × P36 只许 UI 写 key（Asset Store）× VM IME 污染输不进=死结。网络误判修正：VM 原生 https 直连 agnes 200 OK（P61 结论被 node fetch WASM 崩溃误导）。
+- 新增 llm_config（set/get/test，key 走 Asset Store 同 UI 链路）+ agent_task（create/status/result）两 MCP 平台扩展（17→19 工具）。Zodex 终验：agent_task 全循环真实 LLM 中文答案+重启持久（keyStoredInAsset）+static 99/99+smoke 9/9+hilog 零明文。证据 evidence/p65/。
+
+## P66：真实 AI Agent 矩阵——Claude Code/Codex/hmharness 全部装进 VM 驱动本机浏览器（2026-10-29；Zodex 直接执行）
+
+- Claude Code 2.1.98@VM（npmmirror tarball 直装最后纯 JS 版+自写 vm-fetch-full polyfill）→宿主 anthropic_relay:19224→GLM；原生 MCP 驱动浏览器 ✅（建tab→读页→主动关tab）。
+- Codex 0.165.0@VM（官方 musl 静态构建，GitHub release）→宿主 responses_relay:19225（Responses→chat 翻译）→GLM；url 型 MCP ✅（closed:true+正确诊断 P51 拒关外来 tab）。
+- hmharness@VM（并行工程安装，launcher v2=--jitless+vm-fetch）验证 ✅：自写 MCP 客户端（含 SSE 解析）12 轮完成浏览器任务。
+- VM 环境事实：node 必须 --jitless（内核禁 RWX，jitless 无 WASM→fetch 需 polyfill）；npm 崩溃（tarball 直装）；GLM coding key 只通 OpenAI 端点（/api/anthropic 401）→协议翻译双中继（tools/anthropic_relay.js+tools/responses_relay.js）。证据 evidence/p66/。
+
+## P64：测试基建健壮化——smoke 双模式 9/9 + P59-F 20 项回归矩阵收官（2026-10-29；hmh wg6cbb 干净交付，Zodex 双模式复验 PASS）
+
 - **A smoke step7 根因**：旧 y1>=60 过滤排除窗口化模式 y1=43 整排工具栏；修复=结构树定位（地址栏锚→同带→右最右小按钮）+焦点污染防御（dump 归属校验）+--maximize opt-in。hmh 6 轮 9/9+Zodex 双模式复跑 9/9。
 - **B regression_20.py**：19 PASS（16 自动化+3 引用）+1 BLOCKED（下载=P16 ArkWeb 无落盘回调）+0 FAIL，两轮一致；P59-F 验收清单 H 项就此收官。
 - 变更仅 tools/（smoke_reg.py 重构+regression_20.py 新增），应用源码未动。证据 evidence/p64/。
