@@ -1318,4 +1318,10 @@ python tools/smoke_reg.py         # 30 秒健康检查
 - **验收**：p62_verify **5/5 @ sensitiveConfirm=true**（input[type=submit] 直接执行，hmh+Zodex 双证）；支付导航确认挂起保持；表单导航 9ms 直通；static 全过；smoke 8/9（第 7 步窗口化坐标漂移=P40 期已知测试基建问题，→P64 与 P59-F 20 项回归整合）。sensitiveConfirm=true 终态实测。
 - 证据 evidence/p63/。hmh 无 final 中断（第 9 次），Zodex 接管收尾（VERIFY.md/台账/提交）。
 
+## P64：测试基建健壮化——smoke 双模式 9/9 + P59-F 20 项回归矩阵收官（2026-10-29；hmh wg6cbb 干净交付，Zodex 双模式复验 PASS）
+
+- **A smoke step7 根因**：旧 y1>=60 过滤排除窗口化模式 y1=43 整排工具栏；修复=结构树定位（地址栏锚→同带→右最右小按钮）+焦点污染防御（dump 归属校验）+--maximize opt-in。hmh 6 轮 9/9+Zodex 双模式复跑 9/9。
+- **B regression_20.py**：19 PASS（16 自动化+3 引用）+1 BLOCKED（下载=P16 ArkWeb 无落盘回调）+0 FAIL，两轮一致；P59-F 验收清单 H 项就此收官。
+- 变更仅 tools/（smoke_reg.py 重构+regression_20.py 新增），应用源码未动。证据 evidence/p64/。
+
 

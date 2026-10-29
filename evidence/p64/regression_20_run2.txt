@@ -1,0 +1,31 @@
+== P64 regression_20 ==  target: 192.168.161.137:10178
+[[32mPASS[0m] 3.cold launch — lifecycle OK
+[[32mPASS[0m] 01 冷启动生命周期 — lifecycle OK
+[[32mPASS[0m] 4.foreground render — title+omnibox found
+[[32mPASS[0m] 02 前台渲染标题+地址栏 — dumpLayout BrowserOS+TextInput
+[[32mPASS[0m] 7.bookmarks search box — placeholder 搜索书签 found
+[[32mPASS[0m] 8.p34/p35 screens registered — main_pages ok; menu Skills found
+[[32mPASS[0m] 16 页面注册完整性 — main_pages 13页 + 菜单 Skills
+[[32mPASS[0m] 12 ⋮ 菜单结构 — 菜单项命中 4/4: 书签/设置/技能/历史
+[[32mPASS[0m] 13 书签页搜索框 — placeholder 搜索书签
+[[32mPASS[0m] 5.a11y annotations(static) — accessibilityText x45 (>=20)
+[[32mPASS[0m] 15 无障碍标注(静态) — accessibilityText x45 (>=20)
+[[32mPASS[0m] 9.icon pixel gate — icon (219, 151, 255, 171) non-bg 24.2% (>=15)
+[[32mPASS[0m] 14 图标渲染像素门 — icon (219, 151, 255, 171) non-bg 24.2% (>=15)
+[[32mPASS[0m] 03 MCP HTTP initialize — serverInfo ok
+[[32mPASS[0m] 04 navigate+snapshot — snapshot len=1021
+[[32mPASS[0m] 09 evaluate_in_page — {"expression":"document.title","result":"{\"ok\":true,\"result\":\"Example Domain\"}","truncated":false}
+[[32mPASS[0m] 10 read 页面正文 — len=1028
+[[32mPASS[0m] 05 navigate 中文站 — {"expression":"document.title","result":"{\"ok\":true,\"result\":\"百度一下，你就知道\"}","truncated":false}
+[[32mPASS[0m] 06 tabs new/list/close — tabId=tab_1_1793232340054 listed=True close ok
+[[32mPASS[0m] 07 history back/forward — {"url":"https://www.baidu.com/","title":"百度一下，你就知道","action":"back"}
+[[32mPASS[0m] 08 grep 可见文本 — {"matches":[{"line":5,"text":"IANA-managed Reserved Domains"},{"line":66,"text":"# IANA-managed Reserved Domains"},{"line":113,"text":"- [Re
+[[32mPASS[0m] 11 会话隔离读 — s1 read len=1028 leak=False
+[[32mPASS*[0m] 17 主题深浅切换 — t2-settings-dark.jpeg(ok)+t3-newtab-dark.jpeg(ok); 源码 entry/src/main/ets 里 SettingsPage 深浅切换 confirmed
+[[32mPASS*[0m] 18 语言中英切换 — step4_restart_en.jpeg(ok)+step7_restart_zh.jpeg(ok); 源码 I18nZh/I18nEn 双语包 confirmed
+[[32mPASS*[0m] 19 DevTools 控制台/求值 — g2-devtools.json len=87289; g5-eval.json len=87302
+[[33mBLOCKED[0m] 20 网页下载 — P16 实证: ArkWeb 组件无下载完成回调,onDownloadStart 之外无落盘钩子,设备侧无法断言文件落盘;待上游 API 或应用层方案后转自动化
+
+===== regression_20: 20 项  PASS 19 (含引用 3)  FAIL 0  BLOCKED 1 =====
+  BLOCKED: 20 网页下载 — P16 实证: ArkWeb 组件无下载完成回调,onDownloadStart 之外无落盘钩子,设备侧无法断言文件落盘;待上游 API 或应用层方案后转自动化
+report -> D:\BrowserOS - KaihongOS\tools\..\evidence\p64\regression_20_report.txt

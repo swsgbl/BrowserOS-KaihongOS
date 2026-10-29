@@ -29,6 +29,8 @@ WS_PORT = 8765
 
 PASS, FAIL, SKIP = '\x1b[32mPASS\x1b[0m', '\x1b[31mFAIL\x1b[0m', '\x1b[33mSKIP\x1b[0m'
 results = []
+MAXIMIZE = False  # P64: 默认按原样窗口跑(结构化定位不依赖坐标窗口);--maximize 开启
+hdc_g = None      # _grab helper 用的全局 Hdc 引用(main 里注入)
 
 
 def run(cmd, timeout=30, shell=False):
@@ -89,7 +91,10 @@ def check_launch(hdc):
 
 
 def _maximize_window(hdc):
-    """P49: 冷启动后 app 常为自由窗口（toolbar 下移），先最大化恢复全屏坐标假设。"""
+    """P49/P64: 仅 --maximize 时先把自由窗口最大化(统一坐标);默认关闭,
+    让结构化定位在【原样窗口模式】下接受检验(两种模式都必须 9/9)。"""
+    if not MAXIMIZE:
+        return
     hdc.sh('uitest dumpLayout -p /data/local/tmp/smoke_mx.json', 40)
     hdc.raw('file recv /data/local/tmp/smoke_mx.json smoke_mx_layout.json', 30)
     try:
@@ -198,7 +203,68 @@ def _find_node(lay_text, needle, exact=False):
     return None
 
 
+def _find_menu_btn(lay_text):
+    """P64 结构化定位 ⋮ 菜单钮(窗口化/最大化两模式通吃的结构不变量):
+    以顶部宽地址栏(TextInput 类,y 带为锚)为参照,取同一 y 带、位于地址栏右侧、
+    尺寸<=64px 的图标 Button 中最右者。Enhance*(系统窗控)按 id 排除。
+    返回 bounds 元组 (x1,y1,x2,y2) 或 None。"""
+    try:
+        data = json.loads(lay_text)
+    except json.JSONDecodeError:
+        return None
+    nodes = list(_walk(data))
+    # 1) 锚: 宽>=300 的顶部地址输入框(两种模式下工具栏都含它)
+    anchor = None
+    for a in nodes:
+        if a.get('type') not in ('TextInput', 'TextField', 'SearchField'):
+            continue
+        m = re.match(r'^\[(\d+),(\d+)\]\[(\d+),(\d+)\]$', str(a.get('bounds', '')))
+        if not m:
+            continue
+        x1, y1, x2, y2 = map(int, m.groups())
+        if (x2 - x1) >= 300 and y1 < 300:
+            if anchor is None or y1 < anchor[1]:
+                anchor = (x1, y1, x2, y2)
+    if not anchor:
+        return None
+    band_top, band_bot = anchor[1] - 8, anchor[3] + 8
+    # 2) 同 y 带、地址栏右侧的小图标 Button,取最右
+    best = None
+    for a in nodes:
+        if a.get('type') != 'Button' or 'Enhance' in str(a.get('id', '')):
+            continue
+        m = re.match(r'^\[(\d+),(\d+)\]\[(\d+),(\d+)\]$', str(a.get('bounds', '')))
+        if not m:
+            continue
+        x1, y1, x2, y2 = map(int, m.groups())
+        cy = (y1 + y2) // 2
+        if not (band_top <= cy <= band_bot):
+            continue
+        if x1 < anchor[2] or x1 < 600:   # 必须在地址栏右侧
+            continue
+        if (x2 - x1) > 64 or (y2 - y1) > 64:  # 图标钮尺寸门
+            continue
+        if best is None or x2 > best[2]:
+            best = (x1, y1, x2, y2)
+    return best
+
+
+def _grab(tag):
+    """dump+recv+read 一步到位(P64 抽取的公共helper)。"""
+    hdc_g.sh('uitest dumpLayout -p /data/local/tmp/%s.json' % tag, 40)
+    hdc_g.raw('file recv /data/local/tmp/%s.json %s_layout.json' % (tag, tag), 30)
+    try:
+        with open('%s_layout.json' % tag, encoding='utf-8', errors='replace') as f:
+            return f.read()
+    except Exception:
+        return ''
+
+
 def check_bm_search(hdc, lay):
+    # P64 焦点防御:VM 多窗口下 dump 可能抓到别的 app(如终端)——校验归属,不对就拉回重抓
+    if 'com.browseros.kaihong' not in lay:
+        hdc.sh('aa start -a %s -b %s' % (ABILITY, BUNDLE))
+        time.sleep(3)
     # P33 起启动 +5s 可能弹「更新内容」覆盖层——现抓新 dump,先关掉它再点菜单
     hdc.sh('uitest dumpLayout -p /data/local/tmp/smoke_s7.json', 40)
     hdc.raw('file recv /data/local/tmp/smoke_s7.json smoke_s7_layout.json', 30)
@@ -207,6 +273,12 @@ def check_bm_search(hdc, lay):
             lay = f.read()
     except Exception:
         pass
+    if 'com.browseros.kaihong' not in lay:  # P64: 重抓后仍非目标窗口→拉前台再抓一次
+        print('  [warn] s7 dump not browseros; markers:',
+              [s for s in re.findall(r'"bundleName":"([^"]+)"', lay)][:3])
+        hdc.sh('aa start -a %s -b %s' % (ABILITY, BUNDLE))
+        time.sleep(3)
+        lay = _grab('smoke_s7')
     ob = _find_node(lay, '知道了', exact=True)
     if ob:
         xs = [int(v) for v in re.findall(r'\d+', ob)]
@@ -219,48 +291,33 @@ def check_bm_search(hdc, lay):
                 lay = f.read()
         except Exception:
             pass
-    # ⋮ 菜单(工具栏最右 Button,窗口化模式跳过 Enhance 窗口钮) → 书签 菜单项
-    mb = None
-    try:
-        data = json.loads(lay)
-    except json.JSONDecodeError:
-        data = None
-    if data is not None:
-        best_x = -1
-        for attrs in _walk(data):
-            if attrs.get('type') != 'Button':
-                continue
-            m = re.match(r'^\[(\d+),(\d+)\]\[(\d+),(\d+)\]$', str(attrs.get('bounds', '')))
-            if not m:
-                continue
-            x1, y1, x2, y2 = map(int, m.groups())
-            if y1 < 60 or y1 > 400 or x1 < 1000 or 'Enhance' in str(attrs.get('id', '')):
-                continue
-            if x2 > best_x:
-                best_x, mb = x2, m.groups()
+    # P64: ⋮ 菜单结构化定位(替代坐标窗口过滤——窗口化模式 y1=43 被旧 y1>=60 条件误杀)
+    mb = _find_menu_btn(lay)
     if not mb:
-        record('7.bookmarks search box', False, '⋮ 菜单按钮未找到')
+        record('7.bookmarks search box', False, '⋮ 菜单按钮未找到(结构化定位失败)')
         return
-    cx, cy = (int(mb[0]) + int(mb[2])) // 2, (int(mb[1]) + int(mb[3])) // 2
+    cx, cy = (mb[0] + mb[2]) // 2, (mb[1] + mb[3]) // 2
     hdc.sh('uitest uiInput click %d %d' % (cx, cy), 20)
     time.sleep(2.5)
-    hdc.sh('uitest dumpLayout -p /data/local/tmp/smoke_menu.json', 40)
-    hdc.raw('file recv /data/local/tmp/smoke_menu.json smoke_menu_layout.json', 30)
-    try:
-        with open('smoke_menu_layout.json', encoding='utf-8', errors='replace') as f:
-            menu = f.read()
-    except Exception:
-        menu = ''
+    menu = _grab('smoke_menu')
     if not _find_node(menu, '书签', exact=True):
-        # 菜单可能尚未渲染完——再等一拍重抓一次
+        # P64: 完整重试点链(菜单未开→拉前台+重新结构定位再点,首击可能被动画/焦点吞)
+        hdc.sh('aa start -a %s -b %s' % (ABILITY, BUNDLE))
+        time.sleep(1.5)
+        lay2 = _grab('smoke_s7')
+        if 'com.browseros.kaihong' in lay2:
+            mb2 = _find_menu_btn(lay2)
+            if mb2:
+                cx, cy = (mb2[0] + mb2[2]) // 2, (mb2[1] + mb2[3]) // 2
+        hdc.sh('uitest uiInput click %d %d' % (cx, cy), 20)
         time.sleep(2.0)
-        hdc.sh('uitest dumpLayout -p /data/local/tmp/smoke_menu.json', 40)
-        hdc.raw('file recv /data/local/tmp/smoke_menu.json smoke_menu_layout.json', 30)
-        try:
-            with open('smoke_menu_layout.json', encoding='utf-8', errors='replace') as f:
-                menu = f.read()
-        except Exception:
-            menu = ''
+        menu = _grab('smoke_menu')
+    if not _find_node(menu, '书签', exact=True):
+        # P64 诊断:菜单仍未开——打印 dump 归属与文本样本,供矩阵 FAIL 细节引用
+        import re as _re
+        marks = _re.findall(r'"bundleName":"([^"]+)"', menu)[:3]
+        texts = [t for t in _re.findall(r'"text":"([^"]{1,14})"', menu)][:12]
+        print('  [diag] menu-not-open windows=%s texts=%s' % (marks, texts))
     ib = _find_node(menu, '书签', exact=True)
     if not ib:
         record('7.bookmarks search box', False, '菜单项 书签 未找到')
@@ -363,13 +420,19 @@ def check_icon_render(hdc):
 
 
 def main():
+    global hdc_g
     ap = argparse.ArgumentParser()
     ap.add_argument('--hdc', default=r'C:\Program Files\Huawei\DevEco Studio\sdk\default\openharmony\toolchains\hdc.exe')
     ap.add_argument('--target', default='192.168.161.137:10178')
     ap.add_argument('--skip-install', action='store_true')
+    ap.add_argument('--maximize', action='store_true',
+                    help='P64: 启动后先最大化窗口统一坐标(默认关,验证结构化定位)')
+    global MAXIMIZE
     args = ap.parse_args()
+    MAXIMIZE = args.maximize
 
     hdc = Hdc(args.hdc, args.target)
+    hdc_g = hdc
     print('== BrowserOS smoke regression ==')
     print('hdc:', args.hdc, ' target:', args.target)
 

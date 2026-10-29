@@ -4,6 +4,12 @@
 
 格式参考 Keep a Changelog；版本以仓库主分支阶段号标记。
 
+## [P64] - 2026-10-29
+### 测试基建健壮化（hmh 干净交付 + Zodex 双模式复验）
+- **smoke step7 坐标健壮化**：根因=旧 `y1>=60` 过滤把窗口化模式 y1=43 的整排工具栏按钮排除；修复=结构树定位（地址栏 TextInput 锚→同 y 带→右侧最右小 Button=⋮）+ 焦点污染防御（dump 归属校验+拉回重抓）+ `--maximize` opt-in。**双模式各 9/9**（hmh 6 轮+Zodex 复跑）
+- **regression_20.py**：P59-F 20 项基础功能回归矩阵收官——**19 PASS（16 自动化+3 证据引用）+ 1 BLOCKED（下载=P16 ArkWeb 无落盘回调）+ 0 FAIL**；两轮一致
+- 变更仅 tools/，应用源码未动
+
 ## [P63] - 2026-10-29
 ### 安全：敏感检测语义修正——FORM_SUBMIT 字面量档移除（Zodex 裁决）
 - **裁决依据**：'form'/'submit' 子串匹配可绕过（同一按钮 `#su` vs `input[type=submit]`=假安全）、打断最常见 agent 操作（搜索提交）、上游 BrowserOS 无工具级确认档

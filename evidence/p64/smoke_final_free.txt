@@ -1,0 +1,15 @@
+D:\BrowserOS - KaihongOS\tools\smoke_reg.py:406: DeprecationWarning: Image.Image.getdata is deprecated and will be removed in Pillow 14 (2027-10-15). Use get_flattened_data instead.
+  px = list(im.getdata())
+== BrowserOS smoke regression ==
+hdc: C:\Program Files\Huawei\DevEco Studio\sdk\default\openharmony\toolchains\hdc.exe  target: 192.168.161.137:10178
+[[32mPASS[0m] 1.device online — 127.0.0.1:10178
+[[32mPASS[0m] 2.bundle installed — com.browseros.kaihong
+[[32mPASS[0m] 3.cold launch — lifecycle OK
+[[32mPASS[0m] 4.foreground render — title+omnibox found
+[[32mPASS[0m] 5.a11y annotations(static) — accessibilityText x45 (>=20)
+[[32mPASS[0m] 6.MCP HTTP initialize — {'jsonrpc': '2.0', 'id': 1, 'result': {'protocolVersion': '2024-11-05', 'capabil
+[[32mPASS[0m] 7.bookmarks search box — placeholder 搜索书签 found
+[[32mPASS[0m] 8.p34/p35 screens registered — main_pages ok; menu Skills found
+[[32mPASS[0m] 9.icon pixel gate — icon (94, 759, 112, 777) non-bg 21.3% (>=15)
+--
+TOTAL 9  PASS 9  FAIL 0

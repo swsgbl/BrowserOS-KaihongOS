@@ -1,0 +1,22 @@
+P64 regression_20 report  2026-10-29 08:14:54  target 192.168.161.137:10178
+[PASS    ] 01 冷启动生命周期          | lifecycle OK | 证据: (运行期产物)
+[PASS    ] 02 前台渲染标题+地址栏       | dumpLayout BrowserOS+TextInput | 证据: (运行期产物)
+[PASS    ] 16 页面注册完整性          | main_pages 13页 + 菜单 Skills | 证据: (运行期产物)
+[PASS    ] 12 ⋮ 菜单结构           | 菜单项命中 4/4: 书签/设置/技能/历史 | 证据: (运行期产物)
+[PASS    ] 13 书签页搜索框           | placeholder 搜索书签 | 证据: (运行期产物)
+[PASS    ] 15 无障碍标注(静态)        | accessibilityText x45 (>=20) | 证据: (运行期产物)
+[PASS    ] 14 图标渲染像素门          | icon (94, 759, 112, 777) non-bg 21.3% (>=15) | 证据: (运行期产物)
+[PASS    ] 03 MCP HTTP initialize | serverInfo ok | 证据: (运行期产物)
+[PASS    ] 04 navigate+snapshot | snapshot len=1021 | 证据: (运行期产物)
+[PASS    ] 09 evaluate_in_page | {"expression":"document.title","result":"{\"ok\":true,\"result\":\"Example Domain\"}","truncated":false} | 证据: (运行期产物)
+[PASS    ] 10 read 页面正文        | len=1028 | 证据: (运行期产物)
+[PASS    ] 05 navigate 中文站     | {"expression":"document.title","result":"{\"ok\":true,\"result\":\"百度一下，你就知道\"}","truncated":false} | 证据: (运行期产物)
+[PASS    ] 06 tabs new/list/close | tabId=tab_1_1793232870803 listed=True close ok | 证据: (运行期产物)
+[PASS    ] 07 history back/forward | {"url":"https://www.baidu.com/","title":"百度一下，你就知道","action":"back"} | 证据: (运行期产物)
+[PASS    ] 08 grep 可见文本        | {"matches":[{"line":5,"text":"IANA-managed Reserved Domains"},{"line":47,"text":"Reserved Domains"},{"line":75,"text":"# IANA-managed Reserv | 证据: (运行期产物)
+[PASS    ] 11 会话隔离读            | s1 read len=1028 leak=False | 证据: (运行期产物)
+[PASS-CITE] 17 主题深浅切换           | t2-settings-dark.jpeg(ok)+t3-newtab-dark.jpeg(ok); 源码 entry/src/main/ets 里 SettingsPage 深浅切换 confirmed | 证据: evidence/p44/t2-settings-dark.jpeg + evidence/p44/t3-newtab-dark.jpeg
+[PASS-CITE] 18 语言中英切换           | step4_restart_en.jpeg(ok)+step7_restart_zh.jpeg(ok); 源码 I18nZh/I18nEn 双语包 confirmed | 证据: evidence/p50/step4_restart_en.jpeg + evidence/p50/step7_restart_zh.jpeg
+[PASS-CITE] 19 DevTools 控制台/求值  | g2-devtools.json len=87289; g5-eval.json len=87302 | 证据: evidence/p47/g2-devtools.json + g5-eval.json
+[BLOCKED ] 20 网页下载             | P16 实证: ArkWeb 组件无下载完成回调,onDownloadStart 之外无落盘钩子,设备侧无法断言文件落盘;待上游 API 或应用层方案后转自动化 | 证据: evidence/p16 (历史)
+TOTAL 20  PASS 19(cite 3)  FAIL 0  BLOCKED 1
