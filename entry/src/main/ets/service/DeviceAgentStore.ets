@@ -24,6 +24,7 @@ export class DeviceAgentEntry {
 export class DeviceAgentTask {
   taskId: string = ''
   agent: string = ''
+  kind: string = '' // '' 常规 prompt 任务 | system_update P69 重启即更
   prompt: string = ''
   contextUrl: string = ''
   contextTitle: string = ''
@@ -79,12 +80,13 @@ class DeviceAgentStoreImpl {
     return now() - e.lastSeen < ONLINE_WINDOW_MS
   }
 
-  /** UI 提交任务：写 pending 任务文件，等 runner 领取 */
-  async createTask(agentName: string, prompt: string, ctxUrl: string, ctxTitle: string, ctxSel: string):
-    Promise<DeviceAgentTask> {
+  /** UI 提交任务：写 pending 任务文件，等 runner 领取（kind: '' 常规 | system_update P69） */
+  async createTask(agentName: string, prompt: string, ctxUrl: string, ctxTitle: string, ctxSel: string,
+    kind: string = ''): Promise<DeviceAgentTask> {
     const t = new DeviceAgentTask()
     t.taskId = 'dat_' + now() + '_' + Math.floor(Math.random() * 100000)
     t.agent = agentName
+    t.kind = kind
     t.prompt = prompt
     t.contextUrl = ctxUrl
     t.contextTitle = ctxTitle
@@ -172,6 +174,7 @@ class DeviceAgentStoreImpl {
     const t = new DeviceAgentTask()
     t.taskId = `${r['taskId'] ?? ''}`
     t.agent = `${r['agent'] ?? ''}`
+    t.kind = `${r['kind'] ?? ''}`
     t.prompt = `${r['prompt'] ?? ''}`
     t.contextUrl = `${r['contextUrl'] ?? ''}`
     t.contextTitle = `${r['contextTitle'] ?? ''}`
@@ -188,6 +191,7 @@ class DeviceAgentStoreImpl {
     const r: Record<string, Object> = {}
     r['taskId'] = t.taskId
     r['agent'] = t.agent
+    r['kind'] = t.kind
     r['prompt'] = t.prompt
     r['contextUrl'] = t.contextUrl
     r['contextTitle'] = t.contextTitle

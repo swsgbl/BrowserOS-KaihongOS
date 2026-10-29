@@ -143,6 +143,51 @@ function runTemplate(prompt, ctx) {
   });
 }
 
+// ---------- P69: system_update 分支（重启即更） ----------
+// 应用投递 kind=system_update 任务（prompt= SYSTEM_UPDATE||path=<sandbox hap>||sha256=..||version=..）
+// runner 以 root 执行：校验 hap 存在 → sha256 复核 → bm install -r → aa start（应用被杀重启即新版）。
+// 注意：任务对象在 runner 进程内修改 kind 字段后随 complete 回写。
+async function runSystemUpdate(task) {
+  const parts = String(task.prompt || '').split('||');
+  const kv = {};
+  for (const p of parts) {
+    const i = p.indexOf('=');
+    if (i > 0) kv[p.slice(0, i).trim()] = p.slice(i + 1).trim();
+  }
+  const hapPath = kv.path || '';
+  const expectSha = (kv.sha256 || '').toLowerCase();
+  const version = kv.version || '?';
+  const out = [];
+  if (!hapPath || !hapPath.startsWith('/data/app/el2/100/base/com.browseros.kaihong/')) {
+    return { ok: false, result: `system_update rejected: bad hap path ${hapPath}` };
+  }
+  if (!fs.existsSync(hapPath)) {
+    return { ok: false, result: `system_update rejected: hap not found ${hapPath}` };
+  }
+  const crypto = require('crypto');
+  const h = crypto.createHash('sha256');
+  h.update(fs.readFileSync(hapPath));
+  const actual = h.digest('hex');
+  out.push(`sha256 ${actual === expectSha ? 'MATCH' : 'MISMATCH'} (${actual.slice(0, 12)}..)`);
+  if (actual !== expectSha) {
+    return { ok: false, result: out.join('\n') + '\nrejected: sha256 mismatch' };
+  }
+  const exec = (cmd) => new Promise((resolve) => {
+    execFile('/system/bin/sh', ['-c', cmd], { timeout: 120000 }, (err, stdout, stderr) => {
+      out.push(`$ ${cmd}\n${(stdout || '') + (stderr || '')}`.trim());
+      resolve(err ? (err.code || 1) : 0);
+    });
+  });
+  let code = await exec('bm install -r ' + shellQuote(hapPath));
+  if (code !== 0) {
+    return { ok: false, result: out.join('\n') + `\nbm install exit ${code}` };
+  }
+  // 应用此刻已被 bm install -r 杀掉；aa start 拉起新版
+  code = await exec('sleep 1 && aa start -a EntryAbility -b com.browseros.kaihong');
+  out.push(`system_update v${version} done (aa start exit ${code})`);
+  return { ok: true, result: out.join('\n') };
+}
+
 // ---------- 主循环 ----------
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -157,13 +202,22 @@ async function pollOnce() {
   if (!task || !task.taskId) {
     return;
   }
-  log('claimed task:', task.taskId, 'prompt=', String(task.prompt).slice(0, 120));
-  const ctx = { url: task.contextUrl, title: task.contextTitle };
-  let prompt = String(task.prompt || '');
-  if (task.contextUrl) prompt += `\n\n[Context page] ${task.contextTitle || ''} ${task.contextUrl}`;
-  const out = await runTemplate(prompt, ctx);
-  const ok = out.code === 0;
-  let result = ok ? out.stdout : (out.stderr || out.err || `exit ${out.code}`);
+  log('claimed task:', task.taskId, 'kind=', task.kind || 'prompt', 'prompt=', String(task.prompt).slice(0, 120));
+  let ok = false;
+  let result = '';
+  if (task.kind === 'system_update') {
+    const r = await runSystemUpdate(task);
+    ok = r.ok;
+    result = r.result;
+    log('system_update done:', task.taskId, 'ok=', ok);
+  } else {
+    const ctx = { url: task.contextUrl, title: task.contextTitle };
+    let prompt = String(task.prompt || '');
+    if (task.contextUrl) prompt += `\n\n[Context page] ${task.contextTitle || ''} ${task.contextUrl}`;
+    const out = await runTemplate(prompt, ctx);
+    ok = out.code === 0;
+    result = ok ? out.stdout : (out.stderr || out.err || `exit ${out.code}`);
+  }
   if (result.length > 32 * 1024) result = result.slice(0, 32 * 1024) + '…';
   log('task done:', task.taskId, 'ok=', ok, 'len=', result.length);
   await toolCall('device_agent_tasks', { action: 'complete', taskId: task.taskId, ok, result });

@@ -16,6 +16,7 @@ import { ConnectionManager } from '../service/ConnectionManager'
 import { ScheduleManager } from '../service/ScheduleManager'
 import { JSBridgeInjector } from '../protocol/JSBridgeInjector'
 import { I18n } from '../common/I18n'
+import { UpdateService, UpdateSourcePref } from '../service/UpdateService'
 
 export default class EntryAbility extends UIAbility {
   /** P36-B: 冷启动计时锚点（onCreate 首行），BrowserShell aboutToAppear 收口算 cold_start_ms */
@@ -78,6 +79,14 @@ export default class EntryAbility extends UIAbility {
       }).catch((e: BusinessError) => {
         console.error('EntryAbility MCPServer start error: ' + e.code + '/' + e.message)
       })
+      // P69: 应用内更新 —— 服务初始化（读节流状态）+ 24h 节流自动查（失败静默）
+      try {
+        const usp = config.updateSourcePref
+        UpdateService.init(this.context.filesDir, usp === 'cn' || usp === 'global' ? usp as UpdateSourcePref : 'auto')
+        UpdateService.autoCheck()
+      } catch (e69) {
+        console.error('EntryAbility UpdateService init error: ' + e69)
+      }
       return config
     }).catch((e: BusinessError) => {
       console.error('EntryAbility ConfigManager load error: ' + e.message)

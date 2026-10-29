@@ -1,0 +1,16 @@
+{
+  "versionCode": 1010001,
+  "versionName": "1.1.1",
+  "sha256": "9cf5109d5fd5d15509fca6803a1b82e5c2d07a2e9e170456d5e7585b983abfe7",
+  "size": 4026814,
+  "notes": "P69 验收假版本（e2e）",
+  "minCompatibleApi": 23,
+  "urls": {
+    "global": [
+      "http://192.168.161.1:8931/global/browseros-1.1.1.hap"
+    ],
+    "cn": [
+      "http://192.168.161.1:8931/cn/browseros-1.1.1.hap"
+    ]
+  }
+}

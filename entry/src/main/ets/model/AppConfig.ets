@@ -25,10 +25,12 @@ interface AppConfigJSON {
   llmModel: string
   searchEngineId: string
   llmProviders: string
+  updateSourcePref: string
 }
 
 export interface AppConfigUpdate {
   llmProviders?: string
+  updateSourcePref?: string
   mcpPort?: number
   maxAgents?: number
   recordingQuality?: RecordingQuality
@@ -78,6 +80,8 @@ export class AppConfig {
   llmApiKey: string = ''
   llmModel: string = ''
   searchEngineId: string = 'google'
+  /** P69: 更新源偏好 auto|cn|global（auto=双源竞速） */
+  updateSourcePref: string = 'auto'
   /** p23b: LLM 供应商预设列表 JSON（[{name,baseUrl,apiKey,model}]），空串=无预设 */
   llmProviders: string = ''
 
@@ -116,7 +120,8 @@ export class AppConfig {
       llmApiKey: keepSecrets ? this.llmApiKey : '',
       llmModel: this.llmModel,
       searchEngineId: this.searchEngineId,
-      llmProviders: keepSecrets ? this.llmProviders : this.sanitizedProvidersForDisk()
+      llmProviders: keepSecrets ? this.llmProviders : this.sanitizedProvidersForDisk(),
+      updateSourcePref: this.updateSourcePref
     }
     return result
   }
@@ -181,6 +186,9 @@ export class AppConfig {
     config.searchEngineId = json['searchEngineId'] !== undefined && json['searchEngineId'] !== null ? json['searchEngineId'] as string : 'google'
     // p23b: tolerant read — old config.json without llmProviders keeps default ''
     config.llmProviders = json['llmProviders'] !== undefined && json['llmProviders'] !== null ? json['llmProviders'] as string : ''
+    // P69: tolerant read — old config without updateSourcePref keeps default 'auto'
+    const usp = json['updateSourcePref']
+    config.updateSourcePref = usp === 'cn' || usp === 'global' ? usp as string : 'auto'
     return config
   }
 

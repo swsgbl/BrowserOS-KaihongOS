@@ -1,0 +1,16 @@
+{
+  "versionCode": 1010001,
+  "versionName": "1.1.1",
+  "sha256": "133bc4f8eb94a81ec54453f45dcea1b6d83aadaa62afeb8ff33a9d1143b1146f",
+  "size": 4072360,
+  "notes": "P69 更新链验收版本（e2e）",
+  "minCompatibleApi": 23,
+  "urls": {
+    "global": [
+      "https://github.com/swsgbl/BrowserOS-KaihongOS/releases/download/v1.1.1/BrowserOS-KaihongOS-v1.1.1-signed.hap"
+    ],
+    "cn": [
+      "https://atomgit.com/hongfu/BrowserOS-KaihongOS/raw/main/release/browseros-1.1.1.hap"
+    ]
+  }
+}

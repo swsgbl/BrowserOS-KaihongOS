@@ -108,6 +108,41 @@ class StorageManagerImpl {
     }
     return null
   }
+
+  /** P69: 同步读 JSON（启动链非 async 上下文用；失败返 null） */
+  getSync(relativePath: string): Record<string, Object> | null {
+    try {
+      const fullPath = `${this.basePath}/${relativePath}`
+      const stat = fs.statSync(fullPath)
+      const file = fs.openSync(fullPath, fs.OpenMode.READ_ONLY)
+      const buffer = new ArrayBuffer(stat.size)
+      fs.readSync(file.fd, buffer)
+      fs.closeSync(file)
+      const decoder = util.TextDecoder.create('utf-8')
+      const text = decoder.decodeWithStream(new Uint8Array(buffer))
+      return JSON.parse(text) as Record<string, Object>
+    } catch (e) {
+      return null
+    }
+  }
+
+  /** P69: 同步写 JSON（小状态文件；fire-and-forget 语义） */
+  saveJSONSync(relativePath: string, data: Object): boolean {
+    try {
+      const fullPath = `${this.basePath}/${relativePath}`
+      const dirPath = fullPath.substring(0, fullPath.lastIndexOf('/'))
+      try {
+        fs.mkdirSync(dirPath, true)
+      } catch (e) {
+      }
+      const file = fs.openSync(fullPath, fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE | fs.OpenMode.TRUNC)
+      fs.writeSync(file.fd, JSON.stringify(data))
+      fs.closeSync(file)
+      return true
+    } catch (e) {
+      return false
+    }
+  }
 }
 
 export const StorageManager = new StorageManagerImpl()

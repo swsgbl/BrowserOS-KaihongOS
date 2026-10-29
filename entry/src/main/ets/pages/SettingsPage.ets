@@ -18,6 +18,8 @@ import { BookmarkManager } from '../service/BookmarkManager'
 import { LoginStateManager } from '../service/LoginStateManager'
 import { DownloadManager } from '../service/DownloadManager'
 import { SessionManager } from '../service/SessionManager'
+import { UpdateService, UpdatePhase, UpdateSourcePref } from '../service/UpdateService'
+import { EventBus, EventBusEvents } from '../infra/EventBus'
 
 interface NavItem {
   key: string
@@ -72,6 +74,18 @@ struct SettingsPage {
   @State mcpCopiedHint: string = ''
   // 版本（P17b: 动态读取 app.json5 versionName，避免硬编码漂移）
   @State appVersion: string = ''
+  // P69: 应用内更新状态
+  @State upPhase: string = 'idle'
+  @State upProgress: number = 0
+  @State upReceived: number = 0
+  @State upTotal: number = 0
+  @State upNewVer: string = ''
+  @State upNotes: string = ''
+  @State upError: string = ''
+  @State upSource: string = 'auto'
+  @State upShowDialog: boolean = false
+  @State upBusy: boolean = false
+  private upHandler: (() => void) | null = null
 
   private navItems(): NavItem[] {
     return [
@@ -138,7 +152,17 @@ struct SettingsPage {
       this.appVersion = 'dev'
       console.error('SettingsPage getBundleInfo fail: ' + e)
     }
-    console.info('SettingsPage mounted version=' + this.appVersion)
+    this.upSource = ConfigManager.get().updateSourcePref
+    this.upSyncState()
+    this.upHandler = (): void => {
+      this.upSyncState()
+      const st = UpdateService.getState()
+      if (st.phase === UpdatePhase.READY && !this.upShowDialog) {
+        this.upShowDialog = true
+      }
+    }
+    EventBus.on(EventBusEvents.UPDATE_STATE_CHANGE, this.upHandler)
+    console.info('SettingsPage mounted version=' + this.appVersion + ' upPhase=' + this.upPhase)
   }
 
   private getMcpEndpoint(): string {
@@ -787,6 +811,108 @@ struct SettingsPage {
       .width('100%')
       .margin({ top: 10 })
 
+      // P69: 更新区 —— 检查更新 + 进度 + 就绪态 + 更新源偏好
+      Divider().color(this.pal().border).margin({ top: 14, bottom: 10 })
+
+      if (this.upPhase === 'downloading') {
+        Row() {
+          Text(I18n.t('upDownloading') + (this.upNewVer.length > 0 ? ' v' + this.upNewVer : ''))
+            .fontSize(13)
+            .fontColor(this.pal().text)
+            .layoutWeight(1)
+          Text(this.upProgress + '% · ' + Math.floor(this.upReceived / 1024) + '/' + Math.floor(this.upTotal / 1024) + 'KB')
+            .fontSize(11)
+            .fontColor(this.pal().text2)
+        }
+        .width('100%')
+        .margin({ top: 6 })
+        Progress({ value: this.upProgress, total: 100, type: ProgressType.Linear })
+          .width('100%')
+          .margin({ top: 6 })
+      } else if (this.upPhase === 'verifying') {
+        Text(I18n.t('upVerifying'))
+          .fontSize(13)
+          .fontColor(this.pal().text2)
+          .margin({ top: 6 })
+      } else if (this.upPhase === 'ready' || this.upPhase === 'installing') {
+        Row() {
+          Text((this.upPhase === 'installing' ? I18n.t('upInstalling') : I18n.t('upReady')) + (this.upNewVer.length > 0 ? ' v' + this.upNewVer : ''))
+            .fontSize(13)
+            .fontColor('#1A73E8')
+            .layoutWeight(1)
+          Button(this.upPhase === 'installing' ? I18n.t('upInstalling') : I18n.t('upRestartBtn'))
+            .fontSize(13)
+            .height(32)
+            .backgroundColor('#1A73E8')
+            .fontColor('#FFFFFF')
+            .borderRadius(16)
+            .enabled(this.upPhase !== 'installing')
+            .onClick(() => {
+              this.upApply()
+            })
+        }
+        .width('100%')
+        .margin({ top: 10 })
+      } else if (this.upPhase === 'failed') {
+        Text(I18n.t('upFailed') + (this.upError.length > 0 ? ': ' + this.upError : ''))
+          .fontSize(13)
+          .fontColor('#D93025')
+          .margin({ top: 8 })
+        Button(I18n.t('upRetryBtn'))
+          .fontSize(13)
+          .height(32)
+          .backgroundColor(this.pal().surface)
+          .fontColor('#1A73E8')
+          .borderRadius(16)
+          .border({ width: 1, color: this.pal().border })
+          .margin({ top: 8 })
+          .onClick(() => {
+            this.upCheck()
+          })
+      } else {
+        Row() {
+          Text(this.upPhase === 'available' ? I18n.t('upAvailable') + (this.upNewVer.length > 0 ? ' v' + this.upNewVer : '') : (this.upPhase === 'checking' ? I18n.t('upChecking') : (this.upPhase === 'uptodate' ? I18n.t('upToDate') : I18n.t('upCheckBtn'))))
+            .fontSize(13)
+            .fontColor(this.pal().text)
+            .layoutWeight(1)
+          Button(this.upPhase === 'checking' ? I18n.t('upChecking') : I18n.t('upCheckBtn'))
+            .fontSize(13)
+            .height(32)
+            .backgroundColor(this.pal().surface)
+            .fontColor('#1A73E8')
+            .borderRadius(16)
+            .border({ width: 1, color: this.pal().border })
+            .enabled(this.upPhase !== 'checking')
+            .onClick(() => {
+              this.upCheck()
+            })
+        }
+        .width('100%')
+        .margin({ top: 10 })
+      }
+
+      // 更新源偏好
+      Text(I18n.t('upSourceTitle'))
+        .fontSize(12)
+        .fontColor(this.pal().text2)
+        .margin({ top: 14, bottom: 6 })
+        .alignSelf(ItemAlign.Start)
+      Row({ space: 8 }) {
+        ForEach(['auto', 'cn', 'global'], (opt: string) => {
+          Text(opt === 'auto' ? I18n.t('upSourceAuto') : (opt === 'cn' ? I18n.t('upSourceCn') : I18n.t('upSourceGlobal')))
+            .fontSize(12)
+            .padding({ left: 12, right: 12, top: 6, bottom: 6 })
+            .borderRadius(14)
+            .fontColor(this.upSource === opt ? '#FFFFFF' : '#1A73E8')
+            .backgroundColor(this.upSource === opt ? '#1A73E8' : this.pal().surfaceAlt)
+            .border({ width: 1, color: this.upSource === opt ? '#1A73E8' : this.pal().border })
+            .onClick(() => {
+              this.upSetSource(opt)
+            })
+        }, (opt: string) => opt)
+      }
+      .width('100%')
+
       Button(I18n.t('stBackBrowser'))
         .fontSize(13)
         .height(34)
@@ -804,5 +930,118 @@ struct SettingsPage {
     .backgroundColor(this.pal().surface)
     .border({ width: 1, color: this.pal().border })
     .alignItems(HorizontalAlign.Start)
+    .bindSheet($$this.upShowDialog, this.upReadySheet(), {
+      height: SheetSize.FIT_CONTENT,
+      showClose: true
+    } as SheetOptions)
+  }
+  /** P69: 更新就绪弹窗（下载完成一次性提醒：重启更新 / 稍后） */
+  @Builder
+  upReadySheet(): void {
+    Column({ space: 12 }) {
+      Text(I18n.t('upReady'))
+        .fontSize(17)
+        .fontWeight(FontWeight.Bold)
+        .fontColor(this.pal().text)
+      if (this.upNewVer.length > 0) {
+        Text('v' + this.upNewVer)
+          .fontSize(13)
+          .fontColor('#1A73E8')
+      }
+      Text(I18n.t('upReadyNotes'))
+        .fontSize(13)
+        .fontColor(this.pal().text2)
+      if (this.upNotes.length > 0) {
+        Text(this.upNotes)
+          .fontSize(12)
+          .fontColor(this.pal().text2)
+          .maxLines(5)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
+      }
+      Row({ space: 12 }) {
+        Button(I18n.t('upLaterBtn'))
+          .fontSize(14)
+          .height(38)
+          .layoutWeight(1)
+          .backgroundColor(this.pal().surfaceAlt)
+          .fontColor(this.pal().text)
+          .borderRadius(19)
+          .onClick(() => {
+            this.upShowDialog = false
+          })
+        Button(I18n.t('upRestartBtn'))
+          .fontSize(14)
+          .height(38)
+          .layoutWeight(1)
+          .backgroundColor('#1A73E8')
+          .fontColor('#FFFFFF')
+          .borderRadius(19)
+          .onClick(() => {
+            this.upApply()
+          })
+      }
+      .width('100%')
+      .margin({ top: 6 })
+    }
+    .width('100%')
+    .padding(24)
+  }
+  aboutToDisappear(): void {
+    if (this.upHandler !== null) {
+      EventBus.off(EventBusEvents.UPDATE_STATE_CHANGE, this.upHandler)
+      this.upHandler = null
+    }
+  }
+
+  /** P69: 从 UpdateService 同步状态到本地 @State */
+  private upSyncState(): void {
+    const st = UpdateService.getState()
+    this.upPhase = st.phase
+    this.upProgress = st.progress
+    this.upReceived = st.receivedBytes
+    this.upTotal = st.totalBytes
+    this.upNewVer = st.manifest !== null ? st.manifest.versionName : ''
+    this.upNotes = st.manifest !== null ? st.manifest.notes : ''
+    this.upError = st.error
+  }
+
+  /** P69: 手动检查更新（绕过 24h 节流） */
+  private upCheck(): void {
+    if (this.upBusy) {
+      return
+    }
+    this.upBusy = true
+    UpdateService.checkForUpdate(true).then(() => {
+      this.upBusy = false
+      this.upSyncState()
+    }).catch(() => {
+      this.upBusy = false
+      this.upSyncState()
+    })
+  }
+
+  /** P69: 切换更新源偏好并持久化 */
+  private upSetSource(pref: string): void {
+    this.upSource = pref
+    ConfigManager.update({ updateSourcePref: pref } as AppConfigUpdate)
+    const p2: UpdateSourcePref = pref === 'cn' ? 'cn' : (pref === 'global' ? 'global' : 'auto')
+    UpdateService.setPref(p2)
+    console.info('SettingsPage updateSource pref: ' + pref)
+  }
+
+  /** P69: 重启更新 —— 有 runner 走 bm install；无 runner 如实文案 */
+  private upApply(): void {
+    UpdateService.applyViaRunner().then((dispatched) => {
+      this.upShowDialog = false
+      if (!dispatched) {
+        this.upError = I18n.t('upNoRunner')
+        this.upSyncState()
+        console.info('P69 path B: no runner, honest notice')
+      }
+      // dispatched=true: runner 执行 bm install -r 会杀掉本应用重启——UI 自然结束
+    }).catch((e: BusinessError) => {
+      this.upShowDialog = false
+      console.error('P69 apply error: ' + e.message)
+    })
   }
 }
