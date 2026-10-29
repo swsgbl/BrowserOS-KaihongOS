@@ -912,6 +912,30 @@ class MCPServerImpl implements McpHttpDelegate {
     } catch (e) {
       content = `${result.data}`
     }
+    // [P68] transitional-state settle (same as read): a snapshot fired right after act/navigate
+    // can catch a half-swapped document (empty content). If navigated recently (<3s), settle
+    // 500ms and retry the snapshot ONCE; still-empty falls through unchanged (no semantic change).
+    if ((!content || content.trim().length === 0 || content.trim() === 'null' || content.trim() === 'undefined')
+      && BCPEngine.msSinceLastNav() < 3000) {
+      await new Promise<void>((res) => setTimeout(res, 500))
+      const retry = await SnapshotGenerator.generate()
+      if (retry.success) {
+        try {
+          const rp = JSON.parse(`${retry.data}`) as Record<string, Object>
+          const rContent = `${rp['content'] || ''}`
+          if (rContent.trim().length > 0 && rContent.trim() !== 'null' && rContent.trim() !== 'undefined') {
+            content = rContent
+            const rrefsRaw = `${rp['refs'] || ''}`
+            if (rrefsRaw.length > 0) {
+              const rarr = JSON.parse(rrefsRaw) as Record<string, Object>[]
+              if (Array.isArray(rarr)) { refs = rarr }
+            }
+          }
+        } catch (e) {
+          // retry payload unparseable — keep first-attempt content
+        }
+      }
+    }
     const recSnap: Record<string, Object> = { 'content': content, 'refs': refs, 'refCount': refs.length }
     const snapResp: MCPToolResponse = {
       status: 'success', data: recSnap, error: null, requestId: this.generateRequestId()
