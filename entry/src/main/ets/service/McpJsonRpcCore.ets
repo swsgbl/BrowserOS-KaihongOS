@@ -382,6 +382,21 @@ class McpJsonRpcCoreImpl {
       this.propMap([
         ['steps', new McpParamProp('array', 'Array of {tool: act|navigate, params: {...}} steps')]
       ]), ['steps'], []))
+    tools.push(this.toolDef('llm_config', '[P65 extension] Manage LLM provider config (baseUrl/apiKey/model) locally: set writes the key through the same Asset Store path as the LLM Hub UI (config.json stays masked); get returns masked key + asset presence; test performs a real LLM roundtrip',
+      this.propMap([
+        ['action', new McpParamProp('string', 'set | get | test')],
+        ['baseUrl', new McpParamProp('string', 'LLM API base URL for set (e.g. https://apihub.agnes-ai.com/v1)')],
+        ['apiKey', new McpParamProp('string', 'API key for set (stored encrypted in Asset Store, never echoed in full)')],
+        ['model', new McpParamProp('string', 'Model name for set')]
+      ]), ['action'], []))
+    tools.push(this.toolDef('agent_task', '[P65 extension] Drive the internal AgentEngine programmatically: create{prompt,targetUrl?} starts an agent task and returns agentId; status{agentId} polls progress; result{agentId} returns the final answer',
+      this.propMap([
+        ['action', new McpParamProp('string', 'create | status | result')],
+        ['prompt', new McpParamProp('string', 'Task description for create (the agent uses LLM+BCP tools autonomously)')],
+        ['targetUrl', new McpParamProp('string', 'Optional target page URL for create')],
+        ['name', new McpParamProp('string', 'Optional agent display name (default mcp_task)')],
+        ['agentId', new McpParamProp('string', 'Agent id for status/result')]
+      ]), ['action'], []))
     return tools
   }
 

@@ -1,0 +1,280 @@
+== initialize status=200 ==
+{
+ "name": "browseros_mcp",
+ "title": "BrowserOS MCP Server",
+ "version": "1.1.0"
+}
+== tools/list count=19 ==
+[
+ "tabs",
+ "tab_groups",
+ "history",
+ "navigate",
+ "snapshot",
+ "diff",
+ "act",
+ "download",
+ "upload",
+ "read",
+ "grep",
+ "screenshot",
+ "pdf",
+ "wait",
+ "windows",
+ "evaluate_in_page",
+ "run",
+ "llm_config",
+ "agent_task"
+]
+ASSERT 19 tools: true | llm_config: true | agent_task: true
+== llm_config set ==
+{
+ "action": "set",
+ "ok": true,
+ "baseUrl": "https://apihub.agnes-ai.com/v1",
+ "model": "agnes-3.0-flash",
+ "apiKeyMasked": "sk-****THdt",
+ "keyStoredInAsset": true
+}
+== llm_config get ==
+{
+ "action": "get",
+ "baseUrl": "https://apihub.agnes-ai.com/v1",
+ "model": "agnes-3.0-flash",
+ "apiKeyMasked": "sk-****THdt",
+ "keyStoredInAsset": true,
+ "secureStorageAvailable": true,
+ "llmConfigured": true
+}
+== llm_config test ==
+{
+ "action": "test",
+ "ok": true,
+ "elapsedMs": 12790,
+ "model": "agnes-3.0-flash",
+ "reply": "pong"
+}
+== agent_task create ==
+{
+ "action": "create",
+ "agentId": "agent_1793246490372_59odiaqd",
+ "name": "mcp_task",
+ "targetUrl": "https://example.com",
+ "status": "running"
+}
+== agent_task status #1 ==
+{
+ "action": "status",
+ "agentId": "agent_1793246490372_59odiaqd",
+ "status": "running",
+ "progress": 0,
+ "currentUrl": "",
+ "errorMessage": "",
+ "activity": ""
+}
+== agent_task status #2 ==
+{
+ "action": "status",
+ "agentId": "agent_1793246490372_59odiaqd",
+ "status": "running",
+ "progress": 0,
+ "currentUrl": "",
+ "errorMessage": "",
+ "activity": ""
+}
+== agent_task status #3 ==
+{
+ "action": "status",
+ "agentId": "agent_1793246490372_59odiaqd",
+ "status": "running",
+ "progress": 0,
+ "currentUrl": "",
+ "errorMessage": "",
+ "activity": ""
+}
+== agent_task status #4 ==
+{
+ "action": "status",
+ "agentId": "agent_1793246490372_59odiaqd",
+ "status": "running",
+ "progress": 0,
+ "currentUrl": "",
+ "errorMessage": "",
+ "activity": ""
+}
+== agent_task status #5 ==
+{
+ "action": "status",
+ "agentId": "agent_1793246490372_59odiaqd",
+ "status": "running",
+ "progress": 0,
+ "currentUrl": "",
+ "errorMessage": "",
+ "activity": ""
+}
+== agent_task status #6 ==
+{
+ "action": "status",
+ "agentId": "agent_1793246490372_59odiaqd",
+ "status": "running",
+ "progress": 7,
+ "currentUrl": "https://example.com/",
+ "errorMessage": "",
+ "activity": "navigate({\"url\": \"https://example.com\"})"
+}
+== agent_task status #7 ==
+{
+ "action": "status",
+ "agentId": "agent_1793246490372_59odiaqd",
+ "status": "running",
+ "progress": 7,
+ "currentUrl": "https://example.com/",
+ "errorMessage": "",
+ "activity": "navigate({\"url\": \"https://example.com\"})"
+}
+== agent_task status #8 ==
+{
+ "action": "status",
+ "agentId": "agent_1793246490372_59odiaqd",
+ "status": "running",
+ "progress": 7,
+ "currentUrl": "https://example.com/",
+ "errorMessage": "",
+ "activity": "navigate({\"url\": \"https://example.com\"})"
+}
+== agent_task status #9 ==
+{
+ "action": "status",
+ "agentId": "agent_1793246490372_59odiaqd",
+ "status": "running",
+ "progress": 7,
+ "currentUrl": "https://example.com/",
+ "errorMessage": "",
+ "activity": "navigate({\"url\": \"https://example.com\"})"
+}
+== agent_task status #10 ==
+{
+ "action": "status",
+ "agentId": "agent_1793246490372_59odiaqd",
+ "status": "running",
+ "progress": 7,
+ "currentUrl": "https://example.com/",
+ "errorMessage": "",
+ "activity": "navigate({\"url\": \"https://example.com\"})"
+}
+== agent_task status #11 ==
+{
+ "action": "status",
+ "agentId": "agent_1793246490372_59odiaqd",
+ "status": "running",
+ "progress": 7,
+ "currentUrl": "https://example.com/",
+ "errorMessage": "",
+ "activity": "navigate({\"url\": \"https://example.com\"})"
+}
+== agent_task status #12 ==
+{
+ "action": "status",
+ "agentId": "agent_1793246490372_59odiaqd",
+ "status": "running",
+ "progress": 7,
+ "currentUrl": "https://example.com/",
+ "errorMessage": "",
+ "activity": "navigate({\"url\": \"https://example.com\"})"
+}
+== agent_task status #13 ==
+{
+ "action": "status",
+ "agentId": "agent_1793246490372_59odiaqd",
+ "status": "running",
+ "progress": 7,
+ "currentUrl": "https://example.com/",
+ "errorMessage": "",
+ "activity": "navigate({\"url\": \"https://example.com\"})"
+}
+== agent_task status #14 ==
+{
+ "action": "status",
+ "agentId": "agent_1793246490372_59odiaqd",
+ "status": "running",
+ "progress": 7,
+ "currentUrl": "https://example.com/",
+ "errorMessage": "",
+ "activity": "navigate({\"url\": \"https://example.com\"})"
+}
+== agent_task status #15 ==
+{
+ "action": "status",
+ "agentId": "agent_1793246490372_59odiaqd",
+ "status": "running",
+ "progress": 13,
+ "currentUrl": "https://example.com/",
+ "errorMessage": "",
+ "activity": "getText({})"
+}
+== agent_task status #16 ==
+{
+ "action": "status",
+ "agentId": "agent_1793246490372_59odiaqd",
+ "status": "running",
+ "progress": 13,
+ "currentUrl": "https://example.com/",
+ "errorMessage": "",
+ "activity": "getText({})"
+}
+== agent_task status #17 ==
+{
+ "action": "status",
+ "agentId": "agent_1793246490372_59odiaqd",
+ "status": "running",
+ "progress": 13,
+ "currentUrl": "https://example.com/",
+ "errorMessage": "",
+ "activity": "getText({})"
+}
+== agent_task status #18 ==
+{
+ "action": "status",
+ "agentId": "agent_1793246490372_59odiaqd",
+ "status": "running",
+ "progress": 13,
+ "currentUrl": "https://example.com/",
+ "errorMessage": "",
+ "activity": "getText({})"
+}
+== agent_task status #19 ==
+{
+ "action": "status",
+ "agentId": "agent_1793246490372_59odiaqd",
+ "status": "running",
+ "progress": 13,
+ "currentUrl": "https://example.com/",
+ "errorMessage": "",
+ "activity": "getText({})"
+}
+== agent_task status #20 ==
+{
+ "action": "status",
+ "agentId": "agent_1793246490372_59odiaqd",
+ "status": "running",
+ "progress": 13,
+ "currentUrl": "https://example.com/",
+ "errorMessage": "",
+ "activity": "getText({})"
+}
+== agent_task result ==
+{
+ "action": "result",
+ "agentId": "agent_1793246490372_59odiaqd",
+ "status": "running",
+ "finalAnswer": ""
+}
+P65 E2E DONE
+
+== FINAL POLL ==
+{
+ "action": "result",
+ "agentId": "agent_1793246490372_59odiaqd",
+ "status": "error",
+ "finalAnswer": "任务失败: LLM 请求失败：请检查 API 端点与网络"
+}

@@ -27,6 +27,10 @@ import { DownloadManager, DownloadItem } from './DownloadManager'
 import { TabInfo } from '../model/TabInfo'
 import { cryptoFramework } from '@kit.CryptoArchitectureKit'
 import { util } from '@kit.ArkTS'
+import { ConfigManager } from '../storage/ConfigManager'
+import { SecureStorageAdapter } from '../storage/SecureStorageAdapter'
+import { AppConfigUpdate } from '../model/AppConfig'
+import { LLMClient, LLMChatMessage } from './LLMClient'
 
 /** P51: tools that require a routed page (session must own a tab) */
 const PAGE_TOOLS: string[] = ['navigate', 'snapshot', 'diff', 'act', 'click', 'type', 'scroll', 'read', 'getText',
@@ -368,6 +372,206 @@ class MCPServerImpl implements McpHttpDelegate {
     this.toolHandlers.set('windows', this.handleWindows)
     this.toolHandlers.set('evaluate_in_page', this.handleEvaluate)
     this.toolHandlers.set('run', this.handleRun)
+    // [P65] 平台扩展：LLM 配置管理通道 + 内部 agent 程序化触发（上游 registry 无，extension）
+    this.toolHandlers.set('llm_config', this.handleLlmConfig)
+    this.toolHandlers.set('agent_task', this.handleAgentTask)
+  }
+
+  // ---------- [P65] llm_config：LLM 供应商配置的本地管理通道 ----------
+  // 死结背景：P36 安全设计下 key 真值只能经 LLM Hub UI 写入 Asset Store，
+  // 而 VM TextInput 受 IME 污染无法输 ASCII key → 本工具与 UI 同路径写
+  // （ConfigManager.update → syncKeysToAsset → asset），config.json 恒脱敏。
+
+  /** P36 asset 别名（与 ConfigManager 保持一致，探测 key 是否已存） */
+  private static readonly ALIAS_LLM_KEY_P65: string = 'llm_api_key'
+
+  /** key 掩码：sk-****后4位（短 key 全掩） */
+  private maskApiKey(key: string): string {
+    if (key.length === 0) {
+      return ''
+    }
+    if (key.length <= 8) {
+      return '****'
+    }
+    return (key.startsWith('sk-') ? 'sk-' : '') + '****' + key.substring(key.length - 4)
+  }
+
+  private handleLlmConfig: ToolHandler = async (params, agentId, sessionId) => {
+    const action = ((params['action'] as string) || '').trim()
+    if (action.length === 0) {
+      return this.errResponse('P65: llm_config requires action: set | get | test')
+    }
+
+    if (action === 'set') {
+      const upd: AppConfigUpdate = {}
+      let touched = 0
+      if (params['baseUrl'] !== undefined && params['baseUrl'] !== null) {
+        upd.llmBaseUrl = `${params['baseUrl']}`
+        touched++
+      }
+      if (params['apiKey'] !== undefined && params['apiKey'] !== null) {
+        const key = `${params['apiKey']}`.trim()
+        if (key.length === 0) {
+          return this.errResponse('P65: apiKey must be non-empty')
+        }
+        upd.llmApiKey = key
+        touched++
+      }
+      if (params['model'] !== undefined && params['model'] !== null) {
+        upd.llmModel = `${params['model']}`
+        touched++
+      }
+      if (touched === 0) {
+        return this.errResponse('P65: nothing to set (provide baseUrl/apiKey/model)')
+      }
+      const ok = await ConfigManager.update(upd)
+      if (!ok) {
+        return this.errResponse('P65: config save failed (validate error — see hilog CFG_001)')
+      }
+      const cfg = ConfigManager.get()
+      const stored = cfg.llmApiKey.length > 0 && SecureStorageAdapter.isSecureStorageAvailable()
+      const data: Record<string, Object> = {
+        'action': 'set',
+        'ok': true,
+        'baseUrl': cfg.llmBaseUrl,
+        'model': cfg.llmModel,
+        'apiKeyMasked': this.maskApiKey(cfg.llmApiKey),
+        'keyStoredInAsset': stored
+      }
+      console.info('[P65] llm_config set: baseUrl=' + cfg.llmBaseUrl + ' model=' + cfg.llmModel +
+        ' key=' + this.maskApiKey(cfg.llmApiKey) + ' assetStored=' + stored)
+      return this.okResponse(data)
+    }
+
+    if (action === 'get') {
+      const cfg = ConfigManager.get()
+      let keyInAsset = false
+      if (SecureStorageAdapter.isSecureStorageAvailable()) {
+        const real = await SecureStorageAdapter.getSecret(MCPServerImpl.ALIAS_LLM_KEY_P65)
+        keyInAsset = real !== null && real.length > 0
+      }
+      const data: Record<string, Object> = {
+        'action': 'get',
+        'baseUrl': cfg.llmBaseUrl,
+        'model': cfg.llmModel,
+        'apiKeyMasked': this.maskApiKey(cfg.llmApiKey),
+        'keyStoredInAsset': keyInAsset,
+        'secureStorageAvailable': SecureStorageAdapter.isSecureStorageAvailable(),
+        'llmConfigured': cfg.llmBaseUrl.length > 0
+      }
+      return this.okResponse(data)
+    }
+
+    if (action === 'test') {
+      const cfg = ConfigManager.get()
+      if (cfg.llmBaseUrl.length === 0) {
+        return this.errResponse('P65: llmBaseUrl not configured (llm_config set baseUrl=... first)')
+      }
+      if (cfg.llmApiKey.length === 0) {
+        return this.errResponse('P65: llmApiKey not configured (llm_config set apiKey=... first)')
+      }
+      const messages: LLMChatMessage[] = [LLMChatMessage.user('ping — reply with the single word: pong')]
+      const t0 = Date.now()
+      console.info('[P65] llm_config test: POST ' + cfg.llmBaseUrl + ' model=' + cfg.llmModel)
+      const resp = await LLMClient.chat({
+        'baseUrl': cfg.llmBaseUrl,
+        'apiKey': cfg.llmApiKey,
+        'model': cfg.llmModel,
+        'messages': messages,
+        'timeoutMs': 25000,
+      'tools': []
+      })
+      const ms = Date.now() - t0
+      if (resp === null) {
+        console.warn('[P65] llm_config test FAILED: ' + LLMClient.lastError)
+        const failData: Record<string, Object> = {
+          'action': 'test', 'ok': false, 'elapsedMs': ms, 'error': LLMClient.lastError
+        }
+        return this.okResponse(failData)
+      }
+      console.info('[P65] llm_config test OK: ' + ms + 'ms reply=' + resp.content.substring(0, 60))
+      const okData: Record<string, Object> = {
+        'action': 'test', 'ok': true, 'elapsedMs': ms, 'model': cfg.llmModel,
+        'reply': resp.content.substring(0, 200)
+      }
+      return this.okResponse(okData)
+    }
+
+    return this.errResponse('P65: unknown action \'' + action + '\' (set | get | test)')
+  }
+
+  // ---------- [P65] agent_task：内部 AgentEngine 的程序化触发 ----------
+
+  private handleAgentTask: ToolHandler = async (params, agentId, sessionId) => {
+    const action = ((params['action'] as string) || '').trim()
+    if (action.length === 0) {
+      return this.errResponse('P65: agent_task requires action: create | status | result')
+    }
+
+    if (action === 'create') {
+      const prompt = ((params['prompt'] as string) || '').trim()
+      if (prompt.length === 0) {
+        return this.errResponse('P65: agent_task create requires prompt')
+      }
+      const targetUrl = ((params['targetUrl'] as string) || '').trim()
+      const name = ((params['name'] as string) || 'mcp_task').trim()
+      const cfg = AgentEngine.createAgent(name, targetUrl, prompt)
+      if (cfg === null) {
+        return this.errResponse('P65: agent create failed (max agents reached or tab error — see hilog AGT_001)')
+      }
+      console.info('[P65] agent_task create: ' + cfg.agentId + ' prompt=' + prompt.substring(0, 80) +
+        ' targetUrl=' + targetUrl)
+      const data: Record<string, Object> = {
+        'action': 'create', 'agentId': cfg.agentId, 'name': cfg.name,
+        'targetUrl': cfg.targetUrl, 'status': 'running'
+      }
+      return this.okResponse(data)
+    }
+
+    const agentIdParam = ((params['agentId'] as string) || '').trim()
+    if (agentIdParam.length === 0) {
+      return this.errResponse('P65: agent_task ' + action + ' requires agentId')
+    }
+
+    if (action === 'status') {
+      const st = AgentEngine.getAgentStatus(agentIdParam)
+      if (st === null) {
+        return this.errResponse('P65: agent not found: ' + agentIdParam + ' (terminated or never existed)')
+      }
+      const data: Record<string, Object> = {
+        'action': 'status', 'agentId': agentIdParam, 'status': st.status,
+        'progress': st.progress, 'currentUrl': st.currentUrl,
+        'errorMessage': st.errorMessage, 'activity': AgentEngine.getAgentActivity(agentIdParam)
+      }
+      return this.okResponse(data)
+    }
+
+    if (action === 'result') {
+      const st = AgentEngine.getAgentStatus(agentIdParam)
+      const answer = AgentEngine.getFinalAnswer(agentIdParam)
+      if (st === null && answer === null) {
+        return this.errResponse('P65: agent not found: ' + agentIdParam)
+      }
+      const data: Record<string, Object> = {
+        'action': 'result', 'agentId': agentIdParam,
+        'status': st === null ? 'terminated' : st.status,
+        'finalAnswer': answer === null ? '' : answer
+      }
+      return this.okResponse(data)
+    }
+
+    return this.errResponse('P65: unknown action \'' + action + '\' (create | status | result)')
+  }
+
+  /** [P65] 通用错误响应 */
+  private errResponse(error: string): Promise<MCPToolResponse> {
+    const resp: MCPToolResponse = {
+      'status': 'error',
+      'data': null,
+      'error': error,
+      'requestId': this.generateRequestId()
+    }
+    return Promise.resolve(resp)
   }
 
   /** [P43] 通用成功响应（data 为任意可 JSON 化对象） */

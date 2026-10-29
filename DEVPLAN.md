@@ -1325,3 +1325,13 @@ python tools/smoke_reg.py         # 30 秒健康检查
 - 变更仅 tools/（smoke_reg.py 重构+regression_20.py 新增），应用源码未动。证据 evidence/p64/。
 
 
+
+## P65：AI 功能复活——MCP 管理通道（llm_config + agent_task）（2026-10-29，用户 P0 生产反馈）
+
+- **死结背景**：P36 安全设计下 llmApiKey 真值只能经 LLM Hub UI 写入 Asset Store（config.json 恒脱敏为空），而 VM TextInput 受 IME 污染无法输入 ASCII key → 设备端 AI 功能全废（网络已排除：VM 直连 agnes 200）。解法=两个 MCP 平台扩展工具，与 UI 同路径写 key、程序化触发内部 agent。
+- **llm_config 工具**（MCPServer.handleLlmConfig）：set{baseUrl,apiKey,model}（走 ConfigManager.update→syncKeysToAsset 同 UI 链路）/ get（掩码 sk-****后4位 + asset presence 探测）/ test（LLMClient.chat 真往返，timeoutMs=25000 以内嵌 P62 callTool 30s 硬限）。响应永不回真值；审计经 AuditRedactor api_?key 键名脱敏双保险。
+- **agent_task 工具**（MCPServer.handleAgentTask）：create{prompt,targetUrl?}→AgentEngine.createAgent 后台跑（立即返回 agentId，不受 callTool 30s 限）/ status{agentId}→进度+currentUrl+activity / result{agentId}→finalAnswer。同时把 AgentEngine.LLM_TIMEOUT_MS 30000→60000（agnes 免费端点 VM 内非流式 25-35s 常态，agent 后台任务可等）。
+- **tools/list 17→19**：McpJsonRpcCore.buildToolDescriptors 增补两描述符（P65 extension 标注），上游 registry 17 个零改动。
+- **装机实证（设备 192.168.161.137:10178）**：initialize 200 + tools/list 19/19 断言过；set→assetStored=true；get→sk-****THdt；test→**12790-15592ms 真往返 "pong"**（agnes-3.0-flash）；agent_task create→status 轮询（navigate example.com→getText→LLM 多轮 tool_calls）→**completed progress=100 finalAnswer="https://example.com 是 IANA 保留的示例域名..."**（03:41 轮全程闭环；后续轮 agnes 间歇超时走 error 路径亦验证）；force-stop 重启后 get 仍 keyStoredInAsset=true（Asset Store 持久化）；config.json llmApiKey=[] 恒空；hilog 全程 [P65]/[LLMClient] 留痕、零 key 明文泄漏。
+- **门禁**：static 99 项全过（含 install_p65.py py_compile）；smoke 9/9 PASS。mcp_client_e2e.py 4/15 为 P51 session 隔离上线后的既有缺口（无 Mcp-Session-Id 支持，git 实证 P64 基线同样 FAIL），非 P65 回归；session 版门禁=session_isolation_test.py（目标 5555 待迁移）。
+- **部署链**：hvigor(API26)→tools/build_api23_hap.py（降 API23+ZIP_STORED）→tools/install_p65.py（VM hap-sign-tool 签名+bm install+relaunch）。证据=evidence/p65/（e2e_final.txt 等）。

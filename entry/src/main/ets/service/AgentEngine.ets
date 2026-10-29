@@ -96,7 +96,7 @@ class AgentEngineImpl {
   getFinalAnswer(agentId: string): string | null {
     return this.finalAnswers.get(agentId) ?? null
   }
-  private static readonly LLM_TIMEOUT_MS: number = 30000
+  private static readonly LLM_TIMEOUT_MS: number = 60000
 
   createAgent(name: string, targetUrl: string, taskDescription: string,
     runStrategy: RunStrategy = RunStrategy.ONCE): AgentConfig | null {

@@ -21,7 +21,7 @@
 | **i18n** | **中英双语界面切换**（510 条语言包 zh/en，即时生效+持久化；侧栏/菜单/设置/弹窗全量覆盖） |
 | **密码管理器** | **Bitwarden 兼容导入 + 保存/自动填充条 + PasswordsPage**；凭据经 Asset Store Kit 硬件级加密 |
 | **DevTools Console** | 页面 console 日志采集（onConsole/onInterceptRequest 网络请求记录）+ 独立 DevTools 页面 |
-| MCP | 设备端 MCP 服务（统一 endpoint `/mcp`，协议 2026-07-28 协商兼容 2024-11-05），JSON-RPC 2.0，**17 个工具**（对齐上游 registry：tabs/tab_groups/history/navigate/snapshot/diff/act/download/upload/read/grep/screenshot/pdf/wait/windows/evaluate/run），限流 30req/10s/连接，**session 隔离**（McpSessionStore，session-id 校验+tab ownership） |
+| MCP | 设备端 MCP 服务（统一 endpoint `/mcp`，协议 2026-07-28 协商兼容 2024-11-05），JSON-RPC 2.0，**19 个工具**（上游 registry 17 个对齐：tabs/tab_groups/history/navigate/snapshot/diff/act/download/upload/read/grep/screenshot/pdf/wait/windows/evaluate/run；**P65 平台扩展 2 个**：llm_config（LLM 供应商 key 配置管理，Asset Store 同 UI 路径，config.json 恒脱敏）/ agent_task（内部 AgentEngine 程序化触发：create/status/result）），限流 30req/10s/连接，**session 隔离**（McpSessionStore，session-id 校验+tab ownership） |
 | **Harness Adapter** | Claude Code / Codex / Cursor / Generic 四种 AI harness 的一键配置（per-CLI config 形状）+ **真实连接测试**（initialize 握手，不再假 Connected）；6 家 harness 互操作 41/41 |
 | **Audit** | **统一事件总线 AuditEventBus**（内部 agent + 外部 MCP 工具调用同源审计）+ AuditPage 查看 + **AuditRedactor 脱敏**（输出/日志系统级敏感信息遮蔽） |
 | 定时任务 | 每小时/每天/每周模型，60s tick 调度，防重入，独立管理页 + 新标签页结果卡 |
