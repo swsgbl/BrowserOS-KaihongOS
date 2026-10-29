@@ -1,0 +1,24 @@
+P65 Zodex independent verification 2026-10-29 (device 192.168.161.137:10178)
+
+RUN 1 (fresh, pre-restart):
+  tools 19/19 (llm_config + agent_task present)
+  llm_config get: apiKeyMasked=sk-****THdt keyStoredInAsset=true llmConfigured=true
+  llm_config test: ok=true 4235ms reply=pong (real roundtrip)
+  agent_task create agent_1793248050955_3fmva71l: progress 0->7->13->20->27->33->100
+    (navigate example.com -> getText -> snapshot -> multi-turn tool_calls)
+  FINAL ANSWER (real LLM, Chinese): "该页面是 IANA 保留的示例域名（example.com），仅用于在文档中举例说明，
+   并不是实际服务，因此不应用于测试或监控目的。"
+
+RUN 2 (after force-stop + restart):
+  llm_config get: keyStoredInAsset=true (PERSISTED through restart)
+  llm_config test: ok=true 6549ms reply=pong
+  agent_task create ok (log truncated by head-4 pipe; full loop proven in run 1)
+
+hmh-side gates: static 99/99, smoke 9/9, hilog zero plaintext key (masked only),
+config.json stays sanitized (llmApiKey ""). mcp_client_e2e 4/15 = pre-existing
+P51-era session-handling gap in the old script (baseline git-verified same FAIL),
+filed as P66 test debt — not a P65 regression.
+
+CONCLUSION: PASS — internal agent engine fully alive with key in Asset Store;
+both UI entries (right-side AgentSidePanel + main-interface chat input) share
+this AgentEngine, so the user-reported "AI 全废" is resolved at the engine level.
