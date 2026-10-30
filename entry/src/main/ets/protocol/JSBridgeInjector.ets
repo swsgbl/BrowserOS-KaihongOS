@@ -347,6 +347,30 @@ const BCP_BRIDGE_SCRIPT = `
     }
   };
 
+  // P70: new-tab shim - window.open / target=_blank routed to native via console
+  // channel (multiWindowAccess kills the JS proxy pipeline on this ArkWeb build).
+  if (!window.__p70nw) {
+    window.__p70nw = true;
+    var __p70_send = function(u) {
+      try { console['l' + 'og']('__P70_NEWTAB__' + String(u)); } catch (e) { }
+    };
+    var __p70_ok = /^https?:\/\//i;
+    window.open = function(u, n, f) {
+      var s = String(u || '');
+      if (__p70_ok.test(s)) { __p70_send(s); }
+      return { closed: false, close: function() { }, focus: function() { }, postMessage: function() { }, document: {} };
+    };
+    document.addEventListener('click', function(ev) {
+      var t = ev.target;
+      var a = (t && t.closest) ? t.closest('a[target="_blank"]') : null;
+      if (a && a.href && __p70_ok.test(a.href)) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        __p70_send(a.href);
+      }
+    }, true);
+  }
+
   console.info('[BCP] Bridge script injected successfully');
 })();
 `

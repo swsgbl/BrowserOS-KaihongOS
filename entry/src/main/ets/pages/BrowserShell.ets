@@ -2336,6 +2336,40 @@ Text(this.dashDeviceSel.length > 0 ? ('🤖 ' + this.dashDeviceSel)
           // (导航折叠成汉堡/链接,桌面下拉菜单不复存在),与用户预期(桌面站)不符。
           .userAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36')
           .databaseAccess(true)
+          // P70 教训：multiWindowAccess(true) 在本 ArkWeb 构建上会杀死 JS proxy 管线
+          // (read/snapshot/evaluate 全 null)——已回滚。onWindowNew 保留(无该 flag 时不触发，无害)。
+          // 新标签打开能力需另寻安全路径(见 evidence/p70)。
+          .onWindowNew((event?: OnWindowNewEvent) => {
+            // P70: window.open / target=_blank previously had NO handler — ArkWeb silently
+            // dropped every new-window request (WPS 在线使用、无数站点菜单点了没反应的根因).
+            // 单窗口形态统一降级为新标签: 建 tab -> 绑定其 controller -> 激活.
+            if (!event) {
+              return
+            }
+            const srcTabId = tab.tabId
+            const url = event.targetUrl || ''
+            console.info('[P70] onWindowNew src=' + srcTabId + ' url=' + url.slice(0, 90) + ' user=' + event.isUserTrigger)
+            try {
+              const nt = TabManager.createTab(false)
+              if (url.length > 0) {
+                TabManager.updateTabUrl(nt.tabId, url)
+              }
+              const ctl = this.getOrCreateController(nt.tabId)
+              this.activeTabId = nt.tabId
+              this.showDashboard = false
+              this.showNeo = false
+              this.tabs = TabManager.getAllTabs()
+              TabManager.switchTab(nt.tabId)
+              if (event.handler) {
+                event.handler.setWebController(ctl)
+              }
+            } catch (e) {
+              console.error('[P70] onWindowNew fail: ' + e)
+              if (event.handler) {
+                try { event.handler.setWebController(null) } catch (e2) { }
+              }
+            }
+          })
           .onControllerAttached(() => {
             // 闭包捕获事件源 tabId（多 Web 下 activeTabId 不可靠）
             const tabId = tab.tabId
@@ -2548,6 +2582,12 @@ Text(this.dashDeviceSel.length > 0 ? ('🤖 ' + this.dashDeviceSel)
           .onConsole((event) => {
             // P47-A: DevTools Console 日志收集
             const msg = event.message
+            const p70msg = msg.getMessage()
+            // P70: 页面 shim 的新标签请求(window.open/_blank) —— console 通道,不依赖 proxy 桥
+            if (typeof p70msg === 'string' && p70msg.startsWith('__P70_NEWTAB__')) {
+              this.openTabFromShim(p70msg.substring('__P70_NEWTAB__'.length))
+              return true
+            }
             DevToolsCollector.addConsole(tab.tabId, msg.getMessageLevel(), msg.getSourceId(), msg.getMessage())
             return false
           })
@@ -2803,6 +2843,27 @@ Text(this.dashDeviceSel.length > 0 ? ('🤖 ' + this.dashDeviceSel)
   private focusOmnibox(): void {
     this.getUIContext().getFocusController().requestFocus('p11f_omnibox')
     console.info('BrowserShell focusOmnibox requested')
+  }
+
+  /** P70: 页面 shim 经 console 通道发来的新标签请求(仅 http/https，防 js: 注入) */
+  private openTabFromShim(rawUrl: string): void {
+    const url = rawUrl.trim()
+    if (!url.startsWith('https://') && !url.startsWith('http://')) {
+      console.warn('[P70] shim new-tab rejected (scheme): ' + url.slice(0, 80))
+      return
+    }
+    console.info('[P70] shim new-tab: ' + url.slice(0, 90))
+    try {
+      const nt = TabManager.createTab(false)
+      TabManager.updateTabUrl(nt.tabId, url)
+      this.activeTabId = nt.tabId
+      this.showDashboard = false
+      this.showNeo = false
+      this.tabs = TabManager.getAllTabs()
+      TabManager.switchTab(nt.tabId)
+    } catch (e) {
+      console.error('[P70] shim new-tab fail: ' + e)
+    }
   }
 
   private getOrCreateController(tabId: string): webview.WebviewController {

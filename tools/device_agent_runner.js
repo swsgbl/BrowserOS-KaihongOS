@@ -36,7 +36,9 @@ const KIND = argOf('--kind', NAME === 'claude-code' ? 'claude-code' : NAME === '
 const CMD_TEMPLATE = argOf('--cmd', '');
 const HOST = argOf('--host', '127.0.0.1');
 const PORT = parseInt(argOf('--port', '9222'), 10);
-const TOKEN_FILE = argOf('--token-file', '/data/local/tmp/browseros_mcp_token');
+// P70: default to the app's live token file (root-readable) — rotations are picked up
+// automatically by refreshToken(); the /data/local/tmp copy remains a fallback.
+const TOKEN_FILE = argOf('--token-file', '/data/app/el2/100/base/com.browseros.kaihong/haps/entry/files/mcp_token.txt');
 const TIMEOUT_MIN = parseFloat(argOf('--timeout-min', '10'));
 const POLL_MS = parseInt(argOf('--poll-ms', '3000'), 10);
 const LOG = argOf('--log', `/data/local/tmp/da_runner_${NAME}.log`);
@@ -55,6 +57,22 @@ function log(...a) {
   const line = `[${new Date().toISOString()}] ` + a.join(' ');
   console.log(line);
   try { fs.appendFileSync(LOG, line + '\n'); } catch (e) {}
+}
+
+// // P70: app restarts rotate the CSPRNG token; re-read the file on auth failure
+// (previously a stale token killed the runner at startup -> device-agent tasks
+// hung forever -> "AI 面板没有输出")
+function refreshToken() {
+  try {
+    const t = fs.readFileSync(TOKEN_FILE, 'utf8').trim();
+    if (t && t !== TOKEN) {
+      TOKEN = t;
+      sessionId = null;
+      log('token refreshed from file (rotated)');
+      return true;
+    }
+  } catch (e) { /* file briefly absent during app restart */ }
+  return false;
 }
 
 // ---------- MCP 客户端（node 原生 http，SSE 容忍） ----------
@@ -225,11 +243,21 @@ async function pollOnce() {
 
 async function main() {
   log(`runner start name=${NAME} kind=${KIND} cmd="${CMD_TEMPLATE.slice(0, 80)}" ${HOST}:${PORT}`);
-  await call('initialize', {
-    protocolVersion: '2024-11-05',
-    capabilities: {},
-    clientInfo: { name: `da-runner-${NAME}`, version: '1.0.0' }
-  });
+  // P70: init retry loop — the app may be down/restarting or the token just rotated
+  for (;;) {
+    try {
+      refreshToken();
+      await call('initialize', {
+        protocolVersion: '2024-11-05',
+        capabilities: {},
+        clientInfo: { name: `da-runner-${NAME}`, version: '1.0.0' }
+      });
+      break;
+    } catch (e) {
+      log('init retry (app down or token rotated):', String(e.message || e).slice(0, 120));
+      await sleep(5000);
+    }
+  }
   log('mcp session:', sessionId);
   await post({ jsonrpc: '2.0', method: 'notifications/initialized', params: {} });
 
@@ -244,8 +272,9 @@ async function main() {
       await pollOnce();
     } catch (e) {
       log('loop error:', String(e.message || e).slice(0, 300));
-      // 会话失效时重初始化
+      // 会话失效时重初始化（P70: 先尝试刷新已轮换的 token）
       try {
+        refreshToken();
         sessionId = null;
         await call('initialize', {
           protocolVersion: '2024-11-05', capabilities: {},
