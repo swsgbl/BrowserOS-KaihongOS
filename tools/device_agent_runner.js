@@ -178,7 +178,7 @@ async function runSystemUpdate(task) {
       resolve(err ? (err.code || 1) : 0);
     });
   });
-  let code = await exec('bm install -r ' + shellQuote(hapPath));
+  let code = await exec('bm install -p ' + shellQuote(hapPath) + ' -r');
   if (code !== 0) {
     return { ok: false, result: out.join('\n') + `\nbm install exit ${code}` };
   }

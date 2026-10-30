@@ -1,9 +1,9 @@
 {
   "versionCode": 1010001,
   "versionName": "1.1.1",
-  "sha256": "133bc4f8eb94a81ec54453f45dcea1b6d83aadaa62afeb8ff33a9d1143b1146f",
-  "size": 4072360,
-  "notes": "P69 更新链验收版本（e2e）",
+  "sha256": "2e4fef756538dd85cc6abd2f6ffd3ddd3869b0d1f4757185197dce328c310342",
+  "size": 4072153,
+  "notes": "P69 更新机制（含修复：kind 接线/脱敏豁免/bm -p）",
   "minCompatibleApi": 23,
   "urls": {
     "global": [

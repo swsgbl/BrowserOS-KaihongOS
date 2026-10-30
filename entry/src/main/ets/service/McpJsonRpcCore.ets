@@ -227,7 +227,13 @@ class McpJsonRpcCoreImpl {
         const result = new McpToolCallResult()
         const item = new McpContentItem()
         // P42 (KAI-075): 工具输出统一脱敏
-        item.text = redactSensitive(response.data === null ? 'ok' : JSON.stringify(response.data))
+        // P69-fix: device_agent_tasks 载荷含公开 sha256 摘要（repo manifest），16+hex 掩码会破坏
+        // runner 完整性复核（sha256=**** -> MISMATCH）。该工具为 loopback+token 管理面，豁免脱敏。
+        if (toolName === 'device_agent_tasks') {
+          item.text = response.data === null ? 'ok' : JSON.stringify(response.data)
+        } else {
+          item.text = redactSensitive(response.data === null ? 'ok' : JSON.stringify(response.data))
+        }
         result.content = [item]
         result.isError = false
         return this.outcome(rpcId, null, result)

@@ -489,7 +489,7 @@ class UpdateServiceImpl {
     this.emit()
     const m = this.state.manifest
     const prompt = `SYSTEM_UPDATE||path=${this.state.readyPath}||sha256=${m.sha256}||version=${m.versionName}`
-    const task = await DeviceAgentStore.createTask(runner, prompt, '', '', '')
+    const task = await DeviceAgentStore.createTask(runner, prompt, '', '', '', 'system_update')
     console.info(`[P69] system_update task ${task.taskId} -> runner ${runner}`)
     // 等待 runner 回写结果（最多 120s；runner 侧 bm install 通常 <30s）
     for (let i = 0; i < 60; i++) {
